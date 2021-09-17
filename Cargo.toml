@@ -1,0 +1,16 @@
+[package]
+name = "miniclj"
+version = "0.1.0"
+authors = ["MarioJim <mario.emilio.j@gmail.com>"]
+edition = "2018"
+description = "Clojure-like lisp interpreter written in Rust"
+repository = "https://github.com/MarioJim/miniclj"
+license = "GPL-3.0-or-later"
+
+[build-dependencies]
+lalrpop = "0.19.6"
+
+[dependencies]
+lalrpop-util = "0.19.6"
+num = "0.4"
+regex = "1"
