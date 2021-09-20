@@ -6,6 +6,7 @@ use regex::Regex;
 
 lalrpop_mod!(pub miniclj);
 mod ast;
+mod value;
 
 fn main() -> Result<(), &'static str> {
     let r = Regex::new("^$").unwrap();
