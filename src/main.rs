@@ -4,7 +4,7 @@ use std::fs::read_to_string;
 use lalrpop_util::lalrpop_mod;
 use regex::Regex;
 
-lalrpop_mod!(pub miniclj);
+lalrpop_mod!(#[allow(clippy::all)] pub miniclj);
 mod ast;
 mod value;
 
