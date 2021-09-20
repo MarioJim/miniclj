@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use dyn_clone::DynClone;
 
-use super::Value;
+use crate::value::Value;
 
 pub trait Callable: Debug + DynClone {
     fn call(&self, args: Vec<Value>) -> Value;
