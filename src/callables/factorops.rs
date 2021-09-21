@@ -151,34 +151,34 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let args = vec![2, 5, 6, -3].into_iter().map(n).collect::<Vec<Value>>();
         assert_eq!(FactorOp::Add.call(vec![]), n(0));
-        assert_eq!(FactorOp::Add.call(vec![args[0].clone()]), n(2));
-        assert_eq!(FactorOp::Add.call(args), n(10));
+        assert_eq!(FactorOp::Add.call(vec![n(2)]), n(2));
+        assert_eq!(FactorOp::Add.call(vec![n(2), n(5), n(6), n(-3)]), n(10));
     }
 
     #[test]
     fn test_sub() {
-        let args = vec![2, 5, 6, -3].into_iter().map(n).collect::<Vec<Value>>();
         assert!(matches!(FactorOp::Sub.call(vec![]), Value::Error(_)));
-        assert_eq!(FactorOp::Sub.call(vec![args[0].clone()]), n(-2));
-        assert_eq!(FactorOp::Sub.call(args), n(-6));
+        assert_eq!(FactorOp::Sub.call(vec![n(2)]), n(-2));
+        assert_eq!(FactorOp::Sub.call(vec![n(2), n(5), n(6), n(-3)]), n(-6));
     }
 
     #[test]
     fn test_mul() {
-        let args = vec![2, 5, 6, -3].into_iter().map(n).collect::<Vec<Value>>();
         assert_eq!(FactorOp::Mul.call(vec![]), n(1));
-        assert_eq!(FactorOp::Mul.call(vec![args[0].clone()]), n(2));
-        assert_eq!(FactorOp::Mul.call(args), n(-180));
+        assert_eq!(FactorOp::Mul.call(vec![n(2)]), n(2));
+        assert_eq!(FactorOp::Mul.call(vec![n(2), n(5), n(6), n(-3)]), n(-180));
     }
 
     #[test]
     fn test_div() {
         let f = |num, den| Value::Number(Rational64::new(num, den));
-        let args = vec![2, 5, 6, -3].into_iter().map(n).collect::<Vec<Value>>();
         assert!(matches!(FactorOp::Div.call(vec![]), Value::Error(_)));
-        assert_eq!(FactorOp::Div.call(vec![args[0].clone()]), f(1, 2));
-        assert_eq!(FactorOp::Div.call(args), f(-2, 90));
+        assert_eq!(FactorOp::Div.call(vec![n(2)]), f(1, 2));
+        assert_eq!(FactorOp::Div.call(vec![n(2), n(5), n(6), n(-3)]), f(-2, 90));
+        assert!(matches!(
+            FactorOp::Div.call(vec![n(2), n(3), n(0)]),
+            Value::Error(_)
+        ));
     }
 }
