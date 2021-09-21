@@ -6,6 +6,7 @@ use regex::Regex;
 
 lalrpop_mod!(#[allow(clippy::all)] pub miniclj);
 mod ast;
+mod callables;
 mod value;
 
 fn main() -> Result<(), &'static str> {

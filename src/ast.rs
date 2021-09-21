@@ -108,7 +108,7 @@ impl Display for Atom {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FactorOp {
     Add,
     Sub,
@@ -127,7 +127,7 @@ impl Display for FactorOp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ComparisonOp {
     Eq,
     Ne,

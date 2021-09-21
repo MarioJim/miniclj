@@ -13,12 +13,12 @@ mod set;
 mod traits;
 mod vector;
 
-use traits::callable;
+pub use traits::callable::Callable;
 
 #[derive(Debug, Clone)]
 pub enum Value {
     DefMacro,
-    Fn(Box<dyn callable::Callable>),
+    Fn(Box<dyn Callable>),
     Error(String),
 
     List(list::List),
