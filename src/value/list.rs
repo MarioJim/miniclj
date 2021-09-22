@@ -24,8 +24,10 @@ impl Display for List {
 }
 
 impl Collection for List {
-    fn cons(&mut self, val: Value) {
-        self.0.push_front(val);
+    fn cons(&self, val: Value) -> Value {
+        let mut cloned_list = self.0.clone();
+        cloned_list.push_front(val);
+        Value::List(List(cloned_list))
     }
 
     fn get(&self, key: &Value) -> Value {
@@ -35,11 +37,7 @@ impl Collection for List {
                     let index = (*n.numer()).try_into().unwrap();
                     self.0.get(index).unwrap_or(&Value::Nil).clone()
                 } else {
-                    Value::Error(format!(
-                        "List has {} elements, index {} out of bounds",
-                        self.0.len(),
-                        n
-                    ))
+                    Value::Nil
                 }
             } else {
                 Value::Error(format!(
@@ -54,9 +52,5 @@ impl Collection for List {
 
     fn len(&self) -> usize {
         self.0.len()
-    }
-
-    fn empty(&self) -> bool {
-        self.0.is_empty()
     }
 }

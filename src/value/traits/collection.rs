@@ -1,8 +1,13 @@
+use std::fmt::Debug;
+
+use dyn_clone::DynClone;
+
 use crate::value::Value;
 
-pub trait Collection {
-    fn cons(&mut self, val: Value);
+pub trait Collection: Debug + DynClone {
+    fn cons(&self, val: Value) -> Value;
     fn get(&self, key: &Value) -> Value;
     fn len(&self) -> usize;
-    fn empty(&self) -> bool;
 }
+
+dyn_clone::clone_trait_object!(Collection);

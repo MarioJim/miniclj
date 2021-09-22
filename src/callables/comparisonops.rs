@@ -6,12 +6,12 @@ use crate::{
 };
 
 impl Callable for ComparisonOp {
-    fn call(&self, args: Vec<Value>) -> Value {
+    fn call(&self, args: &[Value]) -> Value {
         if args.is_empty() {
             return Value::Error(String::from("Comparison function called with no arguments"));
         }
-        let args_as_nums = |a: Vec<Value>| {
-            a.into_iter()
+        fn args_as_nums(a: &[Value]) -> Result<Vec<&Rational64>, String> {
+            a.iter()
                 .map(|v| {
                     if let Value::Number(n) = v {
                         Ok(n)
@@ -19,8 +19,8 @@ impl Callable for ComparisonOp {
                         Err(format!("Value {} can't be ordered", v))
                     }
                 })
-                .collect::<Result<Vec<Rational64>, String>>()
-        };
+                .collect()
+        }
         let result = match self {
             ComparisonOp::Eq => Ok(args.iter().all(|v| v == &args[0])),
             ComparisonOp::Ne => Ok(args.iter().any(|v| v != &args[0])),
@@ -52,50 +52,50 @@ mod tests {
 
     #[test]
     fn test_eq() {
-        assert!(matches!(ComparisonOp::Eq.call(vec![]), Value::Error(_)));
-        assert_eq!(ComparisonOp::Eq.call(vec![n(2)]), n(1));
-        assert_eq!(ComparisonOp::Eq.call(vec![n(2), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Eq.call(vec![n(2), n(2), n(3)]), n(0));
+        assert!(matches!(ComparisonOp::Eq.call(&[]), Value::Error(_)));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2)]), n(1));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2)]), n(1));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2), n(3)]), n(0));
     }
 
     #[test]
     fn test_ne() {
-        assert_eq!(ComparisonOp::Ne.call(vec![n(2)]), n(0));
-        assert_eq!(ComparisonOp::Ne.call(vec![n(2), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Ne.call(vec![n(2), n(2), n(3)]), n(1));
+        assert_eq!(ComparisonOp::Ne.call(&[n(2)]), n(0));
+        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2)]), n(0));
+        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2), n(3)]), n(1));
     }
 
     #[test]
     fn test_gt() {
-        assert_eq!(ComparisonOp::Gt.call(vec![n(5)]), n(1));
-        assert_eq!(ComparisonOp::Gt.call(vec![n(2), n(2), n(1)]), n(0));
-        assert_eq!(ComparisonOp::Gt.call(vec![n(2), n(1), n(1)]), n(0));
-        assert_eq!(ComparisonOp::Gt.call(vec![n(3), n(2), n(1)]), n(1));
+        assert_eq!(ComparisonOp::Gt.call(&[n(5)]), n(1));
+        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(2), n(1)]), n(0));
+        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(1), n(1)]), n(0));
+        assert_eq!(ComparisonOp::Gt.call(&[n(3), n(2), n(1)]), n(1));
     }
 
     #[test]
     fn test_lt() {
-        assert_eq!(ComparisonOp::Lt.call(vec![n(5)]), n(1));
-        assert_eq!(ComparisonOp::Lt.call(vec![n(1), n(1), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Lt.call(vec![n(1), n(2), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Lt.call(vec![n(1), n(2), n(3)]), n(1));
+        assert_eq!(ComparisonOp::Lt.call(&[n(5)]), n(1));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(1), n(2)]), n(0));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(2)]), n(0));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(3)]), n(1));
     }
 
     #[test]
     fn test_ge() {
-        assert_eq!(ComparisonOp::Ge.call(vec![n(5)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(vec![n(2), n(2), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(vec![n(2), n(1), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(vec![n(3), n(2), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(vec![n(1), n(2)]), n(0));
+        assert_eq!(ComparisonOp::Ge.call(&[n(5)]), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(2), n(1)]), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(1), n(1)]), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(3), n(2), n(1)]), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(1), n(2)]), n(0));
     }
 
     #[test]
     fn test_le() {
-        assert_eq!(ComparisonOp::Le.call(vec![n(5)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(vec![n(1), n(1), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(vec![n(1), n(2), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(vec![n(1), n(2), n(3)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(vec![n(2), n(1)]), n(0));
+        assert_eq!(ComparisonOp::Le.call(&[n(5)]), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(1), n(2)]), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(2)]), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(3)]), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(2), n(1)]), n(0));
     }
 }

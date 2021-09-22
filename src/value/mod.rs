@@ -14,6 +14,7 @@ mod traits;
 mod vector;
 
 pub use traits::callable::Callable;
+pub use traits::collection::Collection;
 
 #[derive(Debug, Clone)]
 pub enum Value {

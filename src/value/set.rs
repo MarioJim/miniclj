@@ -46,8 +46,10 @@ impl PartialEq for Set {
 }
 
 impl Collection for Set {
-    fn cons(&mut self, val: Value) {
-        self.0.insert(val);
+    fn cons(&self, val: Value) -> Value {
+        let mut cloned_set = self.0.clone();
+        cloned_set.insert(val);
+        Value::Set(Set(cloned_set))
     }
 
     fn get(&self, key: &Value) -> Value {
@@ -57,9 +59,5 @@ impl Collection for Set {
 
     fn len(&self) -> usize {
         self.0.len()
-    }
-
-    fn empty(&self) -> bool {
-        self.0.is_empty()
     }
 }

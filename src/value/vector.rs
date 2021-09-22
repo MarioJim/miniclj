@@ -11,8 +11,10 @@ use crate::value::{traits::collection::Collection, Value};
 pub struct Vector(Vec<Value>);
 
 impl Collection for Vector {
-    fn cons(&mut self, val: Value) {
-        self.0.push(val);
+    fn cons(&self, val: Value) -> Value {
+        let mut cloned_vector = self.0.clone();
+        cloned_vector.push(val);
+        Value::Vector(Vector(cloned_vector))
     }
 
     fn get(&self, key: &Value) -> Value {
@@ -22,17 +24,10 @@ impl Collection for Vector {
                     let index: usize = (*n.numer()).try_into().unwrap();
                     self.0.get(index).unwrap_or(&Value::Nil).clone()
                 } else {
-                    Value::Error(format!(
-                        "Vector has {} elements, index {} out of bounds",
-                        self.0.len(),
-                        n
-                    ))
+                    Value::Nil
                 }
             } else {
-                Value::Error(format!(
-                    "Vector can only be indexed by positive integers, not by {}",
-                    n
-                ))
+                Value::Nil
             }
         } else {
             Value::Error(format!("Vector can't be indexed by {}", key))
@@ -41,10 +36,6 @@ impl Collection for Vector {
 
     fn len(&self) -> usize {
         self.0.len()
-    }
-
-    fn empty(&self) -> bool {
-        self.0.is_empty()
     }
 }
 

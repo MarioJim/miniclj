@@ -6,30 +6,27 @@ use crate::{
 };
 
 impl Callable for FactorOp {
-    fn call(&self, args: Vec<Value>) -> Value {
+    fn call(&self, args: &[Value]) -> Value {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
-        match self {
-            FactorOp::Add => {
-                let maybe_nums = args
-                    .into_iter()
-                    .map(|a| {
-                        if let Value::Number(n) = a {
-                            Ok(n)
-                        } else {
-                            Err(a)
-                        }
-                    })
-                    .collect::<Result<Vec<Rational64>, Value>>();
-
-                match maybe_nums {
-                    Ok(v) => {
-                        let result = v.into_iter().fold(zero, |a, b| a + b);
-                        Value::Number(result)
-                    }
-                    Err(v) => Value::Error(format!("Addition can't be called with argument {}", v)),
+        let maybe_nums = args
+            .iter()
+            .map(|a| {
+                if let Value::Number(n) = a {
+                    Ok(n)
+                } else {
+                    Err(a)
                 }
-            }
+            })
+            .collect::<Result<Vec<&Rational64>, &Value>>();
+        match self {
+            FactorOp::Add => match maybe_nums {
+                Ok(v) => {
+                    let result = v.into_iter().fold(zero, |a, b| a + b);
+                    Value::Number(result)
+                }
+                Err(v) => Value::Error(format!("Addition can't be called with argument {}", v)),
+            },
             FactorOp::Sub => match args.len() {
                 0 => Value::Error(String::from("Substraction called with no arguments")),
                 1 => {
@@ -43,17 +40,6 @@ impl Callable for FactorOp {
                     }
                 }
                 _ => {
-                    let maybe_nums = args
-                        .into_iter()
-                        .map(|a| {
-                            if let Value::Number(n) = a {
-                                Ok(n)
-                            } else {
-                                Err(a)
-                            }
-                        })
-                        .collect::<Result<Vec<Rational64>, Value>>();
-
                     let nums = match maybe_nums {
                         Ok(v) => v,
                         Err(v) => {
@@ -64,32 +50,19 @@ impl Callable for FactorOp {
                         }
                     };
 
-                    Value::Number(nums[0] - nums[1..].iter().fold(zero, |a, b| a + b))
+                    Value::Number(nums[0] - nums[1..].iter().fold(zero, |a, b| a + *b))
                 }
             },
-            FactorOp::Mul => {
-                let maybe_nums = args
-                    .into_iter()
-                    .map(|a| {
-                        if let Value::Number(n) = a {
-                            Ok(n)
-                        } else {
-                            Err(a)
-                        }
-                    })
-                    .collect::<Result<Vec<Rational64>, Value>>();
-
-                match maybe_nums {
-                    Ok(v) => {
-                        let result = v.into_iter().fold(one, |a, b| a * b);
-                        Value::Number(result)
-                    }
-                    Err(v) => Value::Error(format!(
-                        "Multiplication can't be called with argument {}",
-                        v
-                    )),
+            FactorOp::Mul => match maybe_nums {
+                Ok(v) => {
+                    let result = v.into_iter().fold(one, |a, b| a * b);
+                    Value::Number(result)
                 }
-            }
+                Err(v) => Value::Error(format!(
+                    "Multiplication can't be called with argument {}",
+                    v
+                )),
+            },
             FactorOp::Div => match args.len() {
                 0 => Value::Error(String::from("Division called with no arguments")),
                 1 => {
@@ -107,17 +80,6 @@ impl Callable for FactorOp {
                     }
                 }
                 _ => {
-                    let maybe_nums = args
-                        .into_iter()
-                        .map(|a| {
-                            if let Value::Number(n) = a {
-                                Ok(n)
-                            } else {
-                                Err(a)
-                            }
-                        })
-                        .collect::<Result<Vec<Rational64>, Value>>();
-
                     let nums = match maybe_nums {
                         Ok(v) => v,
                         Err(v) => {
@@ -128,7 +90,7 @@ impl Callable for FactorOp {
                         }
                     };
 
-                    let denominator = nums[1..].iter().fold(one, |a, b| a * b);
+                    let denominator = nums[1..].iter().fold(one, |a, b| a * *b);
 
                     if denominator.is_zero() {
                         Value::Error(String::from("Division by zero"))
@@ -151,33 +113,33 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(FactorOp::Add.call(vec![]), n(0));
-        assert_eq!(FactorOp::Add.call(vec![n(2)]), n(2));
-        assert_eq!(FactorOp::Add.call(vec![n(2), n(5), n(6), n(-3)]), n(10));
+        assert_eq!(FactorOp::Add.call(&[]), n(0));
+        assert_eq!(FactorOp::Add.call(&[n(2)]), n(2));
+        assert_eq!(FactorOp::Add.call(&[n(2), n(5), n(6), n(-3)]), n(10));
     }
 
     #[test]
     fn test_sub() {
-        assert!(matches!(FactorOp::Sub.call(vec![]), Value::Error(_)));
-        assert_eq!(FactorOp::Sub.call(vec![n(2)]), n(-2));
-        assert_eq!(FactorOp::Sub.call(vec![n(2), n(5), n(6), n(-3)]), n(-6));
+        assert!(matches!(FactorOp::Sub.call(&[]), Value::Error(_)));
+        assert_eq!(FactorOp::Sub.call(&[n(2)]), n(-2));
+        assert_eq!(FactorOp::Sub.call(&[n(2), n(5), n(6), n(-3)]), n(-6));
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(FactorOp::Mul.call(vec![]), n(1));
-        assert_eq!(FactorOp::Mul.call(vec![n(2)]), n(2));
-        assert_eq!(FactorOp::Mul.call(vec![n(2), n(5), n(6), n(-3)]), n(-180));
+        assert_eq!(FactorOp::Mul.call(&[]), n(1));
+        assert_eq!(FactorOp::Mul.call(&[n(2)]), n(2));
+        assert_eq!(FactorOp::Mul.call(&[n(2), n(5), n(6), n(-3)]), n(-180));
     }
 
     #[test]
     fn test_div() {
         let f = |num, den| Value::Number(Rational64::new(num, den));
-        assert!(matches!(FactorOp::Div.call(vec![]), Value::Error(_)));
-        assert_eq!(FactorOp::Div.call(vec![n(2)]), f(1, 2));
-        assert_eq!(FactorOp::Div.call(vec![n(2), n(5), n(6), n(-3)]), f(-2, 90));
+        assert!(matches!(FactorOp::Div.call(&[]), Value::Error(_)));
+        assert_eq!(FactorOp::Div.call(&[n(2)]), f(1, 2));
+        assert_eq!(FactorOp::Div.call(&[n(2), n(5), n(6), n(-3)]), f(-2, 90));
         assert!(matches!(
-            FactorOp::Div.call(vec![n(2), n(3), n(0)]),
+            FactorOp::Div.call(&[n(2), n(3), n(0)]),
             Value::Error(_)
         ));
     }
