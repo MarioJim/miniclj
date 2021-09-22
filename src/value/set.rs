@@ -6,7 +6,7 @@ use std::{
 
 use num::Rational64;
 
-use crate::value::{traits::collection::Collection, Value};
+use crate::value::Value;
 
 #[derive(Debug, Eq, Clone)]
 pub struct Set(HashSet<Value>);
@@ -45,19 +45,19 @@ impl PartialEq for Set {
     }
 }
 
-impl Collection for Set {
-    fn cons(&self, val: Value) -> Value {
+impl Set {
+    pub fn cons(&self, val: Value) -> Value {
         let mut cloned_set = self.0.clone();
         cloned_set.insert(val);
         Value::Set(Set(cloned_set))
     }
 
-    fn get(&self, key: &Value) -> Value {
+    pub fn get(&self, key: &Value) -> Value {
         let v = if self.0.contains(key) { 1 } else { 0 };
         Value::Number(Rational64::from_integer(v))
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 }

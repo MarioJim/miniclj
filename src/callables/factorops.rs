@@ -1,9 +1,6 @@
 use num::{Rational64, Zero};
 
-use crate::{
-    ast::FactorOp,
-    value::{Callable, Value},
-};
+use crate::{ast::FactorOp, callables::Callable, value::Value};
 
 impl Callable for FactorOp {
     fn call(&self, args: &[Value]) -> Value {

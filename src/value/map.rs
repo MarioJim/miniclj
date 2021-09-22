@@ -6,7 +6,7 @@ use std::{
 
 use num::Rational64;
 
-use crate::value::{traits::collection::Collection, Value};
+use crate::value::Value;
 
 #[derive(Debug, Eq, Clone)]
 pub struct Map(HashMap<Value, Value>);
@@ -45,8 +45,8 @@ impl PartialEq for Map {
     }
 }
 
-impl Collection for Map {
-    fn cons(&self, entry: Value) -> Value {
+impl Map {
+    pub fn cons(&self, entry: Value) -> Value {
         match entry {
             Value::Vector(v) if v.len() == 2 => {
                 let key_idx = Value::Number(Rational64::from_integer(0));
@@ -62,11 +62,11 @@ impl Collection for Map {
         }
     }
 
-    fn get(&self, key: &Value) -> Value {
+    pub fn get(&self, key: &Value) -> Value {
         self.0.get(key).unwrap_or(&Value::Nil).clone()
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 }

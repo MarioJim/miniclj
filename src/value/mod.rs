@@ -7,14 +7,12 @@ use std::{
 use num::Rational64;
 use rand::random;
 
+use crate::callables::Callable;
+
 mod list;
 mod map;
 mod set;
-mod traits;
 mod vector;
-
-pub use traits::callable::Callable;
-pub use traits::collection::Collection;
 
 #[derive(Debug, Clone)]
 pub enum Value {

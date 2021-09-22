@@ -6,7 +6,7 @@ use std::{
 
 use num::{Rational64, Signed};
 
-use crate::value::{traits::collection::Collection, Value};
+use crate::value::Value;
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct List(VecDeque<Value>);
@@ -23,14 +23,14 @@ impl Display for List {
     }
 }
 
-impl Collection for List {
-    fn cons(&self, val: Value) -> Value {
+impl List {
+    pub fn cons(&self, val: Value) -> Value {
         let mut cloned_list = self.0.clone();
         cloned_list.push_front(val);
         Value::List(List(cloned_list))
     }
 
-    fn get(&self, key: &Value) -> Value {
+    pub fn get(&self, key: &Value) -> Value {
         if let Value::Number(n) = key {
             if n.is_integer() && !n.is_negative() {
                 if n < &Rational64::from_integer(self.len().try_into().unwrap()) {
@@ -50,7 +50,7 @@ impl Collection for List {
         }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 }

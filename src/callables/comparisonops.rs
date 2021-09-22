@@ -1,9 +1,6 @@
 use num::Rational64;
 
-use crate::{
-    ast::ComparisonOp,
-    value::{Callable, Value},
-};
+use crate::{ast::ComparisonOp, callables::Callable, value::Value};
 
 impl Callable for ComparisonOp {
     fn call(&self, args: &[Value]) -> Value {

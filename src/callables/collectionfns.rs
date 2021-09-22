@@ -2,7 +2,7 @@ use std::convert::TryInto;
 
 use num::{Rational64, Signed, Zero};
 
-use crate::value::{Callable, Collection, Value};
+use crate::{callables::Callable, value::Value};
 
 #[derive(Debug, Clone)]
 struct Cons;
