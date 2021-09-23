@@ -61,3 +61,18 @@ impl Callable for Loop {
         todo!()
     }
 }
+
+#[derive(Debug, Clone)]
+struct Recur;
+
+impl Display for Recur {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "recur")
+    }
+}
+
+impl Callable for Recur {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
+        todo!()
+    }
+}

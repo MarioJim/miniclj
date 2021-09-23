@@ -23,6 +23,12 @@ impl Display for Vector {
 }
 
 impl Vector {
+    pub fn rest(&self) -> Value {
+        let mut new_vector = self.0.iter();
+        new_vector.next();
+        Value::Vector(Vector(new_vector.cloned().collect()))
+    }
+
     pub fn cons(&self, val: Value) -> Value {
         let mut cloned_vector = self.0.clone();
         cloned_vector.push(val);

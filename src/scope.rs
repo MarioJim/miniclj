@@ -21,11 +21,11 @@ impl Scope {
 
     pub fn get(&self, identifier: &str) -> Option<Value> {
         match self {
-            Scope::RootScope(table) => table.borrow().get(identifier).map(|v| v.to_owned()),
+            Scope::RootScope(table) => table.borrow().get(identifier).cloned(),
             Scope::LocalScope(table, top_scope) => table
                 .borrow()
                 .get(identifier)
-                .map(|v| v.to_owned())
+                .cloned()
                 .or_else(|| top_scope.get(identifier)),
         }
     }
@@ -37,5 +37,12 @@ impl Scope {
         }
         .borrow_mut()
         .insert(identifier, value);
+    }
+
+    pub fn insert_in_root(&self, identifier: String, value: Value) {
+        match self {
+            Scope::LocalScope(_, s) => s.insert_in_root(identifier, value),
+            Scope::RootScope(_) => self.insert(identifier, value),
+        };
     }
 }

@@ -8,6 +8,53 @@ use num::{Rational64, Signed, Zero};
 use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
+struct First;
+
+impl Display for First {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "first")
+    }
+}
+
+impl Callable for First {
+    fn call(&self, args: &[Value], scope: &Scope) -> Value {
+        if args.len() != 1 {
+            return Value::Error(String::from(
+                "first called with wrong number of arguments, should be <sequence>",
+            ));
+        }
+        let idx_first = Value::Number(Rational64::from_integer(0));
+        let coll = args.iter().next().unwrap();
+        let get_args = &[coll.clone(), idx_first];
+        Get.call(get_args, scope)
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Rest;
+
+impl Display for Rest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "rest")
+    }
+}
+
+impl Callable for Rest {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
+        if args.len() != 1 {
+            return Value::Error(String::from(
+                "first called with wrong number of arguments, should be <sequence>",
+            ));
+        }
+        match &args[0] {
+            Value::List(l) => l.rest(),
+            Value::Vector(v) => v.rest(),
+            _ => Value::Error(String::from("Argument of call to rest isn't a sequence")),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 struct Cons;
 
 impl Display for Cons {

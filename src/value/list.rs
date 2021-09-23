@@ -24,6 +24,12 @@ impl Display for List {
 }
 
 impl List {
+    pub fn rest(&self) -> Value {
+        let mut new_list = self.0.clone();
+        new_list.pop_front();
+        Value::List(List(new_list))
+    }
+
     pub fn cons(&self, val: Value) -> Value {
         let mut cloned_list = self.0.clone();
         cloned_list.push_front(val);

@@ -76,7 +76,7 @@ StringLiteral: String = r#""[^"]*""# => {
     let mut chars = <>.chars();
     chars.next();
     chars.next_back();
-    chars.as_str().to_owned()
+    String::from(chars.as_str())
 };
 IntegerLiteral: &'input str = r"[-]?[0-9]+" => <>;
 DecimalLiteral: &'input str = r"[-]?[0-9]+\.[0-9]+" => <>;
