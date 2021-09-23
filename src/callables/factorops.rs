@@ -1,6 +1,27 @@
+use std::fmt::{Display, Formatter};
+
 use num::{Rational64, Zero};
 
-use crate::{ast::FactorOp, callables::Callable, value::Value};
+use crate::{callables::Callable, value::Value};
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum FactorOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+impl Display for FactorOp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FactorOp::Add => write!(f, "+"),
+            FactorOp::Sub => write!(f, "-"),
+            FactorOp::Mul => write!(f, "*"),
+            FactorOp::Div => write!(f, "/"),
+        }
+    }
+}
 
 impl Callable for FactorOp {
     fn call(&self, args: &[Value]) -> Value {

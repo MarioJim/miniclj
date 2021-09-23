@@ -2,6 +2,9 @@ pub mod collectionfns;
 pub mod comparisonops;
 pub mod factorops;
 
+pub use comparisonops::ComparisonOp;
+pub use factorops::FactorOp;
+
 use std::fmt::Debug;
 
 use dyn_clone::DynClone;

@@ -1,6 +1,31 @@
+use std::fmt::{Display, Formatter};
+
 use num::Rational64;
 
-use crate::{ast::ComparisonOp, callables::Callable, value::Value};
+use crate::{callables::Callable, value::Value};
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum ComparisonOp {
+    Eq,
+    Ne,
+    Gt,
+    Lt,
+    Ge,
+    Le,
+}
+
+impl Display for ComparisonOp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ComparisonOp::Eq => write!(f, "="),
+            ComparisonOp::Ne => write!(f, "!="),
+            ComparisonOp::Gt => write!(f, ">"),
+            ComparisonOp::Lt => write!(f, "<"),
+            ComparisonOp::Ge => write!(f, ">="),
+            ComparisonOp::Le => write!(f, "<="),
+        }
+    }
+}
 
 impl Callable for ComparisonOp {
     fn call(&self, args: &[Value]) -> Value {

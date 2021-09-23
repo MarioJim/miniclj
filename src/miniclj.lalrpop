@@ -1,10 +1,16 @@
-use std::collections::HashSet;
-use std::iter::FromIterator;
-use std::str::FromStr;
+use std::{
+    collections::HashSet,
+    iter::FromIterator,
+    str::FromStr,
+};
 
-use num::{BigInt, BigRational, bigint::Sign};
+use num::Rational64;
 
-use crate::ast::{Atom, ComparisonOp, FactorOp, SExpr};
+use crate::{
+    ast::SExpr,
+    callables::{ComparisonOp, FactorOp},
+    value::Value,
+};
 
 grammar;
 
@@ -16,39 +22,36 @@ List<T>: Vec<T> = {
 };
 
 pub SExprs = List<SExpr>;
-Atoms = List<Atom>;
+Values = List<Value>;
 
 SExpr: Box<SExpr> = {
     "(" <SExprs> ")" => Box::new(SExpr::Expr(<>)),
     "#(" <SExprs> ")" => Box::new(SExpr::Lambda(<>)),
     "'(" <SExprs> ")" => Box::new(SExpr::List(<>)),
     "[" <SExprs> "]" => Box::new(SExpr::Vector(<>)),
-    "#{" <Atoms> "}" => Box::new(SExpr::Set(HashSet::from_iter(<>))),
-    Atom => Box::new(SExpr::Atom(<>)),
+    "#{" <Values> "}" => Box::new(SExpr::Set(HashSet::from_iter(<>))),
+    Value => Box::new(SExpr::Value(<>)),
 };
 
-Atom: Box<Atom> = {
-    "nil" => Box::new(Atom::Nil),
-    "%" => Box::new(Atom::LambdaArg),
-    ComparisonOp => Box::new(Atom::Comparison(<>)),
-    FactorOp => Box::new(Atom::Factor(<>)),
-    Identifier => Box::new(Atom::Identifier(<>)),
-    StringLiteral => Box::new(Atom::String(<>)),
+Value: Box<Value> = {
+    "nil" => Box::new(Value::Nil),
+    "%" => Box::new(Value::Identifier(String::from("%"))),
+    ComparisonOp => Box::new(Value::Fn(Box::new(<>))),
+    FactorOp => Box::new(Value::Fn(Box::new(<>))),
+    Identifier => Box::new(Value::Identifier(<>)),
+    StringLiteral => Box::new(Value::String(<>)),
     DecimalLiteral => {
         let num_parts: Vec<&str> = <>.split(".").collect();
-        let integer = BigInt::parse_bytes(num_parts[0].as_bytes(), 10).unwrap();
-        let mut decimals = BigInt::parse_bytes(num_parts[1].as_bytes(), 10).unwrap();
-        if integer.sign() == Sign::Minus {
-            decimals *= -1;
-        }
+        let integer = i64::from_str(num_parts[0]).unwrap();
+        let decimals = i64::from_str(num_parts[1]).unwrap();
         let exp = num_parts[1].len() as u32;
-        let numer = (integer * BigInt::from(10).pow(exp)) + decimals;
-        let fraction = BigRational::new(numer, BigInt::from(10).pow(exp));
-        Box::new(Atom::Number(fraction))
+        let numer = (integer * 10_i64.pow(exp)) + decimals;
+        let fraction = Rational64::new(numer, 10_i64.pow(exp));
+        Box::new(Value::Number(fraction))
     },
     IntegerLiteral => {
-        let fraction = BigRational::from_str(<>).unwrap();
-        Box::new(Atom::Number(fraction))
+        let integer = Rational64::from_str(<>).unwrap();
+        Box::new(Value::Number(integer))
     },
 };
 
