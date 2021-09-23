@@ -1,32 +1,28 @@
-use std::env::args;
-use std::fs::read_to_string;
+use std::{env::args, fs::read_to_string};
 
 use lalrpop_util::lalrpop_mod;
-use regex::Regex;
 
 lalrpop_mod!(#[allow(clippy::all)] pub miniclj);
-mod ast;
 mod callables;
+mod scope;
+mod sexpr;
 mod value;
 
-fn main() -> Result<(), &'static str> {
-    let r = Regex::new("^$").unwrap();
-    for v in &["a", "?", "a+sd'a*s>d<!?", "as\n", "0asdf", "sdf,asdf"] {
-        println!("{} {}", v, r.is_match(v));
-    }
+fn main() -> Result<(), String> {
     let mut args = args();
     let third_arg = args
         .nth(1)
-        .ok_or("Expected path to input file as first argument")?;
+        .ok_or_else(|| String::from("Expected path to input file as first argument"))?;
 
     let input = read_to_string(third_arg).unwrap();
-    match miniclj::SExprsParser::new().parse(&input) {
-        Ok(exprs) => {
-            for expr in exprs {
-                println!("{}", expr)
-            }
-        }
-        Err(e) => println!("{:#?}", e),
+    let syntax_tree = miniclj::SExprsParser::new()
+        .parse(&input)
+        .map_err(|e| format!("{:#?}", e))?;
+    let scope = scope::Scope::new(None);
+
+    for expr in syntax_tree {
+        println!("{}", expr.eval(&scope));
     }
+
     Ok(())
 }

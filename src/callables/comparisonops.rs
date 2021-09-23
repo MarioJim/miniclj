@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{self, Display};
 
 use num::Rational64;
 
@@ -15,7 +15,7 @@ pub enum ComparisonOp {
 }
 
 impl Display for ComparisonOp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ComparisonOp::Eq => write!(f, "="),
             ComparisonOp::Ne => write!(f, "!="),

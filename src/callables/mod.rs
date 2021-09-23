@@ -1,7 +1,12 @@
 pub mod collectionfns;
 pub mod comparisonops;
+pub mod conditionals;
 pub mod factorops;
+pub mod groupingfns;
 pub mod iofns;
+pub mod lambdas;
+pub mod scopefns;
+pub mod seqtransformfns;
 
 pub use comparisonops::ComparisonOp;
 pub use factorops::FactorOp;

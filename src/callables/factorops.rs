@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{self, Display};
 
 use num::{Rational64, Zero};
 
@@ -13,7 +13,7 @@ pub enum FactorOp {
 }
 
 impl Display for FactorOp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             FactorOp::Add => write!(f, "+"),
             FactorOp::Sub => write!(f, "-"),

@@ -3,7 +3,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use crate::value::Value;
+use crate::{scope::Scope, value::Value};
 
 pub type SExprs = Vec<Box<SExpr>>;
 
@@ -79,5 +79,12 @@ impl Display for SExpr {
             SExpr::Map(_) => todo!(),
             SExpr::Value(v) => write!(f, "{}", v),
         }
+    }
+}
+
+impl SExpr {
+    pub fn eval(&self, _: &Scope) -> Value {
+        // TODO: Fill out logic
+        Value::String(format!("{:#?}", self))
     }
 }

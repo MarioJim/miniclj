@@ -7,7 +7,7 @@ use std::{
 use num::Rational64;
 
 use crate::{
-    ast::SExpr,
+    sexpr::SExpr,
     callables::{ComparisonOp, FactorOp},
     value::Value,
 };

@@ -1,5 +1,5 @@
 use std::{
-    fmt::Display,
+    fmt::{self, Display},
     io::{self, Read as ioRead},
 };
 
@@ -9,7 +9,7 @@ use crate::{callables::Callable, value::Value};
 struct Print;
 
 impl Display for Print {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "print")
     }
 }
@@ -31,7 +31,7 @@ impl Callable for Print {
 struct Read;
 
 impl Display for Read {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "read")
     }
 }
