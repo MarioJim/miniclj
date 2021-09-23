@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use num::Rational64;
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ComparisonOp {
@@ -28,7 +28,7 @@ impl Display for ComparisonOp {
 }
 
 impl Callable for ComparisonOp {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         if args.is_empty() {
             return Value::Error(String::from("Comparison function called with no arguments"));
         }
@@ -74,50 +74,59 @@ mod tests {
 
     #[test]
     fn test_eq() {
-        assert!(matches!(ComparisonOp::Eq.call(&[]), Value::Error(_)));
-        assert_eq!(ComparisonOp::Eq.call(&[n(2)]), n(1));
-        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2), n(3)]), n(0));
+        let scope = Scope::new(None);
+        assert!(matches!(
+            ComparisonOp::Eq.call(&[], &scope),
+            Value::Error(_)
+        ));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2)], &scope), n(1));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2)], &scope), n(1));
+        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2), n(3)], &scope), n(0));
     }
 
     #[test]
     fn test_ne() {
-        assert_eq!(ComparisonOp::Ne.call(&[n(2)]), n(0));
-        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2), n(3)]), n(1));
+        let scope = Scope::new(None);
+        assert_eq!(ComparisonOp::Ne.call(&[n(2)], &scope), n(0));
+        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2)], &scope), n(0));
+        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2), n(3)], &scope), n(1));
     }
 
     #[test]
     fn test_gt() {
-        assert_eq!(ComparisonOp::Gt.call(&[n(5)]), n(1));
-        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(2), n(1)]), n(0));
-        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(1), n(1)]), n(0));
-        assert_eq!(ComparisonOp::Gt.call(&[n(3), n(2), n(1)]), n(1));
+        let scope = Scope::new(None);
+        assert_eq!(ComparisonOp::Gt.call(&[n(5)], &scope), n(1));
+        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(2), n(1)], &scope), n(0));
+        assert_eq!(ComparisonOp::Gt.call(&[n(2), n(1), n(1)], &scope), n(0));
+        assert_eq!(ComparisonOp::Gt.call(&[n(3), n(2), n(1)], &scope), n(1));
     }
 
     #[test]
     fn test_lt() {
-        assert_eq!(ComparisonOp::Lt.call(&[n(5)]), n(1));
-        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(1), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(2)]), n(0));
-        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(3)]), n(1));
+        let scope = Scope::new(None);
+        assert_eq!(ComparisonOp::Lt.call(&[n(5)], &scope), n(1));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(1), n(2)], &scope), n(0));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(2)], &scope), n(0));
+        assert_eq!(ComparisonOp::Lt.call(&[n(1), n(2), n(3)], &scope), n(1));
     }
 
     #[test]
     fn test_ge() {
-        assert_eq!(ComparisonOp::Ge.call(&[n(5)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(2), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(1), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(&[n(3), n(2), n(1)]), n(1));
-        assert_eq!(ComparisonOp::Ge.call(&[n(1), n(2)]), n(0));
+        let scope = Scope::new(None);
+        assert_eq!(ComparisonOp::Ge.call(&[n(5)], &scope), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(2), n(1)], &scope), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(2), n(1), n(1)], &scope), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(3), n(2), n(1)], &scope), n(1));
+        assert_eq!(ComparisonOp::Ge.call(&[n(1), n(2)], &scope), n(0));
     }
 
     #[test]
     fn test_le() {
-        assert_eq!(ComparisonOp::Le.call(&[n(5)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(&[n(1), n(1), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(2)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(3)]), n(1));
-        assert_eq!(ComparisonOp::Le.call(&[n(2), n(1)]), n(0));
+        let scope = Scope::new(None);
+        assert_eq!(ComparisonOp::Le.call(&[n(5)], &scope), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(1), n(2)], &scope), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(2)], &scope), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(1), n(2), n(3)], &scope), n(1));
+        assert_eq!(ComparisonOp::Le.call(&[n(2), n(1)], &scope), n(0));
     }
 }

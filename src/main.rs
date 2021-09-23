@@ -8,6 +8,10 @@ mod scope;
 mod sexpr;
 mod value;
 
+pub use callables::Callable;
+pub use scope::Scope;
+pub use value::Value;
+
 fn main() -> Result<(), String> {
     let mut args = args();
     let third_arg = args

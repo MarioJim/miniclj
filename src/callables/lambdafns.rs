@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct LambdaFn;
@@ -12,7 +12,7 @@ impl Display for LambdaFn {
 }
 
 impl Callable for LambdaFn {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -27,7 +27,7 @@ impl Display for AnonymousLambdaFn {
 }
 
 impl Callable for AnonymousLambdaFn {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }

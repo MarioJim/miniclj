@@ -5,7 +5,7 @@ use std::{
 
 use num::{Rational64, Signed, Zero};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct Cons;
@@ -17,7 +17,7 @@ impl Display for Cons {
 }
 
 impl Callable for Cons {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         if args.len() != 2 {
             return Value::Error(String::from(
                 "cons called with wrong number of arguments, should be <new element> <collection>",
@@ -46,7 +46,7 @@ impl Display for Get {
 }
 
 impl Callable for Get {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         if args.len() != 2 {
             return Value::Error(String::from(
                 "get called with wrong number of arguments, should be <collection> <key>",
@@ -91,7 +91,7 @@ impl Display for Len {
 }
 
 impl Callable for Len {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         if args.len() != 1 {
             return Value::Error(String::from(
                 "len called with wrong number of arguments, should be <collection>",
@@ -123,13 +123,13 @@ impl Display for IsEmpty {
 }
 
 impl Callable for IsEmpty {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], scope: &Scope) -> Value {
         if args.len() != 1 {
             return Value::Error(String::from(
                 "empty? called with wrong number of arguments, should be <collection>",
             ));
         }
-        let len = Len.call(args);
+        let len = Len.call(args, scope);
         if let Value::Number(n) = len {
             if n.is_zero() {
                 Value::Number(Rational64::from_integer(1))

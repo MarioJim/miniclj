@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct Def;
@@ -12,7 +12,7 @@ impl Display for Def {
 }
 
 impl Callable for Def {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -27,7 +27,7 @@ impl Display for Defn {
 }
 
 impl Callable for Defn {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -42,7 +42,7 @@ impl Display for Let {
 }
 
 impl Callable for Let {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -57,7 +57,7 @@ impl Display for Loop {
 }
 
 impl Callable for Loop {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }

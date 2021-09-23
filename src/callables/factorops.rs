@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use num::{Rational64, Zero};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FactorOp {
@@ -24,7 +24,7 @@ impl Display for FactorOp {
 }
 
 impl Callable for FactorOp {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
         let maybe_nums = args
@@ -131,33 +131,49 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(FactorOp::Add.call(&[]), n(0));
-        assert_eq!(FactorOp::Add.call(&[n(2)]), n(2));
-        assert_eq!(FactorOp::Add.call(&[n(2), n(5), n(6), n(-3)]), n(10));
+        let scope = Scope::new(None);
+        assert_eq!(FactorOp::Add.call(&[], &scope), n(0));
+        assert_eq!(FactorOp::Add.call(&[n(2)], &scope), n(2));
+        assert_eq!(
+            FactorOp::Add.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            n(10)
+        );
     }
 
     #[test]
     fn test_sub() {
-        assert!(matches!(FactorOp::Sub.call(&[]), Value::Error(_)));
-        assert_eq!(FactorOp::Sub.call(&[n(2)]), n(-2));
-        assert_eq!(FactorOp::Sub.call(&[n(2), n(5), n(6), n(-3)]), n(-6));
+        let scope = Scope::new(None);
+        assert!(matches!(FactorOp::Sub.call(&[], &scope), Value::Error(_)));
+        assert_eq!(FactorOp::Sub.call(&[n(2)], &scope), n(-2));
+        assert_eq!(
+            FactorOp::Sub.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            n(-6)
+        );
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(FactorOp::Mul.call(&[]), n(1));
-        assert_eq!(FactorOp::Mul.call(&[n(2)]), n(2));
-        assert_eq!(FactorOp::Mul.call(&[n(2), n(5), n(6), n(-3)]), n(-180));
+        let scope = Scope::new(None);
+        assert_eq!(FactorOp::Mul.call(&[], &scope), n(1));
+        assert_eq!(FactorOp::Mul.call(&[n(2)], &scope), n(2));
+        assert_eq!(
+            FactorOp::Mul.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            n(-180)
+        );
     }
 
     #[test]
     fn test_div() {
+        let scope = Scope::new(None);
         let f = |num, den| Value::Number(Rational64::new(num, den));
-        assert!(matches!(FactorOp::Div.call(&[]), Value::Error(_)));
-        assert_eq!(FactorOp::Div.call(&[n(2)]), f(1, 2));
-        assert_eq!(FactorOp::Div.call(&[n(2), n(5), n(6), n(-3)]), f(-2, 90));
+        assert!(matches!(FactorOp::Div.call(&[], &scope), Value::Error(_)));
+        assert_eq!(FactorOp::Div.call(&[n(2)], &scope), f(1, 2));
+        assert_eq!(
+            FactorOp::Div.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            f(-2, 90)
+        );
         assert!(matches!(
-            FactorOp::Div.call(&[n(2), n(3), n(0)]),
+            FactorOp::Div.call(&[n(2), n(3), n(0)], &scope),
             Value::Error(_)
         ));
     }

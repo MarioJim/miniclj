@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct Do;
@@ -12,7 +12,7 @@ impl Display for Do {
 }
 
 impl Callable for Do {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }

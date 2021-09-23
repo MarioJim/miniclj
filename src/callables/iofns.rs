@@ -3,7 +3,7 @@ use std::{
     io::{self, Read as ioRead},
 };
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct Print;
@@ -15,7 +15,7 @@ impl Display for Print {
 }
 
 impl Callable for Print {
-    fn call(&self, args: &[Value]) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> Value {
         let mut it = args.iter();
         if let Some(v) = it.next() {
             print!("{}", v);
@@ -37,7 +37,7 @@ impl Display for Read {
 }
 
 impl Callable for Read {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         let mut buffer = String::new();
         let result = io::stdin().read_to_string(&mut buffer);
         if let Err(error) = result {

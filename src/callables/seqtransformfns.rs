@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use crate::{callables::Callable, value::Value};
+use crate::{Callable, Scope, Value};
 
 #[derive(Debug, Clone)]
 struct Map;
@@ -12,7 +12,7 @@ impl Display for Map {
 }
 
 impl Callable for Map {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -27,7 +27,7 @@ impl Display for Filter {
 }
 
 impl Callable for Filter {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
@@ -42,7 +42,7 @@ impl Display for Reduce {
 }
 
 impl Callable for Reduce {
-    fn call(&self, _: &[Value]) -> Value {
+    fn call(&self, _: &[Value], _: &Scope) -> Value {
         todo!()
     }
 }
