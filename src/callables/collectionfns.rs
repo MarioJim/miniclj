@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, fmt::Display};
 
 use num::{Rational64, Signed, Zero};
 
@@ -6,6 +6,12 @@ use crate::{callables::Callable, value::Value};
 
 #[derive(Debug, Clone)]
 struct Cons;
+
+impl Display for Cons {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "cons")
+    }
+}
 
 impl Callable for Cons {
     fn call(&self, args: &[Value]) -> Value {
@@ -29,6 +35,12 @@ impl Callable for Cons {
 
 #[derive(Debug, Clone)]
 struct Get;
+
+impl Display for Get {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "get")
+    }
+}
 
 impl Callable for Get {
     fn call(&self, args: &[Value]) -> Value {
@@ -69,6 +81,12 @@ impl Callable for Get {
 #[derive(Debug, Clone)]
 struct Len;
 
+impl Display for Len {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "len")
+    }
+}
+
 impl Callable for Len {
     fn call(&self, args: &[Value]) -> Value {
         if args.len() != 1 {
@@ -94,6 +112,12 @@ impl Callable for Len {
 
 #[derive(Debug, Clone)]
 struct IsEmpty;
+
+impl Display for IsEmpty {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "empty?")
+    }
+}
 
 impl Callable for IsEmpty {
     fn call(&self, args: &[Value]) -> Value {

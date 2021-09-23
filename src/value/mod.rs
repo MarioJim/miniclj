@@ -16,7 +16,6 @@ mod vector;
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    DefMacro,
     Fn(Box<dyn Callable>),
     Error(String),
 
@@ -35,8 +34,7 @@ pub enum Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::DefMacro, Self::DefMacro) => true,
-            (Self::Fn(_), Self::Fn(_)) => false,
+            (Self::Fn(f1), Self::Fn(f2)) => f1.equals(f2.as_ref()),
             (Self::Error(_), Self::Error(_)) => false,
             (Self::List(l1), Self::List(l2)) => l1 == l2,
             (Self::Vector(v1), Self::Vector(v2)) => v1 == v2,
@@ -55,8 +53,7 @@ impl Eq for Value {}
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let string = match self {
-            Self::DefMacro => String::from("#def"),
-            Self::Fn(_) => String::from("#function"),
+            Self::Fn(f) => format!("#function[{}]", f),
             Self::Error(e) => format!("#error \"{}\"", e),
             Self::List(l) => l.to_string(),
             Self::Vector(v) => v.to_string(),
@@ -72,14 +69,11 @@ impl Display for Value {
 }
 
 #[derive(Hash)]
-enum ValueHash {
-    DefMacro,
-    Nil,
-}
+struct NilHash;
+
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Value::DefMacro => ValueHash::DefMacro.hash(state),
             Value::Fn(_) => {
                 let x: u16 = random();
                 x.hash(state)
@@ -92,7 +86,7 @@ impl Hash for Value {
             Value::Identifier(i) => i.hash(state),
             Value::String(s) => s.hash(state),
             Value::Number(n) => n.hash(state),
-            Value::Nil => ValueHash::Nil.hash(state),
+            Value::Nil => NilHash.hash(state),
         }
     }
 }
