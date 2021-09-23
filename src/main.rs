@@ -5,7 +5,6 @@ use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(#[allow(clippy::all)] pub miniclj);
 mod callables;
 mod scope;
-mod sexpr;
 mod value;
 
 pub use callables::Callable;
@@ -25,7 +24,7 @@ fn main() -> Result<(), String> {
     let scope = scope::Scope::new(None);
 
     for expr in syntax_tree {
-        println!("{}", expr.eval(&scope));
+        println!("{:#?}", expr.eval(&scope));
     }
 
     Ok(())

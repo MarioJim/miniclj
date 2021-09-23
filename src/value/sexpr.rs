@@ -3,11 +3,11 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use crate::{scope::Scope, value::Value};
+use crate::{Scope, Value};
 
 pub type SExprs = Vec<Box<SExpr>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SExpr {
     Expr(SExprs),
     Lambda(SExprs),
@@ -85,6 +85,6 @@ impl Display for SExpr {
 impl SExpr {
     pub fn eval(&self, _: &Scope) -> Value {
         // TODO: Fill out logic
-        Value::String(format!("{:#?}", self))
+        Value::SExpr(self.clone())
     }
 }

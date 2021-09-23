@@ -12,10 +12,14 @@ use crate::callables::Callable;
 mod list;
 mod map;
 mod set;
+mod sexpr;
 mod vector;
+
+pub use sexpr::SExpr;
 
 #[derive(Debug, Clone)]
 pub enum Value {
+    SExpr(sexpr::SExpr),
     Fn(Box<dyn Callable>),
     Error(String),
 
@@ -34,7 +38,7 @@ pub enum Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Fn(f1), Self::Fn(f2)) => f1.equals(f2.as_ref()),
+            (Self::SExpr(s1), Self::SExpr(s2)) => s1 == s2,
             (Self::Error(_), Self::Error(_)) => false,
             (Self::List(l1), Self::List(l2)) => l1 == l2,
             (Self::Vector(v1), Self::Vector(v2)) => v1 == v2,
@@ -53,6 +57,7 @@ impl Eq for Value {}
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let string = match self {
+            Self::SExpr(s) => s.to_string(),
             Self::Fn(f) => format!("#function[{}]", f),
             Self::Error(e) => format!("#error \"{}\"", e),
             Self::List(l) => l.to_string(),
@@ -74,7 +79,7 @@ struct NilHash;
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Value::Fn(_) => {
+            Value::SExpr(_) | Value::Fn(_) => {
                 let x: u16 = random();
                 x.hash(state)
             }

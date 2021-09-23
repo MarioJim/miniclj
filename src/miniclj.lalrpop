@@ -7,9 +7,9 @@ use std::{
 use num::Rational64;
 
 use crate::{
-    sexpr::SExpr,
     callables::{ComparisonOp, FactorOp},
-    value::Value,
+    value::SExpr,
+    Value,
 };
 
 grammar;
