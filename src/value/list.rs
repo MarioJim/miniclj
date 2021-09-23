@@ -6,7 +6,10 @@ use std::{
 
 use num::{Rational64, Signed};
 
-use crate::value::Value;
+use crate::{
+    callables::{ExecutionResult, RuntimeError},
+    value::Value,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct List(VecDeque<Value>);
@@ -36,23 +39,26 @@ impl List {
         Value::List(List(cloned_list))
     }
 
-    pub fn get(&self, key: &Value) -> Value {
+    pub fn get(&self, key: &Value) -> ExecutionResult {
         if let Value::Number(n) = key {
             if n.is_integer() && !n.is_negative() {
                 if n < &Rational64::from_integer(self.len().try_into().unwrap()) {
                     let index = (*n.numer()).try_into().unwrap();
-                    self.0.get(index).unwrap_or(&Value::Nil).clone()
+                    Ok(self.0.get(index).unwrap_or(&Value::Nil).clone())
                 } else {
-                    Value::Nil
+                    Ok(Value::Nil)
                 }
             } else {
-                Value::Error(format!(
+                Err(RuntimeError::GenericError(format!(
                     "List can only be indexed by positive integers, not by {}",
                     n
-                ))
+                )))
             }
         } else {
-            Value::Error(format!("List can't be indexed by {}", key))
+            Err(RuntimeError::GenericError(format!(
+                "List can't be indexed by {}",
+                key
+            )))
         }
     }
 

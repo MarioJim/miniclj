@@ -6,7 +6,7 @@ use std::{
 
 use num::Rational64;
 
-use crate::value::Value;
+use crate::{callables::ExecutionResult, value::Value};
 
 #[derive(Debug, Eq, Clone)]
 pub struct Set(HashSet<Value>);
@@ -52,9 +52,9 @@ impl Set {
         Value::Set(Set(cloned_set))
     }
 
-    pub fn get(&self, key: &Value) -> Value {
+    pub fn get(&self, key: &Value) -> ExecutionResult {
         let v = if self.0.contains(key) { 1 } else { 0 };
-        Value::Number(Rational64::from_integer(v))
+        Ok(Value::Number(Rational64::from_integer(v)))
     }
 
     pub fn len(&self) -> usize {

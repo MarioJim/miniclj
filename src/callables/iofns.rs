@@ -1,21 +1,19 @@
-use std::{
-    fmt::{self, Display},
-    io::{self, Read as ioRead},
-};
+use std::io::{self, Read as ioRead};
 
-use crate::{Callable, Scope, Value};
+use crate::{
+    callables::{Callable, ExecutionResult, RuntimeError},
+    Scope, Value,
+};
 
 #[derive(Debug, Clone)]
 struct Print;
 
-impl Display for Print {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "print")
-    }
-}
-
 impl Callable for Print {
-    fn call(&self, args: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "print"
+    }
+
+    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         let mut it = args.iter();
         if let Some(v) = it.next() {
             print!("{}", v);
@@ -23,27 +21,27 @@ impl Callable for Print {
         for v in it {
             print!(" {}", v);
         }
-        Value::Nil
+        Ok(Value::Nil)
     }
 }
+
+display_for_callable!(Print);
 
 #[derive(Debug, Clone)]
 struct Read;
 
-impl Display for Read {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "read")
+impl Callable for Read {
+    fn name(&self) -> &'static str {
+        "read"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
+        let mut buffer = String::new();
+        io::stdin()
+            .read_to_string(&mut buffer)
+            .map_err(|e| RuntimeError::GenericError(format!("{}", e)))?;
+        Ok(Value::String(buffer))
     }
 }
 
-impl Callable for Read {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
-        let mut buffer = String::new();
-        let result = io::stdin().read_to_string(&mut buffer);
-        if let Err(error) = result {
-            Value::Error(format!("{}", error))
-        } else {
-            Value::String(buffer)
-        }
-    }
-}
+display_for_callable!(Read);

@@ -7,7 +7,6 @@ mod callables;
 mod scope;
 mod value;
 
-pub use callables::Callable;
 pub use scope::Scope;
 pub use value::Value;
 

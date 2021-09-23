@@ -1,48 +1,49 @@
-use std::fmt::{self, Display};
-
-use crate::{Callable, Scope, Value};
+use crate::{
+    callables::{Callable, ExecutionResult},
+    Scope, Value,
+};
 
 #[derive(Debug, Clone)]
 struct Map;
 
-impl Display for Map {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "map")
-    }
-}
-
 impl Callable for Map {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "map"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Map);
 
 #[derive(Debug, Clone)]
 struct Filter;
 
-impl Display for Filter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "filter")
-    }
-}
-
 impl Callable for Filter {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "filter"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Filter);
 
 #[derive(Debug, Clone)]
 struct Reduce;
 
-impl Display for Reduce {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "reduce")
-    }
-}
-
 impl Callable for Reduce {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "reduce"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Reduce);

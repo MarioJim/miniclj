@@ -1,48 +1,63 @@
-use std::fmt::{self, Display};
+use crate::{
+    callables::{Callable, ExecutionResult},
+    Scope, Value,
+};
 
-use crate::{Callable, Scope, Value};
+#[derive(Debug, Clone)]
+struct IsTrue;
+
+impl Callable for IsTrue {
+    fn name(&self) -> &'static str {
+        "true?"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
+        todo!()
+    }
+}
+
+display_for_callable!(IsTrue);
 
 #[derive(Debug, Clone)]
 struct If;
 
-impl Display for If {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "if")
-    }
-}
-
 impl Callable for If {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "if"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(If);
 
 #[derive(Debug, Clone)]
 struct And;
 
-impl Display for And {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "and")
-    }
-}
-
 impl Callable for And {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "and"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(And);
 
 #[derive(Debug, Clone)]
 struct Or;
 
-impl Display for Or {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "or")
-    }
-}
-
 impl Callable for Or {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "or"
+    }
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Or);

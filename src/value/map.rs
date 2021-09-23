@@ -6,7 +6,10 @@ use std::{
 
 use num::Rational64;
 
-use crate::value::Value;
+use crate::{
+    callables::{ExecutionResult, RuntimeError},
+    value::Value,
+};
 
 #[derive(Debug, Eq, Clone)]
 pub struct Map(HashMap<Value, Value>);
@@ -46,24 +49,24 @@ impl PartialEq for Map {
 }
 
 impl Map {
-    pub fn cons(&self, entry: Value) -> Value {
+    pub fn cons(&self, entry: Value) -> ExecutionResult {
         match entry {
             Value::Vector(v) if v.len() == 2 => {
                 let key_idx = Value::Number(Rational64::from_integer(0));
                 let val_idx = Value::Number(Rational64::from_integer(1));
 
                 let mut cloned_map = self.0.clone();
-                cloned_map.insert(v.get(&key_idx), v.get(&val_idx));
-                Value::Map(Map(cloned_map))
+                cloned_map.insert(v.get(&key_idx).unwrap(), v.get(&val_idx).unwrap());
+                Ok(Value::Map(Map(cloned_map)))
             }
-            _ => Value::Error(String::from(
+            _ => Err(RuntimeError::GenericError(String::from(
                 "Only vectors with two elements (key-value pair) can be added to a map",
-            )),
+            ))),
         }
     }
 
-    pub fn get(&self, key: &Value) -> Value {
-        self.0.get(key).unwrap_or(&Value::Nil).clone()
+    pub fn get(&self, key: &Value) -> ExecutionResult {
+        Ok(self.0.get(key).cloned().unwrap_or(Value::Nil))
     }
 
     pub fn len(&self) -> usize {

@@ -1,33 +1,34 @@
-use std::fmt::{self, Display};
-
-use crate::{Callable, Scope, Value};
+use crate::{
+    callables::{Callable, ExecutionResult},
+    Scope, Value,
+};
 
 #[derive(Debug, Clone)]
 struct LambdaFn;
 
-impl Display for LambdaFn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "fn")
-    }
-}
-
 impl Callable for LambdaFn {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "fn"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(LambdaFn);
 
 #[derive(Debug, Clone)]
 struct AnonymousLambdaFn;
 
-impl Display for AnonymousLambdaFn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "")
-    }
-}
-
 impl Callable for AnonymousLambdaFn {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        ""
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(AnonymousLambdaFn);

@@ -1,78 +1,79 @@
-use std::fmt::{self, Display};
-
-use crate::{Callable, Scope, Value};
+use crate::{
+    callables::{Callable, ExecutionResult},
+    Scope, Value,
+};
 
 #[derive(Debug, Clone)]
 struct Def;
 
-impl Display for Def {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "def")
-    }
-}
-
 impl Callable for Def {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "def"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Def);
 
 #[derive(Debug, Clone)]
 struct Defn;
 
-impl Display for Defn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "defn")
-    }
-}
-
 impl Callable for Defn {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "defn"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Defn);
 
 #[derive(Debug, Clone)]
 struct Let;
 
-impl Display for Let {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "let")
-    }
-}
-
 impl Callable for Let {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "let"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Let);
 
 #[derive(Debug, Clone)]
 struct Loop;
 
-impl Display for Loop {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "loop")
-    }
-}
-
 impl Callable for Loop {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "loop"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Loop);
 
 #[derive(Debug, Clone)]
 struct Recur;
 
-impl Display for Recur {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "recur")
-    }
-}
-
 impl Callable for Recur {
-    fn call(&self, _: &[Value], _: &Scope) -> Value {
+    fn name(&self) -> &'static str {
+        "recur"
+    }
+
+    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
         todo!()
     }
 }
+
+display_for_callable!(Recur);

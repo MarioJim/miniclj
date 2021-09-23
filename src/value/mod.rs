@@ -21,7 +21,6 @@ pub use sexpr::SExpr;
 pub enum Value {
     SExpr(sexpr::SExpr),
     Fn(Box<dyn Callable>),
-    Error(String),
 
     List(list::List),
     Vector(vector::Vector),
@@ -38,16 +37,16 @@ pub enum Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::SExpr(s1), Self::SExpr(s2)) => s1 == s2,
-            (Self::Error(_), Self::Error(_)) => false,
-            (Self::List(l1), Self::List(l2)) => l1 == l2,
-            (Self::Vector(v1), Self::Vector(v2)) => v1 == v2,
-            (Self::Set(s1), Self::Set(s2)) => s1 == s2,
-            (Self::Map(m1), Self::Map(m2)) => m1 == m2,
-            (Self::Identifier(i1), Self::Identifier(i2)) => i1 == i2,
-            (Self::String(s1), Self::String(s2)) => s1 == s2,
-            (Self::Number(n1), Self::Number(n2)) => n1 == n2,
-            (Self::Nil, Self::Nil) => true,
+            (Value::SExpr(r), Value::SExpr(l)) => r == l,
+            (Value::Fn(r), Value::Fn(l)) => r.name() == l.name(),
+            (Value::List(r), Value::List(l)) => r == l,
+            (Value::Vector(r), Value::Vector(l)) => r == l,
+            (Value::Set(r), Value::Set(l)) => r == l,
+            (Value::Map(r), Value::Map(l)) => r == l,
+            (Value::Identifier(r), Value::Identifier(l)) => r == l,
+            (Value::String(r), Value::String(l)) => r == l,
+            (Value::Number(r), Value::Number(l)) => r == l,
+            (Value::Nil, Value::Nil) => true,
             _ => false,
         }
     }
@@ -58,8 +57,7 @@ impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let string = match self {
             Self::SExpr(s) => s.to_string(),
-            Self::Fn(f) => format!("#function[{}]", f),
-            Self::Error(e) => format!("#error \"{}\"", e),
+            Self::Fn(f) => format!("#function[{}]", f.name()),
             Self::List(l) => l.to_string(),
             Self::Vector(v) => v.to_string(),
             Self::Set(s) => s.to_string(),
@@ -83,7 +81,6 @@ impl Hash for Value {
                 let x: u16 = random();
                 x.hash(state)
             }
-            Value::Error(s) => s.hash(state),
             Value::List(l) => l.hash(state),
             Value::Vector(v) => v.hash(state),
             Value::Set(s) => s.hash(state),
@@ -92,6 +89,23 @@ impl Hash for Value {
             Value::String(s) => s.hash(state),
             Value::Number(n) => n.hash(state),
             Value::Nil => NilHash.hash(state),
+        }
+    }
+}
+
+impl Value {
+    pub fn type_str(&self) -> &'static str {
+        match self {
+            Value::SExpr(_) => "an s-expression",
+            Value::Fn(_) => "a function",
+            Value::List(_) => "a list",
+            Value::Vector(_) => "a vector",
+            Value::Set(_) => "a set",
+            Value::Map(_) => "a map",
+            Value::Identifier(_) => "a identifier",
+            Value::String(_) => "a string",
+            Value::Number(_) => "a number",
+            Value::Nil => "nil",
         }
     }
 }

@@ -1,8 +1,9 @@
-use std::fmt::{self, Display};
-
 use num::{Rational64, Zero};
 
-use crate::{Callable, Scope, Value};
+use crate::{
+    callables::{Callable, ExecutionResult, RuntimeError},
+    Scope, Value,
+};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum FactorOp {
@@ -12,114 +13,64 @@ pub enum FactorOp {
     Div,
 }
 
-impl Display for FactorOp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Callable for FactorOp {
+    fn name(&self) -> &'static str {
         match self {
-            FactorOp::Add => write!(f, "+"),
-            FactorOp::Sub => write!(f, "-"),
-            FactorOp::Mul => write!(f, "*"),
-            FactorOp::Div => write!(f, "/"),
+            FactorOp::Add => "+",
+            FactorOp::Sub => "-",
+            FactorOp::Mul => "*",
+            FactorOp::Div => "/",
         }
     }
-}
 
-impl Callable for FactorOp {
-    fn call(&self, args: &[Value], _: &Scope) -> Value {
+    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
         let maybe_nums = args
             .iter()
-            .map(|a| {
-                if let Value::Number(n) = a {
+            .map(|v| {
+                if let Value::Number(n) = v {
                     Ok(n)
                 } else {
-                    Err(a)
+                    Err(RuntimeError::WrongArgument(
+                        self.name(),
+                        "a number",
+                        v.type_str(),
+                    ))
                 }
             })
-            .collect::<Result<Vec<&Rational64>, &Value>>();
+            .collect::<Result<Vec<&Rational64>, RuntimeError>>();
         match self {
-            FactorOp::Add => match maybe_nums {
-                Ok(v) => {
-                    let result = v.into_iter().fold(zero, |a, b| a + b);
-                    Value::Number(result)
-                }
-                Err(v) => Value::Error(format!("Addition can't be called with argument {}", v)),
-            },
+            FactorOp::Add => {
+                maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(zero, |a, b| a + b)))
+            }
             FactorOp::Sub => match args.len() {
-                0 => Value::Error(String::from("Substraction called with no arguments")),
-                1 => {
-                    if let Value::Number(n) = args[0] {
-                        Value::Number(n * Rational64::from_integer(-1))
-                    } else {
-                        Value::Error(format!(
-                            "Substraction can't be called with argument {}",
-                            args[0]
-                        ))
-                    }
-                }
-                _ => {
-                    let nums = match maybe_nums {
-                        Ok(v) => v,
-                        Err(v) => {
-                            return Value::Error(format!(
-                                "Substraction can't be called with argument {}",
-                                v
-                            ));
-                        }
-                    };
-
+                0 => Err(RuntimeError::ArityError(self.name(), "<...args>")),
+                1 => maybe_nums.map(|nums| Value::Number(-nums[0])),
+                _ => maybe_nums.map(|nums| {
                     Value::Number(nums[0] - nums[1..].iter().fold(zero, |a, b| a + *b))
-                }
+                }),
             },
-            FactorOp::Mul => match maybe_nums {
-                Ok(v) => {
-                    let result = v.into_iter().fold(one, |a, b| a * b);
-                    Value::Number(result)
-                }
-                Err(v) => Value::Error(format!(
-                    "Multiplication can't be called with argument {}",
-                    v
-                )),
-            },
+            FactorOp::Mul => {
+                maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(one, |a, b| a * b)))
+            }
             FactorOp::Div => match args.len() {
-                0 => Value::Error(String::from("Division called with no arguments")),
-                1 => {
-                    if let Value::Number(n) = args[0] {
-                        if n.is_zero() {
-                            Value::Error(String::from("Division by zero"))
-                        } else {
-                            Value::Number(n.recip())
-                        }
-                    } else {
-                        Value::Error(format!(
-                            "Division can't be called with argument {}",
-                            args[0]
-                        ))
-                    }
-                }
-                _ => {
-                    let nums = match maybe_nums {
-                        Ok(v) => v,
-                        Err(v) => {
-                            return Value::Error(format!(
-                                "Division can't be called with argument {}",
-                                v
-                            ));
-                        }
-                    };
-
+                0 => Err(RuntimeError::ArityError(self.name(), "<...args>")),
+                1 => maybe_nums.map(|nums| Value::Number(nums[0].recip())),
+                _ => maybe_nums.and_then(|nums| {
                     let denominator = nums[1..].iter().fold(one, |a, b| a * *b);
-
                     if denominator.is_zero() {
-                        Value::Error(String::from("Division by zero"))
+                        Err(RuntimeError::DivisionByZero)
                     } else {
-                        Value::Number(nums[0] / denominator)
+                        Ok(Value::Number(nums[0] / denominator))
                     }
-                }
+                }),
             },
         }
     }
 }
+
+display_for_callable!(FactorOp);
 
 #[cfg(test)]
 mod tests {
@@ -132,10 +83,12 @@ mod tests {
     #[test]
     fn test_add() {
         let scope = Scope::new(None);
-        assert_eq!(FactorOp::Add.call(&[], &scope), n(0));
-        assert_eq!(FactorOp::Add.call(&[n(2)], &scope), n(2));
+        assert_eq!(FactorOp::Add.call(&[], &scope).unwrap(), n(0));
+        assert_eq!(FactorOp::Add.call(&[n(2)], &scope).unwrap(), n(2));
         assert_eq!(
-            FactorOp::Add.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            FactorOp::Add
+                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .unwrap(),
             n(10)
         );
     }
@@ -143,10 +96,15 @@ mod tests {
     #[test]
     fn test_sub() {
         let scope = Scope::new(None);
-        assert!(matches!(FactorOp::Sub.call(&[], &scope), Value::Error(_)));
-        assert_eq!(FactorOp::Sub.call(&[n(2)], &scope), n(-2));
+        assert!(matches!(
+            FactorOp::Sub.call(&[], &scope),
+            Err(RuntimeError::ArityError(..))
+        ));
+        assert_eq!(FactorOp::Sub.call(&[n(2)], &scope).unwrap(), n(-2));
         assert_eq!(
-            FactorOp::Sub.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            FactorOp::Sub
+                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .unwrap(),
             n(-6)
         );
     }
@@ -154,10 +112,12 @@ mod tests {
     #[test]
     fn test_mul() {
         let scope = Scope::new(None);
-        assert_eq!(FactorOp::Mul.call(&[], &scope), n(1));
-        assert_eq!(FactorOp::Mul.call(&[n(2)], &scope), n(2));
+        assert_eq!(FactorOp::Mul.call(&[], &scope).unwrap(), n(1));
+        assert_eq!(FactorOp::Mul.call(&[n(2)], &scope).unwrap(), n(2));
         assert_eq!(
-            FactorOp::Mul.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            FactorOp::Mul
+                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .unwrap(),
             n(-180)
         );
     }
@@ -166,15 +126,20 @@ mod tests {
     fn test_div() {
         let scope = Scope::new(None);
         let f = |num, den| Value::Number(Rational64::new(num, den));
-        assert!(matches!(FactorOp::Div.call(&[], &scope), Value::Error(_)));
-        assert_eq!(FactorOp::Div.call(&[n(2)], &scope), f(1, 2));
+        assert!(matches!(
+            FactorOp::Div.call(&[], &scope),
+            Err(RuntimeError::ArityError(..))
+        ));
+        assert_eq!(FactorOp::Div.call(&[n(2)], &scope).unwrap(), f(1, 2));
         assert_eq!(
-            FactorOp::Div.call(&[n(2), n(5), n(6), n(-3)], &scope),
+            FactorOp::Div
+                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .unwrap(),
             f(-2, 90)
         );
         assert!(matches!(
             FactorOp::Div.call(&[n(2), n(3), n(0)], &scope),
-            Value::Error(_)
+            Err(RuntimeError::DivisionByZero)
         ));
     }
 }
