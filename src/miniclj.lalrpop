@@ -40,18 +40,20 @@ Value: Box<Value> = {
     FactorOp => Box::new(Value::Fn(Box::new(<>))),
     Identifier => Box::new(Value::Identifier(<>)),
     StringLiteral => Box::new(Value::String(<>)),
+    NumberLiteral => Box::new(Value::Number(<>)),
+};
+
+pub NumberLiteral: Rational64 = {
     DecimalLiteral => {
         let num_parts: Vec<&str> = <>.split(".").collect();
         let integer = i64::from_str(num_parts[0]).unwrap();
         let decimals = i64::from_str(num_parts[1]).unwrap();
         let exp = num_parts[1].len() as u32;
         let numer = (integer * 10_i64.pow(exp)) + decimals;
-        let fraction = Rational64::new(numer, 10_i64.pow(exp));
-        Box::new(Value::Number(fraction))
+        Rational64::new(numer, 10_i64.pow(exp))
     },
     IntegerLiteral => {
-        let integer = Rational64::from_str(<>).unwrap();
-        Box::new(Value::Number(integer))
+        Rational64::from_str(<>).unwrap()
     },
 };
 
