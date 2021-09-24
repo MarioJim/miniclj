@@ -47,7 +47,10 @@ pub NumberLiteral: Rational64 = {
     DecimalLiteral => {
         let num_parts: Vec<&str> = <>.split(".").collect();
         let integer = i64::from_str(num_parts[0]).unwrap();
-        let decimals = i64::from_str(num_parts[1]).unwrap();
+        let mut decimals = i64::from_str(num_parts[1]).unwrap();
+        if integer < 0 {
+            decimals *= -1;
+        }
         let exp = num_parts[1].len() as u32;
         let numer = (integer * 10_i64.pow(exp)) + decimals;
         Rational64::new(numer, 10_i64.pow(exp))

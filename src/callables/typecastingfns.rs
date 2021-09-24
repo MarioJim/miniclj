@@ -49,9 +49,23 @@ impl Callable for StringCast {
     }
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
-        Ok(Value::String(
-            args.iter().map(|v| format!("{}", v)).collect(),
-        ))
+        match args
+            .iter()
+            .map(|v| match v {
+                Value::String(s) => Ok(String::from(s)),
+                Value::Number(n) => Ok(format!("{}", n)),
+                Value::Nil => Ok(String::from("nil")),
+                _ => Err(v.type_str()),
+            })
+            .collect::<Result<String, &'static str>>()
+        {
+            Ok(s) => Ok(Value::String(s)),
+            Err(v) => Err(RuntimeError::WrongArgument(
+                self.name(),
+                "a primitive value",
+                v,
+            )),
+        }
     }
 }
 
@@ -130,3 +144,54 @@ impl Callable for Chr {
 }
 
 display_for_callable!(Chr);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn s(s: &str) -> Value {
+        Value::String(String::from(s))
+    }
+
+    fn n(n: i64, d: i64) -> Value {
+        Value::Number(Rational64::new(n, d))
+    }
+
+    #[test]
+    fn test_num() {
+        let scope = Scope::new(None);
+        assert_eq!(NumberCast.call(&[s("1234")], &scope).unwrap(), n(1234, 1));
+        assert_eq!(
+            NumberCast.call(&[s("-12.32")], &scope).unwrap(),
+            n(-1232, 100)
+        );
+        assert!(NumberCast.call(&[s("1.1.1")], &scope).is_err());
+        assert!(NumberCast.call(&[s("testing")], &scope).is_err());
+    }
+
+    #[test]
+    fn test_str() {
+        let scope = Scope::new(None);
+        assert_eq!(StringCast.call(&[], &scope).unwrap(), s(""));
+        assert_eq!(
+            StringCast.call(&[s("testA"), s("testB")], &scope).unwrap(),
+            s("testAtestB")
+        );
+        assert_eq!(
+            StringCast
+                .call(&[n(12, 1), s("str"), n(1, 100), Value::Nil], &scope)
+                .unwrap(),
+            s("12str1/100nil")
+        );
+    }
+
+    #[test]
+    fn test_chr_ord() {
+        let scope = Scope::new(None);
+        for chr in ["x", "0", "1", ",", "\""] {
+            let val_str = Value::String(String::from(chr));
+            let val_num = Ord.call(&[val_str.clone()], &scope).unwrap();
+            assert_eq!(Chr.call(&[val_num], &scope).unwrap(), val_str);
+        }
+    }
+}
