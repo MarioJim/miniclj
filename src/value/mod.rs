@@ -7,7 +7,10 @@ use std::{
 use num::Rational64;
 use rand::random;
 
-use crate::callables::Callable;
+use crate::{
+    callables::{Callable, ExecutionResult, RuntimeError},
+    Scope,
+};
 
 mod list;
 mod map;
@@ -107,5 +110,28 @@ impl Value {
             Value::Number(_) => "a number",
             Value::Nil => "nil",
         }
+    }
+
+    pub fn eval(&self, scope: &Scope) -> ExecutionResult {
+        match self {
+            Value::SExpr(_) => todo!(),
+            Value::Identifier(id) => match scope.get(id) {
+                Some(val) => val.eval(scope),
+                None => Err(RuntimeError::NotDefined(id.clone())),
+            },
+            _ => Ok(self.clone()),
+        }
+    }
+}
+
+impl From<i64> for Value {
+    fn from(n: i64) -> Self {
+        Value::Number(Rational64::from_integer(n))
+    }
+}
+
+impl From<bool> for Value {
+    fn from(b: bool) -> Self {
+        Value::from(if b { 1 } else { 0 })
     }
 }

@@ -1,6 +1,6 @@
-use std::convert::TryInto;
+use std::convert::TryFrom;
 
-use num::{Rational64, Signed, Zero};
+use num::{Signed, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
@@ -19,9 +19,8 @@ impl Callable for First {
         if args.len() != 1 {
             return Err(RuntimeError::ArityError(self.name(), "<sequence>"));
         }
-        let idx_first = Value::Number(Rational64::from_integer(0));
         let coll = args.iter().next().unwrap();
-        let get_args = &[coll.clone(), idx_first];
+        let get_args = &[coll.clone(), Value::from(0)];
         Get.call(get_args, scope)
     }
 }
@@ -107,7 +106,7 @@ impl Callable for Get {
                 if let Value::Number(n) = &args[0] {
                     if n.is_integer() && !n.is_negative() {
                         Ok(s.chars()
-                            .nth((*n.numer()).try_into().unwrap())
+                            .nth(usize::try_from(*n.numer()).unwrap())
                             .map(|chr| Value::String(String::from(chr)))
                             .unwrap_or(Value::Nil))
                     } else {
@@ -160,9 +159,7 @@ impl Callable for Len {
                 ))
             }
         };
-        Ok(Value::Number(Rational64::from_integer(
-            len.try_into().unwrap(),
-        )))
+        Ok(Value::from(i64::try_from(len).unwrap()))
     }
 }
 
@@ -182,8 +179,7 @@ impl Callable for IsEmpty {
         }
         let len = Len.call(args, scope);
         if let Ok(Value::Number(n)) = len {
-            let boolean = if n.is_zero() { 1 } else { 0 };
-            Ok(Value::Number(Rational64::from_integer(boolean)))
+            Ok(Value::from(n.is_zero()))
         } else {
             len
         }

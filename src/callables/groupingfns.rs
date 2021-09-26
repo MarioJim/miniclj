@@ -11,8 +11,12 @@ impl Callable for Do {
         "do"
     }
 
-    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
-        todo!()
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        let mut result = Value::Nil;
+        for arg in args {
+            result = arg.eval(scope)?;
+        }
+        Ok(result)
     }
 }
 

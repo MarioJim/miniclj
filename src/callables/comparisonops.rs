@@ -50,15 +50,15 @@ impl Callable for ComparisonOp {
                 .collect()
         }
         let nm = self.name();
-        match self {
+        let result = match self {
             ComparisonOp::Eq => Ok(args.iter().all(|v| v == &args[0])),
             ComparisonOp::Ne => Ok(args.iter().any(|v| v != &args[0])),
             ComparisonOp::Gt => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] > n[1])),
             ComparisonOp::Lt => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] < n[1])),
             ComparisonOp::Ge => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] >= n[1])),
             ComparisonOp::Le => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] <= n[1])),
-        }
-        .map(|boolean| Value::Number(Rational64::from_integer(if boolean { 1 } else { 0 })))
+        }?;
+        Ok(Value::from(result))
     }
 }
 
@@ -69,7 +69,7 @@ mod tests {
     use super::*;
 
     fn n(n: i64) -> Value {
-        Value::Number(Rational64::from_integer(n))
+        Value::from(n)
     }
 
     #[test]

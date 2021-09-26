@@ -4,8 +4,6 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use num::Rational64;
-
 use crate::{
     callables::{ExecutionResult, RuntimeError},
     value::Value,
@@ -52,11 +50,11 @@ impl Map {
     pub fn cons(&self, entry: Value) -> ExecutionResult {
         match entry {
             Value::Vector(v) if v.len() == 2 => {
-                let key_idx = Value::Number(Rational64::from_integer(0));
-                let val_idx = Value::Number(Rational64::from_integer(1));
-
                 let mut cloned_map = self.0.clone();
-                cloned_map.insert(v.get(&key_idx).unwrap(), v.get(&val_idx).unwrap());
+                cloned_map.insert(
+                    v.get(&Value::from(0)).unwrap(),
+                    v.get(&Value::from(1)).unwrap(),
+                );
                 Ok(Value::Map(Map(cloned_map)))
             }
             _ => Err(RuntimeError::GenericError(String::from(

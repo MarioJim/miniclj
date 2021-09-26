@@ -1,4 +1,4 @@
-use num::{Rational64, Signed};
+use num::Signed;
 
 use crate::{
     callables::{Callable, ExecutionResult},
@@ -85,7 +85,7 @@ impl Callable for Ord {
         }
         if let Value::String(s) = &args[0] {
             match s.chars().next() {
-                Some(c) => Ok(Value::Number(Rational64::from_integer(c as i64))),
+                Some(c) => Ok(Value::from(c as i64)),
                 None => Err(RuntimeError::WrongArgument(
                     self.name(),
                     "a string with at least one character",
@@ -147,6 +147,8 @@ display_for_callable!(Chr);
 
 #[cfg(test)]
 mod tests {
+    use num::Rational64;
+
     use super::*;
 
     fn s(s: &str) -> Value {

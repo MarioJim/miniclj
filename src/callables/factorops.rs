@@ -77,7 +77,7 @@ mod tests {
     use super::*;
 
     fn n(n: i64) -> Value {
-        Value::Number(Rational64::from_integer(n))
+        Value::from(n)
     }
 
     #[test]

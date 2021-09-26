@@ -41,6 +41,7 @@ pub type ExecutionResult = Result<Value, RuntimeError>;
 pub enum RuntimeError {
     ArityError(&'static str, &'static str),
     WrongArgument(&'static str, &'static str, &'static str),
+    NotDefined(String),
     DivisionByZero,
     GenericError(String),
 }
@@ -58,6 +59,9 @@ impl Display for RuntimeError {
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
             ),
+            RuntimeError::NotDefined(id) => {
+                write!(f, "Identifier \"{}\" not defined in the current scope", id)
+            }
             RuntimeError::DivisionByZero => write!(f, "Division by zero is undefined behavior"),
             RuntimeError::GenericError(s) => write!(f, "{}", s),
         }

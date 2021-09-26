@@ -1,5 +1,9 @@
+use std::slice;
+
+use num::Zero;
+
 use crate::{
-    callables::{Callable, ExecutionResult},
+    callables::{Callable, ExecutionResult, RuntimeError},
     Scope, Value,
 };
 
@@ -11,8 +15,16 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
-        todo!()
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        if args.len() != 1 {
+            return Err(RuntimeError::ArityError(self.name(), "<value>"));
+        }
+        let result = match &args[0].eval(scope)? {
+            Value::Number(n) => n.is_zero(),
+            Value::Nil => false,
+            _ => true,
+        };
+        Ok(Value::from(result))
     }
 }
 
@@ -26,8 +38,18 @@ impl Callable for If {
         "if"
     }
 
-    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
-        todo!()
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        if args.len() != 3 {
+            return Err(RuntimeError::ArityError(
+                self.name(),
+                "<condition> <true expression> <false expression>",
+            ));
+        }
+        if IsTrue.call(slice::from_ref(&args[0]), scope)? == Value::from(false) {
+            args[2].eval(scope)
+        } else {
+            args[1].eval(scope)
+        }
     }
 }
 
@@ -41,8 +63,15 @@ impl Callable for And {
         "and"
     }
 
-    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
-        todo!()
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        let false_val = Value::from(false);
+        for arg in args {
+            if IsTrue.call(slice::from_ref(arg), scope)? == false_val {
+                return Ok(false_val);
+            }
+        }
+
+        Ok(Value::from(true))
     }
 }
 
@@ -55,8 +84,16 @@ impl Callable for Or {
     fn name(&self) -> &'static str {
         "or"
     }
-    fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {
-        todo!()
+
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        let true_val = Value::from(true);
+        for arg in args {
+            if IsTrue.call(slice::from_ref(arg), scope)? == true_val {
+                return Ok(true_val);
+            }
+        }
+
+        Ok(Value::from(false))
     }
 }
 

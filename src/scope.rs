@@ -10,8 +10,8 @@ pub enum Scope {
 }
 
 impl Scope {
-    pub fn new(maybe_scope: Option<Rc<Scope>>) -> Scope {
-        if let Some(scope) = maybe_scope {
+    pub fn new(parent_scope: Option<Rc<Scope>>) -> Scope {
+        if let Some(scope) = parent_scope {
             return Scope::LocalScope(Default::default(), scope);
         }
         let symbol_table = HashMap::new();

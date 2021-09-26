@@ -4,8 +4,6 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use num::Rational64;
-
 use crate::{callables::ExecutionResult, value::Value};
 
 #[derive(Debug, Eq, Clone)]
@@ -53,8 +51,7 @@ impl Set {
     }
 
     pub fn get(&self, key: &Value) -> ExecutionResult {
-        let v = if self.0.contains(key) { 1 } else { 0 };
-        Ok(Value::Number(Rational64::from_integer(v)))
+        Ok(Value::from(self.0.contains(key)))
     }
 
     pub fn len(&self) -> usize {
