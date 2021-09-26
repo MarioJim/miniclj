@@ -29,7 +29,7 @@ impl Callable for ComparisonOp {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.is_empty() {
-            return Err(RuntimeError::ArityError(self.name(), "<...args>"));
+            return self.arity_err("<...args>");
         }
         fn args_as_nums<'a>(
             function_name: &'static str,

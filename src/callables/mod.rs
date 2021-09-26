@@ -31,6 +31,10 @@ use crate::{Scope, Value};
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult;
+
+    fn arity_err(&self, expected: &'static str) -> ExecutionResult {
+        Err(RuntimeError::ArityError(self.name(), expected))
+    }
 }
 
 dyn_clone::clone_trait_object!(Callable);
@@ -43,7 +47,7 @@ pub enum RuntimeError {
     WrongArgument(&'static str, &'static str, &'static str),
     NotDefined(String),
     DivisionByZero,
-    GenericError(String),
+    Error(String),
 }
 
 impl Display for RuntimeError {
@@ -63,7 +67,7 @@ impl Display for RuntimeError {
                 write!(f, "Identifier \"{}\" not defined in the current scope", id)
             }
             RuntimeError::DivisionByZero => write!(f, "Division by zero is undefined behavior"),
-            RuntimeError::GenericError(s) => write!(f, "{}", s),
+            RuntimeError::Error(s) => write!(f, "{}", s),
         }
     }
 }

@@ -49,13 +49,13 @@ impl List {
                     Ok(Value::Nil)
                 }
             } else {
-                Err(RuntimeError::GenericError(format!(
+                Err(RuntimeError::Error(format!(
                     "List can only be indexed by positive integers, not by {}",
                     n
                 )))
             }
         } else {
-            Err(RuntimeError::GenericError(format!(
+            Err(RuntimeError::Error(format!(
                 "List can't be indexed by {}",
                 key
             )))

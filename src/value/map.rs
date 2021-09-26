@@ -57,7 +57,7 @@ impl Map {
                 );
                 Ok(Value::Map(Map(cloned_map)))
             }
-            _ => Err(RuntimeError::GenericError(String::from(
+            _ => Err(RuntimeError::Error(String::from(
                 "Only vectors with two elements (key-value pair) can be added to a map",
             ))),
         }

@@ -39,7 +39,7 @@ impl Callable for Read {
         let mut buffer = String::new();
         io::stdin()
             .read_to_string(&mut buffer)
-            .map_err(|e| RuntimeError::GenericError(format!("{}", e)))?;
+            .map_err(|e| RuntimeError::Error(format!("{}", e)))?;
         Ok(Value::String(buffer))
     }
 }

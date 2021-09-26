@@ -3,7 +3,7 @@ use std::slice;
 use num::Zero;
 
 use crate::{
-    callables::{Callable, ExecutionResult, RuntimeError},
+    callables::{Callable, ExecutionResult},
     Scope, Value,
 };
 
@@ -17,7 +17,7 @@ impl Callable for IsTrue {
 
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<value>"));
+            return self.arity_err("<value>");
         }
         let result = match &args[0].eval(scope)? {
             Value::Number(n) => n.is_zero(),
@@ -40,10 +40,7 @@ impl Callable for If {
 
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 3 {
-            return Err(RuntimeError::ArityError(
-                self.name(),
-                "<condition> <true expression> <false expression>",
-            ));
+            return self.arity_err("<condition> <true expression> <false expression>");
         }
         if IsTrue.call(slice::from_ref(&args[0]), scope)? == Value::from(false) {
             args[2].eval(scope)

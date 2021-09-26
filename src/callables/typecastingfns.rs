@@ -18,12 +18,12 @@ impl Callable for NumberCast {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<string>"));
+            return self.arity_err("<string>");
         }
         if let Value::String(s) = &args[0] {
             match NumberLiteralParser::new().parse(s) {
                 Ok(n) => Ok(Value::Number(n)),
-                Err(_) => Err(RuntimeError::GenericError(format!(
+                Err(_) => Err(RuntimeError::Error(format!(
                     "The string \"{}\" couldn't be parsed as a number",
                     s
                 ))),
@@ -81,7 +81,7 @@ impl Callable for Ord {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<string>"));
+            return self.arity_err("<string>");
         }
         if let Value::String(s) = &args[0] {
             match s.chars().next() {
@@ -114,7 +114,7 @@ impl Callable for Chr {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<number>"));
+            return self.arity_err("<number>");
         }
         if let Value::Number(n) = &args[0] {
             if !n.is_integer() || n.is_negative() {
@@ -126,7 +126,7 @@ impl Callable for Chr {
             } else {
                 match char::from_u32(*n.numer() as u32) {
                     Some(c) => Ok(Value::String(String::from(c))),
-                    None => Err(RuntimeError::GenericError(format!(
+                    None => Err(RuntimeError::Error(format!(
                         "{} couldn't convert the number {} to a valid character",
                         self.name(),
                         n.numer()

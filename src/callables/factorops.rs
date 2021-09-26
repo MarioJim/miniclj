@@ -45,7 +45,7 @@ impl Callable for FactorOp {
                 maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(zero, |a, b| a + b)))
             }
             FactorOp::Sub => match args.len() {
-                0 => Err(RuntimeError::ArityError(self.name(), "<...args>")),
+                0 => self.arity_err("<...args>"),
                 1 => maybe_nums.map(|nums| Value::Number(-nums[0])),
                 _ => maybe_nums.map(|nums| {
                     Value::Number(nums[0] - nums[1..].iter().fold(zero, |a, b| a + *b))
@@ -55,7 +55,7 @@ impl Callable for FactorOp {
                 maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(one, |a, b| a * b)))
             }
             FactorOp::Div => match args.len() {
-                0 => Err(RuntimeError::ArityError(self.name(), "<...args>")),
+                0 => self.arity_err("<...args>"),
                 1 => maybe_nums.map(|nums| Value::Number(nums[0].recip())),
                 _ => maybe_nums.and_then(|nums| {
                     let denominator = nums[1..].iter().fold(one, |a, b| a * *b);

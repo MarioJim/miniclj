@@ -51,7 +51,7 @@ impl Vector {
                 Ok(Value::Nil)
             }
         } else {
-            Err(RuntimeError::GenericError(format!(
+            Err(RuntimeError::Error(format!(
                 "Vector can't be indexed by {}",
                 key
             )))

@@ -17,7 +17,7 @@ impl Callable for First {
 
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<sequence>"));
+            return self.arity_err("<sequence>");
         }
         let coll = args.iter().next().unwrap();
         let get_args = &[coll.clone(), Value::from(0)];
@@ -37,7 +37,7 @@ impl Callable for Rest {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<sequence>"));
+            return self.arity_err("<sequence>");
         }
         match &args[0] {
             Value::List(l) => Ok(l.rest()),
@@ -63,10 +63,7 @@ impl Callable for Cons {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 2 {
-            return Err(RuntimeError::ArityError(
-                self.name(),
-                "<new element> <sequence>",
-            ));
+            return self.arity_err("<new element> <sequence>");
         }
         let elem = args[0].clone();
         match &args[1] {
@@ -95,7 +92,7 @@ impl Callable for Get {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 2 {
-            return Err(RuntimeError::ArityError(self.name(), "<collection> <key>"));
+            return self.arity_err("<collection> <key>");
         }
         match &args[1] {
             Value::List(l) => l.get(&args[0]),
@@ -110,13 +107,13 @@ impl Callable for Get {
                             .map(|chr| Value::String(String::from(chr)))
                             .unwrap_or(Value::Nil))
                     } else {
-                        Err(RuntimeError::GenericError(format!(
+                        Err(RuntimeError::Error(format!(
                             "String can only be indexed by positive integers, not by {}",
                             n
                         )))
                     }
                 } else {
-                    Err(RuntimeError::GenericError(format!(
+                    Err(RuntimeError::Error(format!(
                         "String can't be indexed by {}",
                         args[0]
                     )))
@@ -143,7 +140,7 @@ impl Callable for Len {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<collection>"));
+            return self.arity_err("<collection>");
         }
         let len = match &args[0] {
             Value::List(l) => l.len(),
@@ -175,7 +172,7 @@ impl Callable for IsEmpty {
 
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return Err(RuntimeError::ArityError(self.name(), "<collection>"));
+            return self.arity_err("<collection>");
         }
         let len = Len.call(args, scope);
         if let Ok(Value::Number(n)) = len {
