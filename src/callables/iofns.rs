@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct Print;
+pub struct Print;
 
 impl Callable for Print {
     fn name(&self) -> &'static str {
@@ -28,7 +28,7 @@ impl Callable for Print {
 display_for_callable!(Print);
 
 #[derive(Debug, Clone)]
-struct Read;
+pub struct Read;
 
 impl Callable for Read {
     fn name(&self) -> &'static str {

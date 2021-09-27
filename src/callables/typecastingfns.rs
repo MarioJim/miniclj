@@ -1,15 +1,13 @@
 use num::Signed;
 
 use crate::{
-    callables::{Callable, ExecutionResult},
+    callables::{Callable, ExecutionResult, RuntimeError},
     miniclj::NumberLiteralParser,
     Scope, Value,
 };
 
-use super::RuntimeError;
-
 #[derive(Debug, Clone)]
-struct NumberCast;
+pub struct NumberCast;
 
 impl Callable for NumberCast {
     fn name(&self) -> &'static str {
@@ -41,7 +39,7 @@ impl Callable for NumberCast {
 display_for_callable!(NumberCast);
 
 #[derive(Debug, Clone)]
-struct StringCast;
+pub struct StringCast;
 
 impl Callable for StringCast {
     fn name(&self) -> &'static str {
@@ -72,7 +70,7 @@ impl Callable for StringCast {
 display_for_callable!(StringCast);
 
 #[derive(Debug, Clone)]
-struct Ord;
+pub struct Ord;
 
 impl Callable for Ord {
     fn name(&self) -> &'static str {
@@ -105,7 +103,7 @@ impl Callable for Ord {
 display_for_callable!(Ord);
 
 #[derive(Debug, Clone)]
-struct Chr;
+pub struct Chr;
 
 impl Callable for Chr {
     fn name(&self) -> &'static str {

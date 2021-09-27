@@ -4,10 +4,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use crate::{
-    callables::{ExecutionResult, RuntimeError},
-    value::Value,
-};
+use crate::{callables::ExecutionResult, value::Value};
 
 #[derive(Debug, Eq, Clone)]
 pub struct Map(HashMap<Value, Value>);

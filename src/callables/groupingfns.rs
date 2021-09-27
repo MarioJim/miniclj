@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct Do;
+pub struct Do;
 
 impl Callable for Do {
     fn name(&self) -> &'static str {

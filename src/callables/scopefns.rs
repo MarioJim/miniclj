@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct Def;
+pub struct Def;
 
 impl Callable for Def {
     fn name(&self) -> &'static str {
@@ -19,7 +19,7 @@ impl Callable for Def {
 display_for_callable!(Def);
 
 #[derive(Debug, Clone)]
-struct Defn;
+pub struct Defn;
 
 impl Callable for Defn {
     fn name(&self) -> &'static str {
@@ -34,7 +34,7 @@ impl Callable for Defn {
 display_for_callable!(Defn);
 
 #[derive(Debug, Clone)]
-struct Let;
+pub struct Let;
 
 impl Callable for Let {
     fn name(&self) -> &'static str {
@@ -49,7 +49,7 @@ impl Callable for Let {
 display_for_callable!(Let);
 
 #[derive(Debug, Clone)]
-struct Loop;
+pub struct Loop;
 
 impl Callable for Loop {
     fn name(&self) -> &'static str {
@@ -64,7 +64,7 @@ impl Callable for Loop {
 display_for_callable!(Loop);
 
 #[derive(Debug, Clone)]
-struct Recur;
+pub struct Recur;
 
 impl Callable for Recur {
     fn name(&self) -> &'static str {

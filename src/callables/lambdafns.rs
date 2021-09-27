@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct LambdaFn;
+pub struct LambdaFn;
 
 impl Callable for LambdaFn {
     fn name(&self) -> &'static str {
@@ -19,11 +19,11 @@ impl Callable for LambdaFn {
 display_for_callable!(LambdaFn);
 
 #[derive(Debug, Clone)]
-struct AnonymousLambdaFn;
+pub struct AnonymousLambdaFn;
 
 impl Callable for AnonymousLambdaFn {
     fn name(&self) -> &'static str {
-        ""
+        "an anonymous lambda"
     }
 
     fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {

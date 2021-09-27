@@ -83,7 +83,7 @@ impl Callable for Filter {
 display_for_callable!(Filter);
 
 #[derive(Debug, Clone)]
-struct Reduce;
+pub struct Reduce;
 
 impl Callable for Reduce {
     fn name(&self) -> &'static str {
