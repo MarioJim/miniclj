@@ -8,7 +8,19 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct IsTrue;
+pub struct IsTrue;
+
+impl IsTrue {
+    pub fn inner_call(&self, val: &Value) -> bool {
+        match val {
+            Value::SExpr(_) => unreachable!(),
+            Value::Identifier(_) => unreachable!(),
+            Value::Number(n) => n.is_zero(),
+            Value::Nil => false,
+            _ => true,
+        }
+    }
+}
 
 impl Callable for IsTrue {
     fn name(&self) -> &'static str {
@@ -19,19 +31,14 @@ impl Callable for IsTrue {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
-        let result = match &args[0].eval(scope)? {
-            Value::Number(n) => n.is_zero(),
-            Value::Nil => false,
-            _ => true,
-        };
-        Ok(Value::from(result))
+        Ok(Value::from(self.inner_call(&args[0].eval(scope)?)))
     }
 }
 
 display_for_callable!(IsTrue);
 
 #[derive(Debug, Clone)]
-struct If;
+pub struct If;
 
 impl Callable for If {
     fn name(&self) -> &'static str {
@@ -53,7 +60,7 @@ impl Callable for If {
 display_for_callable!(If);
 
 #[derive(Debug, Clone)]
-struct And;
+pub struct And;
 
 impl Callable for And {
     fn name(&self) -> &'static str {
@@ -75,7 +82,7 @@ impl Callable for And {
 display_for_callable!(And);
 
 #[derive(Debug, Clone)]
-struct Or;
+pub struct Or;
 
 impl Callable for Or {
     fn name(&self) -> &'static str {

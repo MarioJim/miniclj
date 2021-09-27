@@ -62,3 +62,20 @@ impl Vector {
         self.0.len()
     }
 }
+
+impl From<Vec<Value>> for Vector {
+    fn from(v: Vec<Value>) -> Self {
+        Vector(v)
+    }
+}
+
+pub type VectorIter = std::vec::IntoIter<Value>;
+
+impl IntoIterator for Vector {
+    type Item = Value;
+    type IntoIter = VectorIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}

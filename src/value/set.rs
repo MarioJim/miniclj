@@ -58,3 +58,14 @@ impl Set {
         self.0.len()
     }
 }
+
+pub type SetIter = std::collections::hash_set::IntoIter<Value>;
+
+impl IntoIterator for Set {
+    type Item = Value;
+    type IntoIter = SetIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}

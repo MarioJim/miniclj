@@ -1,5 +1,6 @@
 use std::{
     boxed::Box,
+    convert::TryFrom,
     fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
@@ -12,11 +13,11 @@ use crate::{
     Scope,
 };
 
-mod list;
-mod map;
-mod set;
-mod sexpr;
-mod vector;
+pub mod list;
+pub mod map;
+pub mod set;
+pub mod sexpr;
+pub mod vector;
 
 pub use sexpr::SExpr;
 
@@ -35,65 +36,6 @@ pub enum Value {
     // TODO: Maybe change to Ratio<isize>?
     Number(Rational64),
     Nil,
-}
-
-impl PartialEq for Value {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Value::SExpr(r), Value::SExpr(l)) => r == l,
-            (Value::Fn(r), Value::Fn(l)) => r.name() == l.name(),
-            (Value::List(r), Value::List(l)) => r == l,
-            (Value::Vector(r), Value::Vector(l)) => r == l,
-            (Value::Set(r), Value::Set(l)) => r == l,
-            (Value::Map(r), Value::Map(l)) => r == l,
-            (Value::Identifier(r), Value::Identifier(l)) => r == l,
-            (Value::String(r), Value::String(l)) => r == l,
-            (Value::Number(r), Value::Number(l)) => r == l,
-            (Value::Nil, Value::Nil) => true,
-            _ => false,
-        }
-    }
-}
-impl Eq for Value {}
-
-impl Display for Value {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let string = match self {
-            Self::SExpr(s) => s.to_string(),
-            Self::Fn(f) => format!("#function[{}]", f.name()),
-            Self::List(l) => l.to_string(),
-            Self::Vector(v) => v.to_string(),
-            Self::Set(s) => s.to_string(),
-            Self::Map(m) => m.to_string(),
-            Self::Identifier(i) => i.to_string(),
-            Self::String(s) => format!("\"{}\"", s),
-            Self::Number(n) => n.to_string(),
-            Self::Nil => String::from("nil"),
-        };
-        write!(f, "{}", string)
-    }
-}
-
-#[derive(Hash)]
-struct NilHash;
-
-impl Hash for Value {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Value::SExpr(_) | Value::Fn(_) => {
-                let x: u16 = random();
-                x.hash(state)
-            }
-            Value::List(l) => l.hash(state),
-            Value::Vector(v) => v.hash(state),
-            Value::Set(s) => s.hash(state),
-            Value::Map(m) => m.hash(state),
-            Value::Identifier(i) => i.hash(state),
-            Value::String(s) => s.hash(state),
-            Value::Number(n) => n.hash(state),
-            Value::Nil => NilHash.hash(state),
-        }
-    }
 }
 
 impl Value {
@@ -124,6 +66,65 @@ impl Value {
     }
 }
 
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::SExpr(r), Value::SExpr(l)) => r == l,
+            (Value::Fn(r), Value::Fn(l)) => r.name() == l.name(),
+            (Value::List(r), Value::List(l)) => r == l,
+            (Value::Vector(r), Value::Vector(l)) => r == l,
+            (Value::Set(r), Value::Set(l)) => r == l,
+            (Value::Map(r), Value::Map(l)) => r == l,
+            (Value::Identifier(r), Value::Identifier(l)) => r == l,
+            (Value::String(r), Value::String(l)) => r == l,
+            (Value::Number(r), Value::Number(l)) => r == l,
+            (Value::Nil, Value::Nil) => true,
+            _ => false,
+        }
+    }
+}
+impl Eq for Value {}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let string = match self {
+            Value::SExpr(s) => s.to_string(),
+            Value::Fn(f) => format!("#function[{}]", f.name()),
+            Value::List(l) => l.to_string(),
+            Value::Vector(v) => v.to_string(),
+            Value::Set(s) => s.to_string(),
+            Value::Map(m) => m.to_string(),
+            Value::Identifier(i) => i.to_string(),
+            Value::String(s) => format!("\"{}\"", s),
+            Value::Number(n) => n.to_string(),
+            Value::Nil => String::from("nil"),
+        };
+        write!(f, "{}", string)
+    }
+}
+
+#[derive(Hash)]
+struct NilHash;
+
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Value::SExpr(_) | Value::Fn(_) => {
+                let x: u16 = random();
+                x.hash(state)
+            }
+            Value::List(l) => l.hash(state),
+            Value::Vector(v) => v.hash(state),
+            Value::Set(s) => s.hash(state),
+            Value::Map(m) => m.hash(state),
+            Value::Identifier(i) => i.hash(state),
+            Value::String(s) => s.hash(state),
+            Value::Number(n) => n.hash(state),
+            Value::Nil => NilHash.hash(state),
+        }
+    }
+}
+
 impl From<i64> for Value {
     fn from(n: i64) -> Self {
         Value::Number(Rational64::from_integer(n))
@@ -133,5 +134,41 @@ impl From<i64> for Value {
 impl From<bool> for Value {
     fn from(b: bool) -> Self {
         Value::from(if b { 1 } else { 0 })
+    }
+}
+
+pub enum ValueIterator {
+    List(list::ListIter),
+    Vector(vector::VectorIter),
+    Set(set::SetIter),
+    Map(map::MapIter),
+}
+
+impl TryFrom<Value> for ValueIterator {
+    type Error = ();
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::List(l) => Ok(ValueIterator::List(l.into_iter())),
+            Value::Vector(v) => Ok(ValueIterator::Vector(v.into_iter())),
+            Value::Set(s) => Ok(ValueIterator::Set(s.into_iter())),
+            Value::Map(m) => Ok(ValueIterator::Map(m.into_iter())),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Iterator for ValueIterator {
+    type Item = Value;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            ValueIterator::List(it) => it.next(),
+            ValueIterator::Vector(it) => it.next(),
+            ValueIterator::Set(it) => it.next(),
+            ValueIterator::Map(it) => it
+                .next()
+                .map(|(k, v)| Value::Vector(vector::Vector::from(vec![k, v]))),
+        }
     }
 }

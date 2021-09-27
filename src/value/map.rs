@@ -71,3 +71,14 @@ impl Map {
         self.0.len()
     }
 }
+
+pub type MapIter = std::collections::hash_map::IntoIter<Value, Value>;
+
+impl IntoIterator for Map {
+    type Item = (Value, Value);
+    type IntoIter = MapIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}

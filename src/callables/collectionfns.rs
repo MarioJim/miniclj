@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-struct First;
+pub struct First;
 
 impl Callable for First {
     fn name(&self) -> &'static str {
@@ -28,7 +28,7 @@ impl Callable for First {
 display_for_callable!(First);
 
 #[derive(Debug, Clone)]
-struct Rest;
+pub struct Rest;
 
 impl Callable for Rest {
     fn name(&self) -> &'static str {
@@ -54,7 +54,7 @@ impl Callable for Rest {
 display_for_callable!(Rest);
 
 #[derive(Debug, Clone)]
-struct Cons;
+pub struct Cons;
 
 impl Callable for Cons {
     fn name(&self) -> &'static str {
@@ -83,7 +83,7 @@ impl Callable for Cons {
 display_for_callable!(Cons);
 
 #[derive(Debug, Clone)]
-struct Get;
+pub struct Get;
 
 impl Callable for Get {
     fn name(&self) -> &'static str {
@@ -131,7 +131,7 @@ impl Callable for Get {
 display_for_callable!(Get);
 
 #[derive(Debug, Clone)]
-struct Len;
+pub struct Len;
 
 impl Callable for Len {
     fn name(&self) -> &'static str {
@@ -163,7 +163,7 @@ impl Callable for Len {
 display_for_callable!(Len);
 
 #[derive(Debug, Clone)]
-struct IsEmpty;
+pub struct IsEmpty;
 
 impl Callable for IsEmpty {
     fn name(&self) -> &'static str {

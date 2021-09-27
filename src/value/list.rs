@@ -2,6 +2,7 @@ use std::{
     collections::VecDeque,
     convert::TryInto,
     fmt::{self, Display, Formatter},
+    iter::FromIterator,
 };
 
 use num::{Rational64, Signed};
@@ -11,7 +12,7 @@ use crate::{
     value::Value,
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Hash)]
 pub struct List(VecDeque<Value>);
 
 impl Display for List {
@@ -64,5 +65,26 @@ impl List {
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn push_front(&mut self, value: Value) {
+        self.0.push_front(value)
+    }
+}
+
+pub type ListIter = std::collections::vec_deque::IntoIter<Value>;
+
+impl IntoIterator for List {
+    type Item = Value;
+    type IntoIter = ListIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl FromIterator<Value> for List {
+    fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
+        List(iter.into_iter().collect())
     }
 }
