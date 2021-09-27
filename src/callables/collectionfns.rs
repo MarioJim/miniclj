@@ -4,7 +4,7 @@ use num::{Signed, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    value::{list::List, ValueIterator},
+    value::list::List,
     Scope, Value,
 };
 
@@ -18,11 +18,14 @@ impl Callable for First {
 
     fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return self.arity_err("<sequence>");
+            return self.arity_err("<collection>");
         }
-        let coll = args.iter().next().unwrap();
-        let get_args = &[coll.clone(), Value::from(0)];
-        Get.call(get_args, scope)
+        let maybe_coll = args[0].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
+        })?;
+        Ok(coll_as_list.pop_front().unwrap_or(Value::Nil))
     }
 }
 
@@ -36,19 +39,17 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
-            return self.arity_err("<sequence>");
+            return self.arity_err("<collection>");
         }
-        match &args[0] {
-            Value::List(l) => Ok(l.rest()),
-            Value::Vector(v) => Ok(v.rest()),
-            _ => Err(RuntimeError::WrongArgument(
-                self.name(),
-                "a sequence",
-                args[0].type_str(),
-            )),
-        }
+        let maybe_coll = args[0].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
+        })?;
+        coll_as_list.pop_front();
+        Ok(Value::List(coll_as_list))
     }
 }
 
@@ -62,15 +63,16 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        let coll_iter = ValueIterator::try_from(args[1].clone()).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", args[1].type_str())
+        let maybe_coll = args[1].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
         })?;
-        let mut coll_as_list: List = coll_iter.collect();
-        coll_as_list.push_front(args[0].clone());
+        coll_as_list.push_front(args[0].eval(scope)?);
         Ok(Value::List(coll_as_list))
     }
 }
@@ -85,33 +87,30 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
-            return self.arity_err("<value> <sequence>");
+            return self.arity_err("<value> <collection>");
         }
-        let val = args[0].clone();
-        match &args[1] {
-            Value::List(l) => {
-                let mut cloned_list = l.clone();
-                cloned_list.push_front(val);
-                Ok(Value::List(cloned_list))
+        let val = args[0].eval(scope)?;
+        let maybe_collection = args[1].eval(scope)?;
+        match maybe_collection {
+            Value::List(mut list) => {
+                list.push_front(val);
+                Ok(Value::List(list))
             }
-            Value::Vector(v) => {
-                let mut cloned_vector = v.clone();
-                cloned_vector.push(val);
-                Ok(Value::Vector(cloned_vector))
+            Value::Vector(mut vector) => {
+                vector.push(val);
+                Ok(Value::Vector(vector))
             }
-            Value::Set(s) => {
-                let mut cloned_set = s.clone();
-                cloned_set.insert(val);
-                Ok(Value::Set(cloned_set))
+            Value::Set(mut set) => {
+                set.insert(val);
+                Ok(Value::Set(set))
             }
-            Value::Map(m) => match val {
+            Value::Map(mut map) => match val {
                 Value::Vector(v) if v.len() == 2 => {
                     let (key, value) = v.try_into().unwrap();
-                    let mut cloned_map = m.clone();
-                    cloned_map.insert(key, value);
-                    Ok(Value::Map(cloned_map))
+                    map.insert(key, value);
+                    Ok(Value::Map(map))
                 }
                 _ => Err(RuntimeError::Error(String::from(
                     "Only vectors with two elements (key-value pair) can be added to a map",
@@ -120,7 +119,7 @@ impl Callable for Conj {
             _ => Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a collection",
-                args[1].type_str(),
+                maybe_collection.type_str(),
             )),
         }
     }
@@ -136,17 +135,19 @@ impl Callable for Get {
         "get"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
-        match &args[1] {
-            Value::List(l) => l.get(&args[0]),
-            Value::Vector(v) => v.get(&args[0]),
-            Value::Set(s) => s.get(&args[0]),
-            Value::Map(m) => m.get(&args[0]),
+        let coll = args[0].eval(scope)?;
+        let key = args[1].eval(scope)?;
+        match coll {
+            Value::List(l) => l.get(&key),
+            Value::Vector(v) => v.get(&key),
+            Value::Set(s) => s.get(&key),
+            Value::Map(m) => m.get(&key),
             Value::String(s) => {
-                if let Value::Number(n) = &args[0] {
+                if let Value::Number(n) = &key {
                     if n.is_integer() && !n.is_negative() {
                         Ok(s.chars()
                             .nth(usize::try_from(*n.numer()).unwrap())
@@ -161,14 +162,14 @@ impl Callable for Get {
                 } else {
                     Err(RuntimeError::Error(format!(
                         "String can't be indexed by {}",
-                        args[0]
+                        key
                     )))
                 }
             }
             _ => Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a collection",
-                args[1].type_str(),
+                coll.type_str(),
             )),
         }
     }
@@ -184,11 +185,12 @@ impl Callable for Len {
         "len"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let len = match &args[0] {
+        let coll = args[0].eval(scope)?;
+        let len = match coll {
             Value::List(l) => l.len(),
             Value::Vector(v) => v.len(),
             Value::Set(s) => s.len(),
@@ -198,7 +200,7 @@ impl Callable for Len {
                 return Err(RuntimeError::WrongArgument(
                     self.name(),
                     "a collection",
-                    args[0].type_str(),
+                    coll.type_str(),
                 ))
             }
         };
@@ -220,11 +222,10 @@ impl Callable for IsEmpty {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let len = Len.call(args, scope);
-        if let Ok(Value::Number(n)) = len {
+        if let Value::Number(n) = Len.call(args, scope)? {
             Ok(Value::from(n.is_zero()))
         } else {
-            len
+            unreachable!("Call to len returned something that isn't a number")
         }
     }
 }

@@ -13,13 +13,13 @@ impl Callable for Print {
         "print"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
-        let mut it = args.iter();
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        let mut it = args.iter().map(|v| v.eval(scope));
         if let Some(v) = it.next() {
-            print!("{}", v);
+            print!("{}", v?);
         }
         for v in it {
-            print!(" {}", v);
+            print!(" {}", v?);
         }
         Ok(Value::Nil)
     }
@@ -39,7 +39,7 @@ impl Callable for Read {
         let mut buffer = String::new();
         io::stdin()
             .read_to_string(&mut buffer)
-            .map_err(|e| RuntimeError::Error(format!("{}", e)))?;
+            .map_err(|e| RuntimeError::Error(e.to_string()))?;
         Ok(Value::String(buffer))
     }
 }

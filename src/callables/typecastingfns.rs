@@ -14,12 +14,13 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
-        if let Value::String(s) = &args[0] {
-            match NumberLiteralParser::new().parse(s) {
+        let maybe_string = args[0].eval(scope)?;
+        if let Value::String(s) = maybe_string {
+            match NumberLiteralParser::new().parse(&s) {
                 Ok(n) => Ok(Value::Number(n)),
                 Err(_) => Err(RuntimeError::Error(format!(
                     "The string \"{}\" couldn't be parsed as a number",
@@ -30,7 +31,7 @@ impl Callable for NumberCast {
             Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a string",
-                args[0].type_str(),
+                maybe_string.type_str(),
             ))
         }
     }
@@ -46,24 +47,23 @@ impl Callable for StringCast {
         "str"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
-        match args
-            .iter()
-            .map(|v| match v {
-                Value::String(s) => Ok(String::from(s)),
-                Value::Number(n) => Ok(format!("{}", n)),
-                Value::Nil => Ok(String::from("nil")),
-                _ => Err(v.type_str()),
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+        args.iter()
+            .map(|val_ref| {
+                let evaled_value = val_ref.eval(scope)?;
+                match evaled_value {
+                    Value::String(s) => Ok(s),
+                    Value::Number(n) => Ok(n.to_string()),
+                    Value::Nil => Ok(String::from("nil")),
+                    _ => Err(RuntimeError::WrongArgument(
+                        self.name(),
+                        "a primitive value",
+                        evaled_value.type_str(),
+                    )),
+                }
             })
-            .collect::<Result<String, &'static str>>()
-        {
-            Ok(s) => Ok(Value::String(s)),
-            Err(v) => Err(RuntimeError::WrongArgument(
-                self.name(),
-                "a primitive value",
-                v,
-            )),
-        }
+            .collect::<Result<String, RuntimeError>>()
+            .map(Value::String)
     }
 }
 
@@ -77,11 +77,12 @@ impl Callable for Ord {
         "ord"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
-        if let Value::String(s) = &args[0] {
+        let maybe_string = args[0].eval(scope)?;
+        if let Value::String(s) = maybe_string {
             match s.chars().next() {
                 Some(c) => Ok(Value::from(c as i64)),
                 None => Err(RuntimeError::WrongArgument(
@@ -94,7 +95,7 @@ impl Callable for Ord {
             Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a string",
-                args[0].type_str(),
+                maybe_string.type_str(),
             ))
         }
     }
@@ -110,11 +111,12 @@ impl Callable for Chr {
         "chr"
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<number>");
         }
-        if let Value::Number(n) = &args[0] {
+        let maybe_num = args[0].eval(scope)?;
+        if let Value::Number(n) = maybe_num {
             if !n.is_integer() || n.is_negative() {
                 Err(RuntimeError::WrongArgument(
                     self.name(),
@@ -135,7 +137,7 @@ impl Callable for Chr {
             Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a number",
-                args[0].type_str(),
+                maybe_num.type_str(),
             ))
         }
     }

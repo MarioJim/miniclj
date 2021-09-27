@@ -27,38 +27,37 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         if args.is_empty() {
             return self.arity_err("<...args>");
         }
-        fn args_as_nums<'a>(
-            function_name: &'static str,
-            args: &'a [Value],
-        ) -> Result<Vec<&'a Rational64>, RuntimeError> {
-            args.iter()
+        let evaled_args = args
+            .iter()
+            .map(|v| v.eval(scope))
+            .collect::<Result<Vec<Value>, RuntimeError>>()?;
+        let args_as_nums = |args: Vec<Value>| {
+            args.into_iter()
                 .map(|v| {
                     if let Value::Number(n) = v {
                         Ok(n)
                     } else {
                         Err(RuntimeError::WrongArgument(
-                            function_name,
+                            self.name(),
                             "a number",
                             v.type_str(),
                         ))
                     }
                 })
-                .collect()
-        }
-        let nm = self.name();
-        let result = match self {
-            ComparisonOp::Eq => Ok(args.iter().all(|v| v == &args[0])),
-            ComparisonOp::Ne => Ok(args.iter().any(|v| v != &args[0])),
-            ComparisonOp::Gt => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] > n[1])),
-            ComparisonOp::Lt => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] < n[1])),
-            ComparisonOp::Ge => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] >= n[1])),
-            ComparisonOp::Le => args_as_nums(nm, args).map(|n| n.windows(2).all(|n| n[0] <= n[1])),
-        }?;
-        Ok(Value::from(result))
+                .collect::<Result<Vec<Rational64>, RuntimeError>>()
+        };
+        Ok(Value::from(match self {
+            ComparisonOp::Eq => evaled_args.iter().all(|v| v == &evaled_args[0]),
+            ComparisonOp::Ne => evaled_args.iter().any(|v| v != &evaled_args[0]),
+            ComparisonOp::Gt => args_as_nums(evaled_args)?.windows(2).all(|w| w[0] > w[1]),
+            ComparisonOp::Lt => args_as_nums(evaled_args)?.windows(2).all(|w| w[0] < w[1]),
+            ComparisonOp::Ge => args_as_nums(evaled_args)?.windows(2).all(|w| w[0] >= w[1]),
+            ComparisonOp::Le => args_as_nums(evaled_args)?.windows(2).all(|w| w[0] <= w[1]),
+        }))
     }
 }
 

@@ -70,6 +70,10 @@ impl List {
     pub fn push_front(&mut self, value: Value) {
         self.0.push_front(value)
     }
+
+    pub fn pop_front(&mut self) -> Option<Value> {
+        self.0.pop_front()
+    }
 }
 
 pub type ListIter = std::collections::vec_deque::IntoIter<Value>;

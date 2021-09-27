@@ -23,13 +23,13 @@ impl Callable for FactorOp {
         }
     }
 
-    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
-        let maybe_nums = args
+        let mut nums = args
             .iter()
             .map(|v| {
-                if let Value::Number(n) = v {
+                if let Value::Number(n) = v.eval(scope)? {
                     Ok(n)
                 } else {
                     Err(RuntimeError::WrongArgument(
@@ -39,32 +39,32 @@ impl Callable for FactorOp {
                     ))
                 }
             })
-            .collect::<Result<Vec<&Rational64>, RuntimeError>>();
+            .collect::<Result<Vec<Rational64>, RuntimeError>>()?
+            .into_iter();
         match self {
-            FactorOp::Add => {
-                maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(zero, |a, b| a + b)))
-            }
+            FactorOp::Add => Ok(Value::Number(nums.fold(zero, |a, b| a + b))),
             FactorOp::Sub => match args.len() {
                 0 => self.arity_err("<...args>"),
-                1 => maybe_nums.map(|nums| Value::Number(-nums[0])),
-                _ => maybe_nums.map(|nums| {
-                    Value::Number(nums[0] - nums[1..].iter().fold(zero, |a, b| a + *b))
-                }),
+                1 => Ok(Value::Number(-nums.next().unwrap())),
+                _ => {
+                    let positive = nums.next().unwrap();
+                    let negative = nums.fold(zero, |a, b| a + b);
+                    Ok(Value::Number(positive - negative))
+                }
             },
-            FactorOp::Mul => {
-                maybe_nums.map(|nums| Value::Number(nums.into_iter().fold(one, |a, b| a * b)))
-            }
+            FactorOp::Mul => Ok(Value::Number(nums.fold(one, |a, b| a * b))),
             FactorOp::Div => match args.len() {
                 0 => self.arity_err("<...args>"),
-                1 => maybe_nums.map(|nums| Value::Number(nums[0].recip())),
-                _ => maybe_nums.and_then(|nums| {
-                    let denominator = nums[1..].iter().fold(one, |a, b| a * *b);
+                1 => Ok(Value::Number(nums.next().unwrap().recip())),
+                _ => {
+                    let numerator = nums.next().unwrap();
+                    let denominator = nums.fold(one, |a, b| a * b);
                     if denominator.is_zero() {
                         Err(RuntimeError::DivisionByZero)
                     } else {
-                        Ok(Value::Number(nums[0] / denominator))
+                        Ok(Value::Number(numerator / denominator))
                     }
-                }),
+                }
             },
         }
     }

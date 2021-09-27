@@ -149,6 +149,9 @@ impl TryFrom<Value> for ValueIterator {
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         match value {
+            Value::SExpr(_) | Value::Identifier(_) => {
+                unreachable!("Trying to turn an s-expr or an identifier into an iterator")
+            }
             Value::List(l) => Ok(ValueIterator::List(l.into_iter())),
             Value::Vector(v) => Ok(ValueIterator::Vector(v.into_iter())),
             Value::Set(s) => Ok(ValueIterator::Set(s.into_iter())),
@@ -170,5 +173,13 @@ impl Iterator for ValueIterator {
                 .next()
                 .map(|(k, v)| Value::Vector(vector::Vector::from(vec![k, v]))),
         }
+    }
+}
+
+impl TryFrom<Value> for list::List {
+    type Error = ();
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        Ok(ValueIterator::try_from(value)?.collect())
     }
 }

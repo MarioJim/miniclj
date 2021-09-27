@@ -19,7 +19,8 @@ impl Callable for Map {
             return self.arity_err("<function> <collection>");
         }
 
-        let function = if let Value::Fn(function) = &args[0] {
+        let maybe_fn = args[0].eval(scope)?;
+        let function = if let Value::Fn(function) = maybe_fn {
             function
         } else {
             return Err(RuntimeError::WrongArgument(
@@ -29,14 +30,13 @@ impl Callable for Map {
             ));
         };
 
-        Ok(Value::List(
-            ValueIterator::try_from(args[1].clone())
-                .map_err(|_| {
-                    RuntimeError::WrongArgument(self.name(), "a collection", args[1].type_str())
-                })?
-                .map(|v| function.call(&[v], scope))
-                .collect::<Result<_, RuntimeError>>()?,
-        ))
+        let maybe_coll = args[1].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let list = ValueIterator::try_from(maybe_coll)
+            .map_err(|_| RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type))?
+            .map(|v| function.call(&[v], scope))
+            .collect::<Result<_, RuntimeError>>()?;
+        Ok(Value::List(list))
     }
 }
 
@@ -55,18 +55,21 @@ impl Callable for Filter {
             return self.arity_err("<function> <collection>");
         }
 
-        let function = if let Value::Fn(function) = &args[0] {
+        let maybe_fn = args[0].eval(scope)?;
+        let function = if let Value::Fn(function) = maybe_fn {
             function
         } else {
             return Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a function",
-                args[0].type_str(),
+                maybe_fn.type_str(),
             ));
         };
 
-        let coll_iter = ValueIterator::try_from(args[1].clone()).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", args[1].type_str())
+        let maybe_coll = args[1].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let coll_iter = ValueIterator::try_from(maybe_coll).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
         })?;
 
         let mut filtered_list = List::default();
@@ -95,18 +98,21 @@ impl Callable for Reduce {
             return self.arity_err("<function> <collection>");
         }
 
-        let function = if let Value::Fn(function) = &args[0] {
+        let maybe_fn = args[0].eval(scope)?;
+        let function = if let Value::Fn(function) = maybe_fn {
             function
         } else {
             return Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a function",
-                args[0].type_str(),
+                maybe_fn.type_str(),
             ));
         };
 
-        let mut coll_iter = ValueIterator::try_from(args[1].clone()).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", args[1].type_str())
+        let maybe_coll = args[1].eval(scope)?;
+        let maybe_coll_type = maybe_coll.type_str();
+        let mut coll_iter = ValueIterator::try_from(maybe_coll).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
         })?;
 
         let mut reduce_result = match coll_iter.next() {

@@ -26,12 +26,6 @@ impl Display for Vector {
 }
 
 impl Vector {
-    pub fn rest(&self) -> Value {
-        let mut new_vector = self.0.iter();
-        new_vector.next();
-        Value::Vector(Vector(new_vector.cloned().collect()))
-    }
-
     pub fn get(&self, key: &Value) -> ExecutionResult {
         if let Value::Number(n) = key {
             if n.is_integer() && !n.is_negative() {
