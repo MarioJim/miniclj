@@ -47,28 +47,16 @@ impl PartialEq for Map {
 }
 
 impl Map {
-    pub fn cons(&self, entry: Value) -> ExecutionResult {
-        match entry {
-            Value::Vector(v) if v.len() == 2 => {
-                let mut cloned_map = self.0.clone();
-                cloned_map.insert(
-                    v.get(&Value::from(0)).unwrap(),
-                    v.get(&Value::from(1)).unwrap(),
-                );
-                Ok(Value::Map(Map(cloned_map)))
-            }
-            _ => Err(RuntimeError::Error(String::from(
-                "Only vectors with two elements (key-value pair) can be added to a map",
-            ))),
-        }
-    }
-
     pub fn get(&self, key: &Value) -> ExecutionResult {
         Ok(self.0.get(key).cloned().unwrap_or(Value::Nil))
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn insert(&mut self, key: Value, val: Value) {
+        self.0.insert(key, val);
     }
 }
 

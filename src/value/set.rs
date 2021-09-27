@@ -44,18 +44,16 @@ impl PartialEq for Set {
 }
 
 impl Set {
-    pub fn cons(&self, val: Value) -> Value {
-        let mut cloned_set = self.0.clone();
-        cloned_set.insert(val);
-        Value::Set(Set(cloned_set))
-    }
-
     pub fn get(&self, key: &Value) -> ExecutionResult {
         Ok(Value::from(self.0.contains(key)))
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn insert(&mut self, val: Value) {
+        self.0.insert(val);
     }
 }
 

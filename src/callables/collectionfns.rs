@@ -1,9 +1,10 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use num::{Signed, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
+    value::{list::List, ValueIterator},
     Scope, Value,
 };
 
@@ -63,14 +64,59 @@ impl Callable for Cons {
 
     fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
         if args.len() != 2 {
-            return self.arity_err("<new element> <sequence>");
+            return self.arity_err("<value> <collection>");
         }
-        let elem = args[0].clone();
+        let coll_iter = ValueIterator::try_from(args[1].clone()).map_err(|_| {
+            RuntimeError::WrongArgument(self.name(), "a collection", args[1].type_str())
+        })?;
+        let mut coll_as_list: List = coll_iter.collect();
+        coll_as_list.push_front(args[0].clone());
+        Ok(Value::List(coll_as_list))
+    }
+}
+
+display_for_callable!(Cons);
+
+#[derive(Debug, Clone)]
+pub struct Conj;
+
+impl Callable for Conj {
+    fn name(&self) -> &'static str {
+        "conj"
+    }
+
+    fn call(&self, args: &[Value], _: &Scope) -> ExecutionResult {
+        if args.len() != 2 {
+            return self.arity_err("<value> <sequence>");
+        }
+        let val = args[0].clone();
         match &args[1] {
-            Value::List(l) => Ok(l.cons(elem)),
-            Value::Vector(v) => Ok(v.cons(elem)),
-            Value::Set(s) => Ok(s.cons(elem)),
-            Value::Map(m) => m.cons(elem),
+            Value::List(l) => {
+                let mut cloned_list = l.clone();
+                cloned_list.push_front(val);
+                Ok(Value::List(cloned_list))
+            }
+            Value::Vector(v) => {
+                let mut cloned_vector = v.clone();
+                cloned_vector.push(val);
+                Ok(Value::Vector(cloned_vector))
+            }
+            Value::Set(s) => {
+                let mut cloned_set = s.clone();
+                cloned_set.insert(val);
+                Ok(Value::Set(cloned_set))
+            }
+            Value::Map(m) => match val {
+                Value::Vector(v) if v.len() == 2 => {
+                    let (key, value) = v.try_into().unwrap();
+                    let mut cloned_map = m.clone();
+                    cloned_map.insert(key, value);
+                    Ok(Value::Map(cloned_map))
+                }
+                _ => Err(RuntimeError::Error(String::from(
+                    "Only vectors with two elements (key-value pair) can be added to a map",
+                ))),
+            },
             _ => Err(RuntimeError::WrongArgument(
                 self.name(),
                 "a collection",
@@ -80,7 +126,7 @@ impl Callable for Cons {
     }
 }
 
-display_for_callable!(Cons);
+display_for_callable!(Conj);
 
 #[derive(Debug, Clone)]
 pub struct Get;

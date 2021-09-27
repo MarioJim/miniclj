@@ -1,5 +1,5 @@
 use std::{
-    convert::TryInto,
+    convert::{TryFrom, TryInto},
     fmt::{self, Display, Formatter},
 };
 
@@ -32,12 +32,6 @@ impl Vector {
         Value::Vector(Vector(new_vector.cloned().collect()))
     }
 
-    pub fn cons(&self, val: Value) -> Value {
-        let mut cloned_vector = self.0.clone();
-        cloned_vector.push(val);
-        Value::Vector(Vector(cloned_vector))
-    }
-
     pub fn get(&self, key: &Value) -> ExecutionResult {
         if let Value::Number(n) = key {
             if n.is_integer() && !n.is_negative() {
@@ -61,6 +55,10 @@ impl Vector {
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
+    pub fn push(&mut self, val: Value) {
+        self.0.push(val)
+    }
 }
 
 impl From<Vec<Value>> for Vector {
@@ -77,5 +75,20 @@ impl IntoIterator for Vector {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl TryFrom<Vector> for (Value, Value) {
+    type Error = ();
+
+    fn try_from(vector: Vector) -> Result<Self, Self::Error> {
+        if vector.len() == 2 {
+            let mut it = vector.into_iter();
+            let first = it.next().unwrap();
+            let second = it.next().unwrap();
+            Ok((first, second))
+        } else {
+            Err(())
+        }
     }
 }
