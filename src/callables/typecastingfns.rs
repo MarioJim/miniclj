@@ -56,7 +56,7 @@ impl Callable for StringCast {
                 match evaled_value {
                     Value::String(s) => Ok(s),
                     Value::Number(n) => Ok(n.to_string()),
-                    Value::Nil => Ok(String::from("nil")),
+                    Value::Nil => Ok(String::new()),
                     _ => Err(RuntimeError::WrongArgument(
                         self.name(),
                         "a primitive value",
@@ -201,7 +201,7 @@ mod tests {
                     &scope
                 )
                 .unwrap(),
-            sv("12str1/100nil")
+            sv("12str1/100")
         );
     }
 
