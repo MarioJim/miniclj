@@ -3,6 +3,7 @@ use num::Signed;
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
     miniclj::NumberLiteralParser,
+    value::SExpr,
     Scope, Value,
 };
 
@@ -14,11 +15,11 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
-        let maybe_string = args[0].eval(scope)?;
+        let maybe_string = args.into_iter().next().unwrap().eval(scope)?;
         if let Value::String(s) = maybe_string {
             match NumberLiteralParser::new().parse(&s) {
                 Ok(n) => Ok(Value::Number(n)),
@@ -47,10 +48,10 @@ impl Callable for StringCast {
         "str"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
-        args.iter()
-            .map(|val_ref| {
-                let evaled_value = val_ref.eval(scope)?;
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+        args.into_iter()
+            .map(|sexpr| {
+                let evaled_value = sexpr.eval(scope)?;
                 match evaled_value {
                     Value::String(s) => Ok(s),
                     Value::Number(n) => Ok(n.to_string()),
@@ -77,11 +78,11 @@ impl Callable for Ord {
         "ord"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
-        let maybe_string = args[0].eval(scope)?;
+        let maybe_string = args.into_iter().next().unwrap().eval(scope)?;
         if let Value::String(s) = maybe_string {
             match s.chars().next() {
                 Some(c) => Ok(Value::from(c as i64)),
@@ -111,11 +112,11 @@ impl Callable for Chr {
         "chr"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<number>");
         }
-        let maybe_num = args[0].eval(scope)?;
+        let maybe_num = args.into_iter().next().unwrap().eval(scope)?;
         if let Value::Number(n) = maybe_num {
             if !n.is_integer() || n.is_negative() {
                 Err(RuntimeError::WrongArgument(
@@ -151,39 +152,55 @@ mod tests {
 
     use super::*;
 
-    fn s(s: &str) -> Value {
+    fn sv(s: &str) -> Value {
         Value::String(String::from(s))
     }
 
-    fn n(n: i64, d: i64) -> Value {
+    fn ss(s: &str) -> SExpr {
+        SExpr::Value(sv(s))
+    }
+
+    fn nv(n: i64, d: i64) -> Value {
         Value::Number(Rational64::new(n, d))
+    }
+
+    fn ns(n: i64, d: i64) -> SExpr {
+        SExpr::Value(nv(n, d))
     }
 
     #[test]
     fn test_num() {
         let scope = Scope::new(None);
-        assert_eq!(NumberCast.call(&[s("1234")], &scope).unwrap(), n(1234, 1));
         assert_eq!(
-            NumberCast.call(&[s("-12.32")], &scope).unwrap(),
-            n(-1232, 100)
+            NumberCast.call(vec![ss("1234")], &scope).unwrap(),
+            nv(1234, 1)
         );
-        assert!(NumberCast.call(&[s("1.1.1")], &scope).is_err());
-        assert!(NumberCast.call(&[s("testing")], &scope).is_err());
+        assert_eq!(
+            NumberCast.call(vec![ss("-12.32")], &scope).unwrap(),
+            nv(-1232, 100)
+        );
+        assert!(NumberCast.call(vec![ss("1.1.1")], &scope).is_err());
+        assert!(NumberCast.call(vec![ss("testing")], &scope).is_err());
     }
 
     #[test]
     fn test_str() {
         let scope = Scope::new(None);
-        assert_eq!(StringCast.call(&[], &scope).unwrap(), s(""));
+        assert_eq!(StringCast.call(vec![], &scope).unwrap(), sv(""));
         assert_eq!(
-            StringCast.call(&[s("testA"), s("testB")], &scope).unwrap(),
-            s("testAtestB")
+            StringCast
+                .call(vec![ss("testA"), ss("testB")], &scope)
+                .unwrap(),
+            sv("testAtestB")
         );
         assert_eq!(
             StringCast
-                .call(&[n(12, 1), s("str"), n(1, 100), Value::Nil], &scope)
+                .call(
+                    vec![ns(12, 1), ss("str"), ns(1, 100), SExpr::Value(Value::Nil)],
+                    &scope
+                )
                 .unwrap(),
-            s("12str1/100nil")
+            sv("12str1/100nil")
         );
     }
 
@@ -192,8 +209,13 @@ mod tests {
         let scope = Scope::new(None);
         for chr in ["x", "0", "1", ",", "\""] {
             let val_str = Value::String(String::from(chr));
-            let val_num = Ord.call(&[val_str.clone()], &scope).unwrap();
-            assert_eq!(Chr.call(&[val_num], &scope).unwrap(), val_str);
+            let val_num = Ord
+                .call(vec![SExpr::Value(val_str.clone())], &scope)
+                .unwrap();
+            assert_eq!(
+                Chr.call(vec![SExpr::Value(val_num)], &scope).unwrap(),
+                val_str
+            );
         }
     }
 }

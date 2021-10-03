@@ -2,6 +2,7 @@ use num::Rational64;
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
+    value::SExpr,
     Scope, Value,
 };
 
@@ -27,12 +28,12 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.is_empty() {
             return self.arity_err("<...args>");
         }
         let evaled_args = args
-            .iter()
+            .into_iter()
             .map(|v| v.eval(scope))
             .collect::<Result<Vec<Value>, RuntimeError>>()?;
         let args_as_nums = |args: Vec<Value>| {
@@ -67,107 +68,158 @@ display_for_callable!(ComparisonOp);
 mod tests {
     use super::*;
 
-    fn n(n: i64) -> Value {
-        Value::from(n)
+    fn s(n: i64) -> SExpr {
+        SExpr::Value(Value::from(n))
+    }
+
+    fn true_v() -> Value {
+        Value::from(true)
+    }
+
+    fn false_v() -> Value {
+        Value::from(false)
     }
 
     #[test]
     fn test_eq() {
         let scope = Scope::new(None);
         assert!(matches!(
-            ComparisonOp::Eq.call(&[], &scope),
+            ComparisonOp::Eq.call(vec![], &scope),
             Err(RuntimeError::ArityError(..))
         ));
-        assert_eq!(ComparisonOp::Eq.call(&[n(2)], &scope).unwrap(), n(1));
-        assert_eq!(ComparisonOp::Eq.call(&[n(2), n(2)], &scope).unwrap(), n(1));
+        assert_eq!(ComparisonOp::Eq.call(vec![s(2)], &scope).unwrap(), true_v());
         assert_eq!(
-            ComparisonOp::Eq.call(&[n(2), n(2), n(3)], &scope).unwrap(),
-            n(0)
+            ComparisonOp::Eq.call(vec![s(2), s(2)], &scope).unwrap(),
+            true_v()
+        );
+        assert_eq!(
+            ComparisonOp::Eq
+                .call(vec![s(2), s(2), s(3)], &scope)
+                .unwrap(),
+            false_v()
         );
     }
 
     #[test]
     fn test_ne() {
         let scope = Scope::new(None);
-        assert_eq!(ComparisonOp::Ne.call(&[n(2)], &scope).unwrap(), n(0));
-        assert_eq!(ComparisonOp::Ne.call(&[n(2), n(2)], &scope).unwrap(), n(0));
         assert_eq!(
-            ComparisonOp::Ne.call(&[n(2), n(2), n(3)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Ne.call(vec![s(2)], &scope).unwrap(),
+            false_v()
+        );
+        assert_eq!(
+            ComparisonOp::Ne.call(vec![s(2), s(2)], &scope).unwrap(),
+            false_v()
+        );
+        assert_eq!(
+            ComparisonOp::Ne
+                .call(vec![s(2), s(2), s(3)], &scope)
+                .unwrap(),
+            true_v()
         );
     }
 
     #[test]
     fn test_gt() {
         let scope = Scope::new(None);
-        assert_eq!(ComparisonOp::Gt.call(&[n(5)], &scope).unwrap(), n(1));
+        assert_eq!(ComparisonOp::Gt.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
-            ComparisonOp::Gt.call(&[n(2), n(2), n(1)], &scope).unwrap(),
-            n(0)
+            ComparisonOp::Gt
+                .call(vec![s(2), s(2), s(1)], &scope)
+                .unwrap(),
+            false_v()
         );
         assert_eq!(
-            ComparisonOp::Gt.call(&[n(2), n(1), n(1)], &scope).unwrap(),
-            n(0)
+            ComparisonOp::Gt
+                .call(vec![s(2), s(1), s(1)], &scope)
+                .unwrap(),
+            false_v()
         );
         assert_eq!(
-            ComparisonOp::Gt.call(&[n(3), n(2), n(1)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Gt
+                .call(vec![s(3), s(2), s(1)], &scope)
+                .unwrap(),
+            true_v()
         );
     }
 
     #[test]
     fn test_lt() {
         let scope = Scope::new(None);
-        assert_eq!(ComparisonOp::Lt.call(&[n(5)], &scope).unwrap(), n(1));
+        assert_eq!(ComparisonOp::Lt.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
-            ComparisonOp::Lt.call(&[n(1), n(1), n(2)], &scope).unwrap(),
-            n(0)
+            ComparisonOp::Lt
+                .call(vec![s(1), s(1), s(2)], &scope)
+                .unwrap(),
+            false_v()
         );
         assert_eq!(
-            ComparisonOp::Lt.call(&[n(1), n(2), n(2)], &scope).unwrap(),
-            n(0)
+            ComparisonOp::Lt
+                .call(vec![s(1), s(2), s(2)], &scope)
+                .unwrap(),
+            false_v()
         );
         assert_eq!(
-            ComparisonOp::Lt.call(&[n(1), n(2), n(3)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Lt
+                .call(vec![s(1), s(2), s(3)], &scope)
+                .unwrap(),
+            true_v()
         );
     }
 
     #[test]
     fn test_ge() {
         let scope = Scope::new(None);
-        assert_eq!(ComparisonOp::Ge.call(&[n(5)], &scope).unwrap(), n(1));
+        assert_eq!(ComparisonOp::Ge.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
-            ComparisonOp::Ge.call(&[n(2), n(2), n(1)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Ge
+                .call(vec![s(2), s(2), s(1)], &scope)
+                .unwrap(),
+            true_v()
         );
         assert_eq!(
-            ComparisonOp::Ge.call(&[n(2), n(1), n(1)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Ge
+                .call(vec![s(2), s(1), s(1)], &scope)
+                .unwrap(),
+            true_v()
         );
         assert_eq!(
-            ComparisonOp::Ge.call(&[n(3), n(2), n(1)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Ge
+                .call(vec![s(3), s(2), s(1)], &scope)
+                .unwrap(),
+            true_v()
         );
-        assert_eq!(ComparisonOp::Ge.call(&[n(1), n(2)], &scope).unwrap(), n(0));
+        assert_eq!(
+            ComparisonOp::Ge.call(vec![s(1), s(2)], &scope).unwrap(),
+            false_v()
+        );
     }
 
     #[test]
     fn test_le() {
         let scope = Scope::new(None);
-        assert_eq!(ComparisonOp::Le.call(&[n(5)], &scope).unwrap(), n(1));
+        assert_eq!(ComparisonOp::Le.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
-            ComparisonOp::Le.call(&[n(1), n(1), n(2)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Le
+                .call(vec![s(1), s(1), s(2)], &scope)
+                .unwrap(),
+            true_v()
         );
         assert_eq!(
-            ComparisonOp::Le.call(&[n(1), n(2), n(2)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Le
+                .call(vec![s(1), s(2), s(2)], &scope)
+                .unwrap(),
+            true_v()
         );
         assert_eq!(
-            ComparisonOp::Le.call(&[n(1), n(2), n(3)], &scope).unwrap(),
-            n(1)
+            ComparisonOp::Le
+                .call(vec![s(1), s(2), s(3)], &scope)
+                .unwrap(),
+            true_v()
         );
-        assert_eq!(ComparisonOp::Le.call(&[n(2), n(1)], &scope).unwrap(), n(0));
+        assert_eq!(
+            ComparisonOp::Le.call(vec![s(2), s(1)], &scope).unwrap(),
+            false_v()
+        );
     }
 }

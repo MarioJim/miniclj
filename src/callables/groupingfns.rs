@@ -1,5 +1,6 @@
 use crate::{
     callables::{Callable, ExecutionResult},
+    value::SExpr,
     Scope, Value,
 };
 
@@ -11,7 +12,7 @@ impl Callable for Do {
         "do"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         let mut result = Value::Nil;
         for arg in args {
             result = arg.eval(scope)?;

@@ -30,14 +30,14 @@ SExpr: Box<SExpr> = {
     Value => Box::new(SExpr::Value(<>)),
 };
 
-Value: Box<Value> = {
-    "nil" => Box::new(Value::Nil),
-    "%" => Box::new(Value::Symbol(String::from("%"))),
-    ComparisonOp => Box::new(Value::Symbol(String::from(<>.name()))),
-    FactorOp => Box::new(Value::Symbol(String::from(<>.name()))),
-    Symbol => Box::new(Value::Symbol(<>)),
-    StringLiteral => Box::new(Value::String(<>)),
-    NumberLiteral => Box::new(Value::Number(<>)),
+Value: Value = {
+    "nil" => Value::Nil,
+    "%" => Value::Symbol(String::from("%")),
+    ComparisonOp => Value::Symbol(String::from(<>.name())),
+    FactorOp => Value::Symbol(String::from(<>.name())),
+    Symbol => Value::Symbol(<>),
+    StringLiteral => Value::String(<>),
+    NumberLiteral => Value::Number(<>),
 };
 
 pub NumberLiteral: Rational64 = {

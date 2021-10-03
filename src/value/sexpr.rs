@@ -19,7 +19,7 @@ pub enum SExpr {
     Vector(SExprs),
     Set(SExprs),
     Map(SExprs),
-    Value(Box<Value>),
+    Value(Value),
 }
 
 impl Display for SExpr {
@@ -97,6 +97,18 @@ impl Display for SExpr {
 }
 
 impl SExpr {
+    pub fn type_str(&self) -> &'static str {
+        match self {
+            SExpr::Expr(_) => "a s-expression",
+            SExpr::Lambda(_) => "an anonymous function",
+            SExpr::List(_) => "a list",
+            SExpr::Vector(_) => "a vector",
+            SExpr::Set(_) => "a set",
+            SExpr::Map(_) => "a map",
+            SExpr::Value(v) => v.type_str(),
+        }
+    }
+
     pub fn eval(self, scope: &Scope) -> ExecutionResult {
         match self {
             SExpr::Expr(exprs) => {
@@ -106,11 +118,8 @@ impl SExpr {
                     None => Ok(Value::List(list::List::default())),
                 }?;
                 if let Value::Fn(callable) = first_expr {
-                    let mut args = vec![];
-                    for expr in exprs_iter {
-                        args.push(expr.eval(scope)?);
-                    }
-                    callable.call(&args, scope)
+                    let args = exprs_iter.map(|e| *e).collect();
+                    callable.call(args, scope)
                 } else {
                     Err(RuntimeError::Error(format!(
                         "Value {} can't be called",
@@ -129,12 +138,13 @@ impl SExpr {
             SExpr::Vector(_) => todo!(),
             SExpr::Set(_) => todo!(),
             SExpr::Map(_) => todo!(),
-            SExpr::Value(val) => Ok(*val),
+            SExpr::Value(val) => Ok(val),
         }
     }
 
     pub fn eval_inside_list(self) -> ExecutionResult {
         match self {
+            // TODO: Change vector/set/map to its own datatypes
             SExpr::Expr(exprs)
             | SExpr::Lambda(exprs)
             | SExpr::List(exprs)
@@ -159,7 +169,7 @@ impl SExpr {
                     )))
                 }
             }
-            SExpr::Value(val) => Ok(*val),
+            SExpr::Value(val) => Ok(val),
         }
     }
 }

@@ -26,11 +26,11 @@ use std::fmt::{self, Debug, Display};
 
 use dyn_clone::DynClone;
 
-use crate::{Scope, Value};
+use crate::{value::SExpr, Scope, Value};
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult;
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult;
 
     fn arity_err(&self, expected: &'static str) -> ExecutionResult {
         Err(RuntimeError::ArityError(self.name(), expected))

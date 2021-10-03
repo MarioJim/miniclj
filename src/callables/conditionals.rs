@@ -1,9 +1,8 @@
-use std::slice;
-
 use num::Zero;
 
 use crate::{
     callables::{Callable, ExecutionResult},
+    value::SExpr,
     Scope, Value,
 };
 
@@ -28,11 +27,13 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
-        Ok(Value::from(self.inner_call(&args[0].eval(scope)?)))
+        Ok(Value::from(self.inner_call(
+            &args.into_iter().next().unwrap().eval(scope)?,
+        )))
     }
 }
 
@@ -46,14 +47,18 @@ impl Callable for If {
         "if"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 3 {
             return self.arity_err("<condition> <true expression> <false expression>");
         }
-        if IsTrue.call(slice::from_ref(&args[0]), scope)? == Value::from(false) {
-            args[2].eval(scope)
+        let mut args_iter = args.into_iter();
+        let condition = args_iter.next().unwrap();
+        let true_expr = args_iter.next().unwrap();
+        let false_expr = args_iter.next().unwrap();
+        if IsTrue.call(vec![condition], scope)? == Value::from(true) {
+            true_expr.eval(scope)
         } else {
-            args[1].eval(scope)
+            false_expr.eval(scope)
         }
     }
 }
@@ -68,10 +73,10 @@ impl Callable for And {
         "and"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         let false_val = Value::from(false);
-        for arg in args {
-            if IsTrue.call(slice::from_ref(arg), scope)? == false_val {
+        for arg in args.into_iter() {
+            if IsTrue.call(vec![arg], scope)? == false_val {
                 return Ok(false_val);
             }
         }
@@ -90,10 +95,10 @@ impl Callable for Or {
         "or"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         let true_val = Value::from(true);
-        for arg in args {
-            if IsTrue.call(slice::from_ref(arg), scope)? == true_val {
+        for arg in args.into_iter() {
+            if IsTrue.call(vec![arg], scope)? == true_val {
                 return Ok(true_val);
             }
         }

@@ -4,7 +4,7 @@ use num::{Signed, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    value::list::List,
+    value::{list::List, SExpr},
     Scope, Value,
 };
 
@@ -16,11 +16,11 @@ impl Callable for First {
         "first"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let maybe_coll = args[0].eval(scope)?;
+        let maybe_coll = args.into_iter().next().unwrap().eval(scope)?;
         let maybe_coll_type = maybe_coll.type_str();
         let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
             RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
@@ -39,11 +39,11 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let maybe_coll = args[0].eval(scope)?;
+        let maybe_coll = args.into_iter().next().unwrap().eval(scope)?;
         let maybe_coll_type = maybe_coll.type_str();
         let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
             RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
@@ -63,16 +63,18 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        let maybe_coll = args[1].eval(scope)?;
+        let mut args_iter = args.into_iter();
+        let maybe_value = args_iter.next().unwrap();
+        let maybe_coll = args_iter.next().unwrap().eval(scope)?;
         let maybe_coll_type = maybe_coll.type_str();
         let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
             RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
         })?;
-        coll_as_list.push_front(args[0].eval(scope)?);
+        coll_as_list.push_front(maybe_value.eval(scope)?);
         Ok(Value::List(coll_as_list))
     }
 }
@@ -87,12 +89,13 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        let val = args[0].eval(scope)?;
-        let maybe_collection = args[1].eval(scope)?;
+        let mut args_iter = args.into_iter();
+        let val = args_iter.next().unwrap().eval(scope)?;
+        let maybe_collection = args_iter.next().unwrap().eval(scope)?;
         match maybe_collection {
             Value::List(mut list) => {
                 list.push_front(val);
@@ -135,12 +138,13 @@ impl Callable for Get {
         "get"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
-        let coll = args[0].eval(scope)?;
-        let key = args[1].eval(scope)?;
+        let mut args_iter = args.into_iter();
+        let coll = args_iter.next().unwrap().eval(scope)?;
+        let key = args_iter.next().unwrap().eval(scope)?;
         match coll {
             Value::List(l) => l.get(&key),
             Value::Vector(v) => v.get(&key),
@@ -185,11 +189,11 @@ impl Callable for Len {
         "len"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let coll = args[0].eval(scope)?;
+        let coll = args.into_iter().next().unwrap().eval(scope)?;
         let len = match coll {
             Value::List(l) => l.len(),
             Value::Vector(v) => v.len(),
@@ -218,7 +222,7 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }

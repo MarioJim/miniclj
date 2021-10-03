@@ -2,6 +2,7 @@ use num::{Rational64, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
+    value::SExpr,
     Scope, Value,
 };
 
@@ -23,27 +24,25 @@ impl Callable for FactorOp {
         }
     }
 
-    fn call(&self, args: &[Value], scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
+        let len_nums = args.len();
         let mut nums = args
-            .iter()
+            .into_iter()
             .map(|v| {
+                let v_type = v.type_str();
                 if let Value::Number(n) = v.eval(scope)? {
                     Ok(n)
                 } else {
-                    Err(RuntimeError::WrongArgument(
-                        self.name(),
-                        "a number",
-                        v.type_str(),
-                    ))
+                    Err(RuntimeError::WrongArgument(self.name(), "a number", v_type))
                 }
             })
             .collect::<Result<Vec<Rational64>, RuntimeError>>()?
             .into_iter();
         match self {
             FactorOp::Add => Ok(Value::Number(nums.fold(zero, |a, b| a + b))),
-            FactorOp::Sub => match args.len() {
+            FactorOp::Sub => match len_nums {
                 0 => self.arity_err("<...args>"),
                 1 => Ok(Value::Number(-nums.next().unwrap())),
                 _ => {
@@ -53,7 +52,7 @@ impl Callable for FactorOp {
                 }
             },
             FactorOp::Mul => Ok(Value::Number(nums.fold(one, |a, b| a * b))),
-            FactorOp::Div => match args.len() {
+            FactorOp::Div => match len_nums {
                 0 => self.arity_err("<...args>"),
                 1 => Ok(Value::Number(nums.next().unwrap().recip())),
                 _ => {
@@ -76,20 +75,24 @@ display_for_callable!(FactorOp);
 mod tests {
     use super::*;
 
-    fn n(n: i64) -> Value {
+    fn v(n: i64) -> Value {
         Value::from(n)
+    }
+
+    fn s(n: i64) -> SExpr {
+        SExpr::Value(v(n))
     }
 
     #[test]
     fn test_add() {
         let scope = Scope::new(None);
-        assert_eq!(FactorOp::Add.call(&[], &scope).unwrap(), n(0));
-        assert_eq!(FactorOp::Add.call(&[n(2)], &scope).unwrap(), n(2));
+        assert_eq!(FactorOp::Add.call(vec![], &scope).unwrap(), v(0));
+        assert_eq!(FactorOp::Add.call(vec![s(2)], &scope).unwrap(), v(2));
         assert_eq!(
             FactorOp::Add
-                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .call(vec![s(2), s(5), s(6), s(-3)], &scope)
                 .unwrap(),
-            n(10)
+            v(10)
         );
     }
 
@@ -97,28 +100,28 @@ mod tests {
     fn test_sub() {
         let scope = Scope::new(None);
         assert!(matches!(
-            FactorOp::Sub.call(&[], &scope),
+            FactorOp::Sub.call(vec![], &scope),
             Err(RuntimeError::ArityError(..))
         ));
-        assert_eq!(FactorOp::Sub.call(&[n(2)], &scope).unwrap(), n(-2));
+        assert_eq!(FactorOp::Sub.call(vec![s(2)], &scope).unwrap(), v(-2));
         assert_eq!(
             FactorOp::Sub
-                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .call(vec![s(2), s(5), s(6), s(-3)], &scope)
                 .unwrap(),
-            n(-6)
+            v(-6)
         );
     }
 
     #[test]
     fn test_mul() {
         let scope = Scope::new(None);
-        assert_eq!(FactorOp::Mul.call(&[], &scope).unwrap(), n(1));
-        assert_eq!(FactorOp::Mul.call(&[n(2)], &scope).unwrap(), n(2));
+        assert_eq!(FactorOp::Mul.call(vec![], &scope).unwrap(), v(1));
+        assert_eq!(FactorOp::Mul.call(vec![s(2)], &scope).unwrap(), v(2));
         assert_eq!(
             FactorOp::Mul
-                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .call(vec![s(2), s(5), s(6), s(-3)], &scope)
                 .unwrap(),
-            n(-180)
+            v(-180)
         );
     }
 
@@ -127,18 +130,18 @@ mod tests {
         let scope = Scope::new(None);
         let f = |num, den| Value::Number(Rational64::new(num, den));
         assert!(matches!(
-            FactorOp::Div.call(&[], &scope),
+            FactorOp::Div.call(vec![], &scope),
             Err(RuntimeError::ArityError(..))
         ));
-        assert_eq!(FactorOp::Div.call(&[n(2)], &scope).unwrap(), f(1, 2));
+        assert_eq!(FactorOp::Div.call(vec![s(2)], &scope).unwrap(), f(1, 2));
         assert_eq!(
             FactorOp::Div
-                .call(&[n(2), n(5), n(6), n(-3)], &scope)
+                .call(vec![s(2), s(5), s(6), s(-3)], &scope)
                 .unwrap(),
             f(-2, 90)
         );
         assert!(matches!(
-            FactorOp::Div.call(&[n(2), n(3), n(0)], &scope),
+            FactorOp::Div.call(vec![s(2), s(3), s(0)], &scope),
             Err(RuntimeError::DivisionByZero)
         ));
     }
