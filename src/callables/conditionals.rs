@@ -13,8 +13,8 @@ pub struct IsTrue;
 impl IsTrue {
     pub fn inner_call(&self, val: &Value) -> bool {
         match val {
-            Value::Identifier(_) => {
-                unreachable!("IsTrue::inner_call called with an identifier")
+            Value::Symbol(_) => {
+                unreachable!("IsTrue::inner_call called with a symbol")
             }
             Value::Number(n) => n.is_zero(),
             Value::Nil => false,

@@ -30,7 +30,7 @@ pub enum Value {
     Set(set::Set),
     Map(map::Map),
 
-    Identifier(String),
+    Symbol(String),
     String(String),
     // TODO: Maybe change to Ratio<isize>?
     Number(Rational64),
@@ -45,7 +45,7 @@ impl Value {
             Value::Vector(_) => "a vector",
             Value::Set(_) => "a set",
             Value::Map(_) => "a map",
-            Value::Identifier(_) => "a identifier",
+            Value::Symbol(_) => "a symbol",
             Value::String(_) => "a string",
             Value::Number(_) => "a number",
             Value::Nil => "nil",
@@ -54,9 +54,9 @@ impl Value {
 
     pub fn eval(&self, scope: &Scope) -> ExecutionResult {
         match self {
-            Value::Identifier(id) => match scope.get(id) {
+            Value::Symbol(sym) => match scope.get(sym) {
                 Some(val) => val.eval(scope),
-                None => Err(RuntimeError::NotDefined(id.clone())),
+                None => Err(RuntimeError::NotDefined(sym.clone())),
             },
             _ => Ok(self.clone()),
         }
@@ -71,7 +71,7 @@ impl PartialEq for Value {
             (Value::Vector(r), Value::Vector(l)) => r == l,
             (Value::Set(r), Value::Set(l)) => r == l,
             (Value::Map(r), Value::Map(l)) => r == l,
-            (Value::Identifier(r), Value::Identifier(l)) => r == l,
+            (Value::Symbol(r), Value::Symbol(l)) => r == l,
             (Value::String(r), Value::String(l)) => r == l,
             (Value::Number(r), Value::Number(l)) => r == l,
             (Value::Nil, Value::Nil) => true,
@@ -89,7 +89,7 @@ impl Display for Value {
             Value::Vector(v) => v.to_string(),
             Value::Set(s) => s.to_string(),
             Value::Map(m) => m.to_string(),
-            Value::Identifier(i) => i.to_string(),
+            Value::Symbol(s) => s.to_string(),
             Value::String(s) => format!("\"{}\"", s),
             Value::Number(n) => n.to_string(),
             Value::Nil => String::from("nil"),
@@ -116,7 +116,7 @@ impl Hash for Value {
             Value::Vector(v) => v.hash(state),
             Value::Set(s) => s.hash(state),
             Value::Map(m) => m.hash(state),
-            Value::Identifier(i) => i.hash(state),
+            Value::Symbol(s) => s.hash(state),
             Value::String(s) => s.hash(state),
             Value::Number(n) => n.hash(state),
             Value::Nil => NilHash.hash(state),

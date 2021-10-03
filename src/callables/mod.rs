@@ -63,8 +63,8 @@ impl Display for RuntimeError {
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
             ),
-            RuntimeError::NotDefined(id) => {
-                write!(f, "Identifier \"{}\" not defined in the current scope", id)
+            RuntimeError::NotDefined(symbol) => {
+                write!(f, "Symbol \"{}\" not defined in the current scope", symbol)
             }
             RuntimeError::DivisionByZero => write!(f, "Division by zero is undefined behavior"),
             RuntimeError::Error(s) => write!(f, "{}", s),

@@ -32,10 +32,10 @@ SExpr: Box<SExpr> = {
 
 Value: Box<Value> = {
     "nil" => Box::new(Value::Nil),
-    "%" => Box::new(Value::Identifier(String::from("%"))),
-    ComparisonOp => Box::new(Value::Identifier(String::from(<>.name()))),
-    FactorOp => Box::new(Value::Identifier(String::from(<>.name()))),
-    Identifier => Box::new(Value::Identifier(<>)),
+    "%" => Box::new(Value::Symbol(String::from("%"))),
+    ComparisonOp => Box::new(Value::Symbol(String::from(<>.name()))),
+    FactorOp => Box::new(Value::Symbol(String::from(<>.name()))),
+    Symbol => Box::new(Value::Symbol(<>)),
     StringLiteral => Box::new(Value::String(<>)),
     NumberLiteral => Box::new(Value::Number(<>)),
 };
@@ -73,7 +73,7 @@ FactorOp: FactorOp = {
     "/" => FactorOp::Div,
 };
 
-Identifier: String = r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>);
+Symbol: String = r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>);
 StringLiteral: String = r#""[^"]*""# => {
     let mut chars = <>.chars();
     chars.next();

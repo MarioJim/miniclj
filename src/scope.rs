@@ -79,30 +79,30 @@ impl Scope {
         Scope::RootScope(RefCell::new(symbol_table))
     }
 
-    pub fn get(&self, identifier: &str) -> Option<Value> {
+    pub fn get(&self, symbol: &str) -> Option<Value> {
         match self {
-            Scope::RootScope(table) => table.borrow().get(identifier).cloned(),
+            Scope::RootScope(table) => table.borrow().get(symbol).cloned(),
             Scope::LocalScope(table, top_scope) => table
                 .borrow()
-                .get(identifier)
+                .get(symbol)
                 .cloned()
-                .or_else(|| top_scope.get(identifier)),
+                .or_else(|| top_scope.get(symbol)),
         }
     }
 
-    pub fn insert(&self, identifier: String, value: Value) {
+    pub fn insert(&self, symbol: String, value: Value) {
         match self {
             Scope::RootScope(t) => t,
             Scope::LocalScope(t, _) => t,
         }
         .borrow_mut()
-        .insert(identifier, value);
+        .insert(symbol, value);
     }
 
-    pub fn insert_in_root(&self, identifier: String, value: Value) {
+    pub fn insert_in_root(&self, symbol: String, value: Value) {
         match self {
-            Scope::LocalScope(_, s) => s.insert_in_root(identifier, value),
-            Scope::RootScope(_) => self.insert(identifier, value),
+            Scope::LocalScope(_, s) => s.insert_in_root(symbol, value),
+            Scope::RootScope(_) => self.insert(symbol, value),
         };
     }
 }
