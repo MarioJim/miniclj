@@ -6,7 +6,7 @@ use std::{
 
 use crate::{callables::ExecutionResult, value::Value};
 
-#[derive(Debug, Eq, Clone)]
+#[derive(Debug, Default, Eq, Clone)]
 pub struct Set(HashSet<Value>);
 
 impl Display for Set {

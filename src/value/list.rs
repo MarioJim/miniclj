@@ -71,6 +71,10 @@ impl List {
         self.0.push_front(value)
     }
 
+    pub fn push_back(&mut self, value: Value) {
+        self.0.push_back(value)
+    }
+
     pub fn pop_front(&mut self) -> Option<Value> {
         self.0.pop_front()
     }
@@ -90,11 +94,5 @@ impl IntoIterator for List {
 impl FromIterator<Value> for List {
     fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
         List(iter.into_iter().collect())
-    }
-}
-
-impl From<VecDeque<Value>> for List {
-    fn from(v: VecDeque<Value>) -> Self {
-        List(v)
     }
 }

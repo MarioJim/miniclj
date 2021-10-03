@@ -10,7 +10,7 @@ use crate::{
     value::Value,
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Hash)]
 pub struct Vector(Vec<Value>);
 
 impl Display for Vector {

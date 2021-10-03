@@ -1,12 +1,11 @@
 use std::{
-    collections::VecDeque,
     fmt::{Display, Formatter},
     rc::Rc,
 };
 
 use crate::{
     callables::{lambdafns::LambdaFn, ExecutionResult, RuntimeError},
-    value::list,
+    value::{list, map, set, vector},
     Scope, Value,
 };
 
@@ -133,11 +132,11 @@ impl SExpr {
                 Ok(Value::Fn(Box::new(lambdafn)))
             }
             SExpr::List(exprs) => {
-                let mut result = VecDeque::new();
+                let mut result = list::List::default();
                 for expr in exprs {
                     result.push_back(expr.eval_inside_list()?);
                 }
-                Ok(Value::List(list::List::from(result)))
+                Ok(Value::List(result))
             }
             SExpr::Vector(_) => todo!(),
             SExpr::Set(_) => todo!(),
@@ -148,25 +147,37 @@ impl SExpr {
 
     pub fn eval_inside_list(self) -> ExecutionResult {
         match self {
-            // TODO: Change vector/set/map to its own datatypes
-            SExpr::Expr(exprs)
-            | SExpr::Lambda(exprs)
-            | SExpr::List(exprs)
-            | SExpr::Vector(exprs)
-            | SExpr::Set(exprs) => {
-                let mut result = VecDeque::new();
+            SExpr::Expr(exprs) | SExpr::Lambda(exprs) | SExpr::List(exprs) => {
+                let mut result = list::List::default();
                 for expr in exprs {
                     result.push_back(expr.eval_inside_list()?);
                 }
-                Ok(Value::List(list::List::from(result)))
+                Ok(Value::List(result))
+            }
+            SExpr::Vector(exprs) => {
+                let mut result = vector::Vector::default();
+                for expr in exprs {
+                    result.push(expr.eval_inside_list()?);
+                }
+                Ok(Value::Vector(result))
+            }
+            SExpr::Set(exprs) => {
+                let mut result = set::Set::default();
+                for expr in exprs {
+                    result.insert(expr.eval_inside_list()?);
+                }
+                Ok(Value::Set(result))
             }
             SExpr::Map(exprs) => {
                 if exprs.len() % 2 == 0 {
-                    let mut result = VecDeque::new();
-                    for expr in exprs {
-                        result.push_back(expr.eval_inside_list()?);
+                    let mut result = map::Map::default();
+                    let mut exprs_iter = exprs.into_iter();
+                    while let Some(key_expr) = exprs_iter.next() {
+                        let key = key_expr.eval_inside_list()?;
+                        let val = exprs_iter.next().unwrap().eval_inside_list()?;
+                        result.insert(key, val);
                     }
-                    Ok(Value::List(list::List::from(result)))
+                    Ok(Value::Map(result))
                 } else {
                     Err(RuntimeError::Error(String::from(
                         "Map must contain an even number of values",
