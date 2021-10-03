@@ -10,7 +10,7 @@ use num::Rational64;
 use rand::random;
 
 use crate::{
-    callables::{lambdafns::AnonymousLambdaFn, Callable, ExecutionResult, RuntimeError},
+    callables::{Callable, ExecutionResult, RuntimeError},
     Scope,
 };
 
@@ -103,7 +103,7 @@ impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             Value::Fn(f) => {
-                if f.name() == AnonymousLambdaFn.name() {
+                if f.is_user_defined() {
                     let x: u16 = random();
                     x.hash(state)
                 } else {

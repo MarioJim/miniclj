@@ -16,6 +16,7 @@ macro_rules! add_fn {
 
 type SymbolTable = RefCell<HashMap<String, Value>>;
 
+#[derive(Debug)]
 pub enum Scope {
     RootScope(SymbolTable),
     LocalScope(SymbolTable, Rc<Scope>),
@@ -58,7 +59,7 @@ impl Scope {
         add_fn!(symbol_table, callables::iofns::Print);
         add_fn!(symbol_table, callables::iofns::Read);
 
-        add_fn!(symbol_table, callables::lambdafns::LambdaFn);
+        add_fn!(symbol_table, callables::lambdafns::AnonymousFn);
         // callables::lambdafns::AnonymousLambdaFn can't be called directly, just constructed
 
         add_fn!(symbol_table, callables::scopefns::Def);

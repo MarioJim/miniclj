@@ -38,6 +38,10 @@ pub trait Callable: Display + Debug + DynClone {
     fn arity_err(&self, expected: &'static str) -> ExecutionResult {
         Err(RuntimeError::ArityError(self.name(), expected))
     }
+
+    fn is_user_defined(&self) -> bool {
+        false
+    }
 }
 
 dyn_clone::clone_trait_object!(Callable);

@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    callables::{ExecutionResult, RuntimeError},
+    callables::{lambdafns::LambdaFn, ExecutionResult, RuntimeError},
     value::list,
     Scope, Value,
 };
@@ -128,7 +128,10 @@ impl SExpr {
                     )))
                 }
             }
-            SExpr::Lambda(_) => todo!(),
+            SExpr::Lambda(exprs) => {
+                let lambdafn = LambdaFn::new_from_literal(SExpr::Expr(exprs));
+                Ok(Value::Fn(Box::new(lambdafn)))
+            }
             SExpr::List(exprs) => {
                 let mut result = VecDeque::new();
                 for expr in exprs {
