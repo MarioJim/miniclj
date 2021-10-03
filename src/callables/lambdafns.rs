@@ -12,7 +12,7 @@ pub struct LambdaFn {
 }
 
 impl LambdaFn {
-    fn new(symbols: Vec<String>, body: SExpr) -> LambdaFn {
+    pub fn new(symbols: Vec<String>, body: SExpr) -> LambdaFn {
         LambdaFn { symbols, body }
     }
 

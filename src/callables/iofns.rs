@@ -1,7 +1,6 @@
-use std::{
-    io::{self, Read as ioRead},
-    rc::Rc,
-};
+use std::{io, rc::Rc};
+
+use escape8259::unescape;
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
@@ -19,10 +18,18 @@ impl Callable for Print {
     fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         let mut it = args.into_iter().map(|v| v.eval(scope));
         if let Some(v) = it.next() {
-            print!("{}", v?);
+            if let Ok(Value::String(s)) = v {
+                print!("{}", unescape(&s).unwrap());
+            } else {
+                print!("{}", v?);
+            }
         }
         for v in it {
-            print!(" {}", v?);
+            if let Ok(Value::String(s)) = v {
+                print!(" {}", unescape(&s).unwrap());
+            } else {
+                print!(" {}", v?);
+            }
         }
         Ok(Value::Nil)
     }
@@ -41,9 +48,9 @@ impl Callable for Read {
     fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         let mut buffer = String::new();
         io::stdin()
-            .read_to_string(&mut buffer)
+            .read_line(&mut buffer)
             .map_err(|e| RuntimeError::Error(e.to_string()))?;
-        Ok(Value::String(buffer))
+        Ok(Value::String(String::from(buffer.trim_end())))
     }
 }
 

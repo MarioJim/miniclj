@@ -138,10 +138,31 @@ impl SExpr {
                 }
                 Ok(Value::List(result))
             }
-            SExpr::Vector(_) => todo!(),
-            SExpr::Set(_) => todo!(),
-            SExpr::Map(_) => todo!(),
-            SExpr::Value(val) => Ok(val),
+            SExpr::Vector(exprs) => {
+                let mut result = vector::Vector::default();
+                for expr in exprs {
+                    result.push(expr.eval(scope)?);
+                }
+                Ok(Value::Vector(result))
+            }
+            SExpr::Set(exprs) => {
+                let mut result = set::Set::default();
+                for expr in exprs {
+                    result.insert(expr.eval(scope)?);
+                }
+                Ok(Value::Set(result))
+            }
+            SExpr::Map(exprs) => {
+                let mut result = map::Map::default();
+                let mut exprs_iter = exprs.into_iter();
+                while let Some(key_expr) = exprs_iter.next() {
+                    let key = key_expr.eval(scope)?;
+                    let val = exprs_iter.next().unwrap().eval(scope)?;
+                    result.insert(key, val);
+                }
+                Ok(Value::Map(result))
+            }
+            SExpr::Value(val) => val.eval(scope),
         }
     }
 

@@ -12,6 +12,7 @@ lalrpop = "0.19.6"
 
 [dependencies]
 dyn-clone = "1.0"
+escape8259 = "0.5"
 lalrpop-util = "0.19.6"
 num = "0.4"
 rand = "0.8"
