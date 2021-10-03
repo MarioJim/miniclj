@@ -1,4 +1,7 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    rc::Rc,
+};
 
 use num::{Signed, Zero};
 
@@ -16,7 +19,7 @@ impl Callable for First {
         "first"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -39,7 +42,7 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -63,7 +66,7 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
@@ -89,7 +92,7 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
@@ -138,7 +141,7 @@ impl Callable for Get {
         "get"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
@@ -189,7 +192,7 @@ impl Callable for Len {
         "len"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -222,7 +225,7 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }

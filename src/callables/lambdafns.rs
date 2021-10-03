@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     callables::{Callable, ExecutionResult},
     SExpr, Scope,
@@ -11,7 +13,7 @@ impl Callable for LambdaFn {
         "fn"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
@@ -26,7 +28,7 @@ impl Callable for AnonymousLambdaFn {
         "*lambda"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }

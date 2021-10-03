@@ -1,4 +1,7 @@
-use std::io::{self, Read as ioRead};
+use std::{
+    io::{self, Read as ioRead},
+    rc::Rc,
+};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
@@ -13,7 +16,7 @@ impl Callable for Print {
         "print"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         let mut it = args.into_iter().map(|v| v.eval(scope));
         if let Some(v) = it.next() {
             print!("{}", v?);
@@ -35,7 +38,7 @@ impl Callable for Read {
         "read"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         let mut buffer = String::new();
         io::stdin()
             .read_to_string(&mut buffer)

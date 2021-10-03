@@ -3,6 +3,7 @@ use std::{
     convert::TryFrom,
     fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
+    rc::Rc,
 };
 
 use num::Rational64;
@@ -49,7 +50,7 @@ impl Value {
         }
     }
 
-    pub fn eval(&self, scope: &Scope) -> ExecutionResult {
+    pub fn eval(&self, scope: &Rc<Scope>) -> ExecutionResult {
         match self {
             Value::Symbol(sym) => match scope.get(sym) {
                 Some(val) => val.eval(scope),

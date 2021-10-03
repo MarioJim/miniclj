@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use num::Signed;
 
 use crate::{
@@ -14,7 +16,7 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
@@ -47,7 +49,7 @@ impl Callable for StringCast {
         "str"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         args.into_iter()
             .map(|sexpr| {
                 let evaled_value = sexpr.eval(scope)?;
@@ -77,7 +79,7 @@ impl Callable for Ord {
         "ord"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
@@ -111,7 +113,7 @@ impl Callable for Chr {
         "chr"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<number>");
         }
@@ -169,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_num() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(
             NumberCast.call(vec![ss("1234")], &scope).unwrap(),
             nv(1234, 1)
@@ -184,7 +186,7 @@ mod tests {
 
     #[test]
     fn test_str() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(StringCast.call(vec![], &scope).unwrap(), sv(""));
         assert_eq!(
             StringCast
@@ -205,7 +207,7 @@ mod tests {
 
     #[test]
     fn test_chr_ord() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         for chr in ["x", "0", "1", ",", "\""] {
             let val_str = Value::String(String::from(chr));
             let val_num = Ord

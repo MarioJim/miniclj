@@ -1,6 +1,7 @@
 use std::{
     collections::VecDeque,
     fmt::{Display, Formatter},
+    rc::Rc,
 };
 
 use crate::{
@@ -109,7 +110,7 @@ impl SExpr {
         }
     }
 
-    pub fn eval(self, scope: &Scope) -> ExecutionResult {
+    pub fn eval(self, scope: &Rc<Scope>) -> ExecutionResult {
         match self {
             SExpr::Expr(exprs) => {
                 let mut exprs_iter = exprs.into_iter();

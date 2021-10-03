@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use num::{Rational64, Zero};
 
 use crate::{
@@ -23,7 +25,7 @@ impl Callable for FactorOp {
         }
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
         let len_nums = args.len();
@@ -84,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(FactorOp::Add.call(vec![], &scope).unwrap(), v(0));
         assert_eq!(FactorOp::Add.call(vec![s(2)], &scope).unwrap(), v(2));
         assert_eq!(
@@ -97,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_sub() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert!(matches!(
             FactorOp::Sub.call(vec![], &scope),
             Err(RuntimeError::ArityError(..))
@@ -113,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_mul() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(FactorOp::Mul.call(vec![], &scope).unwrap(), v(1));
         assert_eq!(FactorOp::Mul.call(vec![s(2)], &scope).unwrap(), v(2));
         assert_eq!(
@@ -126,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_div() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         let f = |num, den| Value::Number(Rational64::new(num, den));
         assert!(matches!(
             FactorOp::Div.call(vec![], &scope),

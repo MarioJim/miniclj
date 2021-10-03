@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use num::Zero;
 
 use crate::{
@@ -26,7 +28,7 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
@@ -46,7 +48,7 @@ impl Callable for If {
         "if"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 3 {
             return self.arity_err("<condition> <true expression> <false expression>");
         }
@@ -72,7 +74,7 @@ impl Callable for And {
         "and"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         let false_val = Value::from(false);
         for arg in args.into_iter() {
             if IsTrue.call(vec![arg], scope)? == false_val {
@@ -94,7 +96,7 @@ impl Callable for Or {
         "or"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         let true_val = Value::from(true);
         for arg in args.into_iter() {
             if IsTrue.call(vec![arg], scope)? == true_val {

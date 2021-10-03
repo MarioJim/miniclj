@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, rc::Rc};
 
 use crate::{
     callables::{conditionals::IsTrue, Callable, ExecutionResult, RuntimeError},
@@ -14,7 +14,7 @@ impl Callable for Map {
         "map"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -51,7 +51,7 @@ impl Callable for Filter {
         "filter"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -95,7 +95,7 @@ impl Callable for Reduce {
         "reduce"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }

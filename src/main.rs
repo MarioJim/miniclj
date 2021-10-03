@@ -1,4 +1,4 @@
-use std::{env::args, fs::read_to_string};
+use std::{env::args, fs::read_to_string, rc::Rc};
 
 use lalrpop_util::lalrpop_mod;
 
@@ -22,7 +22,7 @@ fn main() -> Result<(), String> {
     let syntax_tree = parser::SExprsParser::new()
         .parse(&input)
         .map_err(|e| format!("{:#?}", e))?;
-    let scope = Scope::new(None);
+    let scope = Rc::new(Scope::new(None));
 
     for expr in syntax_tree {
         println!("{:#?}", expr.eval(&scope));

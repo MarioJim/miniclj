@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use num::Rational64;
 
 use crate::{
@@ -27,7 +29,7 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Scope) -> ExecutionResult {
+    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
         if args.is_empty() {
             return self.arity_err("<...args>");
         }
@@ -81,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_eq() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert!(matches!(
             ComparisonOp::Eq.call(vec![], &scope),
             Err(RuntimeError::ArityError(..))
@@ -101,7 +103,7 @@ mod tests {
 
     #[test]
     fn test_ne() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(
             ComparisonOp::Ne.call(vec![s(2)], &scope).unwrap(),
             false_v()
@@ -120,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_gt() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(ComparisonOp::Gt.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
             ComparisonOp::Gt
@@ -144,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_lt() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(ComparisonOp::Lt.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
             ComparisonOp::Lt
@@ -168,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_ge() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(ComparisonOp::Ge.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
             ComparisonOp::Ge
@@ -196,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_le() {
-        let scope = Scope::new(None);
+        let scope = Rc::new(Scope::new(None));
         assert_eq!(ComparisonOp::Le.call(vec![s(5)], &scope).unwrap(), true_v());
         assert_eq!(
             ComparisonOp::Le

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     callables::{Callable, ExecutionResult},
     SExpr, Scope,
@@ -11,7 +13,7 @@ impl Callable for Def {
         "def"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
@@ -26,7 +28,7 @@ impl Callable for Defn {
         "defn"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
@@ -41,7 +43,7 @@ impl Callable for Let {
         "let"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
@@ -56,7 +58,7 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
@@ -71,7 +73,7 @@ impl Callable for Recur {
         "recur"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Scope) -> ExecutionResult {
+    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
         todo!()
     }
 }
