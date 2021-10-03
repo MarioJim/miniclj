@@ -4,8 +4,7 @@ use num::Rational64;
 
 use crate::{
     callables::{Callable, ComparisonOp, FactorOp},
-    value::SExpr,
-    Value,
+    SExpr, Value,
 };
 
 grammar;

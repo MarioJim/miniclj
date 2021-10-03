@@ -2,8 +2,7 @@ use num::Rational64;
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    value::SExpr,
-    Scope, Value,
+    SExpr, Scope, Value,
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]

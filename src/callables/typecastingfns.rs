@@ -2,9 +2,8 @@ use num::Signed;
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    miniclj::NumberLiteralParser,
-    value::SExpr,
-    Scope, Value,
+    parser::NumberLiteralParser,
+    SExpr, Scope, Value,
 };
 
 #[derive(Debug, Clone)]

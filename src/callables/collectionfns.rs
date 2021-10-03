@@ -4,8 +4,8 @@ use num::{Signed, Zero};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    value::{list::List, SExpr},
-    Scope, Value,
+    value::list::List,
+    SExpr, Scope, Value,
 };
 
 #[derive(Debug, Clone)]

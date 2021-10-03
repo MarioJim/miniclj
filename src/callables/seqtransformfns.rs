@@ -2,8 +2,8 @@ use std::convert::TryFrom;
 
 use crate::{
     callables::{conditionals::IsTrue, Callable, ExecutionResult, RuntimeError},
-    value::{list::List, SExpr, ValueIterator},
-    Scope, Value,
+    value::{list::List, ValueIterator},
+    SExpr, Scope, Value,
 };
 
 #[derive(Debug, Clone)]

@@ -2,8 +2,7 @@ use std::io::{self, Read as ioRead};
 
 use crate::{
     callables::{Callable, ExecutionResult, RuntimeError},
-    value::SExpr,
-    Scope, Value,
+    SExpr, Scope, Value,
 };
 
 #[derive(Debug, Clone)]

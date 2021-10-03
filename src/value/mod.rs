@@ -16,10 +16,7 @@ use crate::{
 pub mod list;
 pub mod map;
 pub mod set;
-pub mod sexpr;
 pub mod vector;
-
-pub use sexpr::SExpr;
 
 #[derive(Debug, Clone)]
 pub enum Value {

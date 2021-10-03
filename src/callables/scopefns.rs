@@ -1,7 +1,6 @@
 use crate::{
     callables::{Callable, ExecutionResult},
-    value::SExpr,
-    Scope,
+    SExpr, Scope,
 };
 
 #[derive(Debug, Clone)]

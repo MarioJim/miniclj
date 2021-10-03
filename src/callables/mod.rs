@@ -26,7 +26,7 @@ use std::fmt::{self, Debug, Display};
 
 use dyn_clone::DynClone;
 
-use crate::{value::SExpr, Scope, Value};
+use crate::{SExpr, Scope, Value};
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
