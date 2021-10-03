@@ -23,7 +23,7 @@ pub struct AnonymousLambdaFn;
 
 impl Callable for AnonymousLambdaFn {
     fn name(&self) -> &'static str {
-        "an anonymous lambda"
+        "*lambda"
     }
 
     fn call(&self, _: &[Value], _: &Scope) -> ExecutionResult {

@@ -1,13 +1,9 @@
-use std::{
-    collections::HashSet,
-    iter::FromIterator,
-    str::FromStr,
-};
+use std::str::FromStr;
 
 use num::Rational64;
 
 use crate::{
-    callables::{ComparisonOp, FactorOp},
+    callables::{Callable, ComparisonOp, FactorOp},
     value::SExpr,
     Value,
 };
@@ -29,15 +25,16 @@ SExpr: Box<SExpr> = {
     "#(" <SExprs> ")" => Box::new(SExpr::Lambda(<>)),
     "'(" <SExprs> ")" => Box::new(SExpr::List(<>)),
     "[" <SExprs> "]" => Box::new(SExpr::Vector(<>)),
-    "#{" <Values> "}" => Box::new(SExpr::Set(HashSet::from_iter(<>))),
+    "{" <SExprs> "}" => Box::new(SExpr::Map(<>)),
+    "#{" <SExprs> "}" => Box::new(SExpr::Set(<>)),
     Value => Box::new(SExpr::Value(<>)),
 };
 
 Value: Box<Value> = {
     "nil" => Box::new(Value::Nil),
     "%" => Box::new(Value::Identifier(String::from("%"))),
-    ComparisonOp => Box::new(Value::Fn(Box::new(<>))),
-    FactorOp => Box::new(Value::Fn(Box::new(<>))),
+    ComparisonOp => Box::new(Value::Identifier(String::from(<>.name()))),
+    FactorOp => Box::new(Value::Identifier(String::from(<>.name()))),
     Identifier => Box::new(Value::Identifier(<>)),
     StringLiteral => Box::new(Value::String(<>)),
     NumberLiteral => Box::new(Value::Number(<>)),

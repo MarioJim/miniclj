@@ -9,7 +9,7 @@ use num::Rational64;
 use rand::random;
 
 use crate::{
-    callables::{Callable, ExecutionResult, RuntimeError},
+    callables::{lambdafns::AnonymousLambdaFn, Callable, ExecutionResult, RuntimeError},
     Scope,
 };
 
@@ -23,7 +23,6 @@ pub use sexpr::SExpr;
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    SExpr(sexpr::SExpr),
     Fn(Box<dyn Callable>),
 
     List(list::List),
@@ -41,7 +40,6 @@ pub enum Value {
 impl Value {
     pub fn type_str(&self) -> &'static str {
         match self {
-            Value::SExpr(_) => "an s-expression",
             Value::Fn(_) => "a function",
             Value::List(_) => "a list",
             Value::Vector(_) => "a vector",
@@ -56,7 +54,6 @@ impl Value {
 
     pub fn eval(&self, scope: &Scope) -> ExecutionResult {
         match self {
-            Value::SExpr(_) => todo!(),
             Value::Identifier(id) => match scope.get(id) {
                 Some(val) => val.eval(scope),
                 None => Err(RuntimeError::NotDefined(id.clone())),
@@ -69,7 +66,6 @@ impl Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Value::SExpr(r), Value::SExpr(l)) => r == l,
             (Value::Fn(r), Value::Fn(l)) => r.name() == l.name(),
             (Value::List(r), Value::List(l)) => r == l,
             (Value::Vector(r), Value::Vector(l)) => r == l,
@@ -88,8 +84,7 @@ impl Eq for Value {}
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let string = match self {
-            Value::SExpr(s) => s.to_string(),
-            Value::Fn(f) => format!("#function[{}]", f.name()),
+            Value::Fn(f) => f.name().to_string(),
             Value::List(l) => l.to_string(),
             Value::Vector(v) => v.to_string(),
             Value::Set(s) => s.to_string(),
@@ -109,9 +104,13 @@ struct NilHash;
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Value::SExpr(_) | Value::Fn(_) => {
-                let x: u16 = random();
-                x.hash(state)
+            Value::Fn(f) => {
+                if f.name() == AnonymousLambdaFn.name() {
+                    let x: u16 = random();
+                    x.hash(state)
+                } else {
+                    f.name().hash(state)
+                }
             }
             Value::List(l) => l.hash(state),
             Value::Vector(v) => v.hash(state),
@@ -149,9 +148,6 @@ impl TryFrom<Value> for ValueIterator {
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         match value {
-            Value::SExpr(_) | Value::Identifier(_) => {
-                unreachable!("Trying to turn an s-expr or an identifier into an iterator")
-            }
             Value::List(l) => Ok(ValueIterator::List(l.into_iter())),
             Value::Vector(v) => Ok(ValueIterator::Vector(v.into_iter())),
             Value::Set(s) => Ok(ValueIterator::Set(s.into_iter())),

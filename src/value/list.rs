@@ -92,3 +92,9 @@ impl FromIterator<Value> for List {
         List(iter.into_iter().collect())
     }
 }
+
+impl From<VecDeque<Value>> for List {
+    fn from(v: VecDeque<Value>) -> Self {
+        List(v)
+    }
+}
