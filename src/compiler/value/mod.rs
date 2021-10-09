@@ -9,7 +9,7 @@ use std::{
 use num::Rational64;
 use rand::random;
 
-use crate::{
+use crate::compiler::{
     callables::{Callable, ExecutionResult, RuntimeError},
     Scope,
 };

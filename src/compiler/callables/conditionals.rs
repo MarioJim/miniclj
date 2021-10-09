@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use num::Zero;
 
-use crate::{
+use crate::compiler::{
     callables::{Callable, ExecutionResult},
     SExpr, Scope, Value,
 };
@@ -16,7 +16,7 @@ impl IsTrue {
             Value::Symbol(_) => {
                 unreachable!("IsTrue::inner_call called with a symbol")
             }
-            Value::Number(n) => n.is_zero(),
+            Value::Number(n) => !n.is_zero(),
             Value::Nil => false,
             _ => true,
         }
@@ -32,9 +32,8 @@ impl Callable for IsTrue {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
-        Ok(Value::from(self.inner_call(
-            &args.into_iter().next().unwrap().eval(scope)?,
-        )))
+        let arg = args.into_iter().next().unwrap();
+        Ok(Value::from(self.inner_call(&arg.eval(scope)?)))
     }
 }
 

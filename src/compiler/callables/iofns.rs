@@ -2,7 +2,7 @@ use std::{io, rc::Rc};
 
 use escape8259::unescape;
 
-use crate::{
+use crate::compiler::{
     callables::{Callable, ExecutionResult, RuntimeError},
     SExpr, Scope, Value,
 };

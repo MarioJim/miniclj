@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{
+use crate::compiler::{
     callables::{lambdafns::LambdaFn, Callable, ExecutionResult, RuntimeError},
     SExpr, Scope, Value,
 };

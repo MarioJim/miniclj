@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::{
+use crate::compiler::{
     callables::{lambdafns::LambdaFn, ExecutionResult, RuntimeError},
     value::{list, map, set, vector},
     Scope, Value,

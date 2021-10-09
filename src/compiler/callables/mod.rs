@@ -29,7 +29,7 @@ use std::{
 
 use dyn_clone::DynClone;
 
-use crate::{SExpr, Scope, Value};
+use crate::compiler::{SExpr, Scope, Value};
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;

@@ -3,9 +3,11 @@ use std::rc::Rc;
 use num::Signed;
 
 use crate::{
-    callables::{Callable, ExecutionResult, RuntimeError},
+    compiler::{
+        callables::{Callable, ExecutionResult, RuntimeError},
+        SExpr, Scope, Value,
+    },
     parser::NumberLiteralParser,
-    SExpr, Scope, Value,
 };
 
 #[derive(Debug, Clone)]

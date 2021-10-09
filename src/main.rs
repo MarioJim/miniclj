@@ -1,31 +1,43 @@
-use std::{env::args, fs::read_to_string, rc::Rc};
+use std::rc::Rc;
 
 use lalrpop_util::lalrpop_mod;
 
-lalrpop_mod!(#[allow(clippy::all)] pub parser);
-mod callables;
-mod scope;
-mod sexpr;
-mod value;
+lalrpop_mod!(#[allow(dead_code)] #[allow(clippy::all)] pub parser);
+mod cli;
+mod compiler;
 
-pub use scope::Scope;
-pub use sexpr::SExpr;
-pub use value::Value;
+use crate::{cli::read_file_from_opts, compiler::Scope};
 
 fn main() -> Result<(), String> {
-    let mut args = args();
-    let third_arg = args
-        .nth(1)
-        .ok_or_else(|| String::from("Expected path to input file as first argument"))?;
+    match cli::args().get_matches().subcommand().unwrap() {
+        ("check", opts) => {
+            let input = read_file_from_opts(opts)?;
+            if let Err(err) = parser::SExprsParser::new().parse(&input) {
+                println!("{:#?}", err)
+            }
+        }
+        ("ast", opts) => {
+            let input = read_file_from_opts(opts)?;
+            match parser::SExprsParser::new().parse(&input) {
+                Ok(tree) => println!("{:#?}", tree),
+                Err(err) => println!("{:#?}", err),
+            }
+        }
+        ("build", _) => todo!(),
+        ("exec", _) => todo!(),
+        ("run", opts) => {
+            let input = read_file_from_opts(opts)?;
+            let tree = parser::SExprsParser::new()
+                .parse(&input)
+                .map_err(|e| format!("{:#?}", e))?;
 
-    let input = read_to_string(third_arg).unwrap();
-    let syntax_tree = parser::SExprsParser::new()
-        .parse(&input)
-        .map_err(|e| format!("{:#?}", e))?;
-    let scope = Rc::new(Scope::new(None));
+            let scope = Rc::new(Scope::new(None));
 
-    for expr in syntax_tree {
-        println!("{:#?}", expr.eval(&scope));
+            for expr in tree {
+                println!("{:#?}", expr.eval(&scope));
+            }
+        }
+        (_, _) => unreachable!(),
     }
 
     Ok(())

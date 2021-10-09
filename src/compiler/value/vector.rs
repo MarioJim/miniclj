@@ -5,7 +5,7 @@ use std::{
 
 use num::{Rational64, Signed};
 
-use crate::{
+use crate::compiler::{
     callables::{ExecutionResult, RuntimeError},
     value::Value,
 };

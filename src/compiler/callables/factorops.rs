@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use num::{Rational64, Zero};
 
-use crate::{
+use crate::compiler::{
     callables::{Callable, ExecutionResult, RuntimeError},
     SExpr, Scope, Value,
 };

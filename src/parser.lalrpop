@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use num::Rational64;
 
-use crate::{
+use crate::compiler::{
     callables::{Callable, ComparisonOp, FactorOp},
     SExpr, Value,
 };

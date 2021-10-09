@@ -1,34 +1,34 @@
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap},
+    collections::{hash_map::DefaultHasher, HashSet},
     fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
 
-use crate::{callables::ExecutionResult, value::Value};
+use crate::compiler::{callables::ExecutionResult, value::Value};
 
 #[derive(Debug, Default, Eq, Clone)]
-pub struct Map(HashMap<Value, Value>);
+pub struct Set(HashSet<Value>);
 
-impl Display for Map {
+impl Display for Set {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let string = self
             .0
             .iter()
-            .map(|(k, v)| format!("[{}, {}]", k, v))
+            .map(|v| format!("{}", v))
             .collect::<Vec<String>>()
             .join(" ");
-        write!(f, "{{{}}}", string)
+        write!(f, "[{}]", string)
     }
 }
 
-impl Hash for Map {
+impl Hash for Set {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let s = self
             .0
             .iter()
-            .map(|kv| {
+            .map(|v| {
                 let mut inner_state = DefaultHasher::new();
-                kv.hash(&mut inner_state);
+                v.hash(&mut inner_state);
                 inner_state.finish()
             })
             .fold(0, u64::wrapping_add);
@@ -37,31 +37,31 @@ impl Hash for Map {
     }
 }
 
-impl PartialEq for Map {
+impl PartialEq for Set {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
 
-impl Map {
+impl Set {
     pub fn get(&self, key: &Value) -> ExecutionResult {
-        Ok(self.0.get(key).cloned().unwrap_or(Value::Nil))
+        Ok(Value::from(self.0.contains(key)))
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn insert(&mut self, key: Value, val: Value) {
-        self.0.insert(key, val);
+    pub fn insert(&mut self, val: Value) {
+        self.0.insert(val);
     }
 }
 
-pub type MapIter = std::collections::hash_map::IntoIter<Value, Value>;
+pub type SetIter = std::collections::hash_set::IntoIter<Value>;
 
-impl IntoIterator for Map {
-    type Item = (Value, Value);
-    type IntoIter = MapIter;
+impl IntoIterator for Set {
+    type Item = Value;
+    type IntoIter = SetIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
