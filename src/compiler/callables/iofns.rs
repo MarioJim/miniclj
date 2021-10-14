@@ -1,10 +1,8 @@
-use std::{io, rc::Rc};
-
-use escape8259::unescape;
+use std::rc::Rc;
 
 use crate::compiler::{
-    callables::{Callable, ExecutionResult, RuntimeError},
-    SExpr, Scope, Value,
+    callables::{Callable, CompilationResult},
+    SExpr, Scope, State,
 };
 
 #[derive(Debug, Clone)]
@@ -15,23 +13,8 @@ impl Callable for Print {
         "print"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
-        let mut it = args.into_iter().map(|v| v.eval(scope));
-        if let Some(v) = it.next() {
-            if let Ok(Value::String(s)) = v {
-                print!("{}", unescape(&s).unwrap());
-            } else {
-                print!("{}", v?);
-            }
-        }
-        for v in it {
-            if let Ok(Value::String(s)) = v {
-                print!(" {}", unescape(&s).unwrap());
-            } else {
-                print!(" {}", v?);
-            }
-        }
-        Ok(Value::Nil)
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+        todo!()
     }
 }
 
@@ -45,12 +28,8 @@ impl Callable for Read {
         "read"
     }
 
-    fn call(&self, _: Vec<SExpr>, _: &Rc<Scope>) -> ExecutionResult {
-        let mut buffer = String::new();
-        io::stdin()
-            .read_line(&mut buffer)
-            .map_err(|e| RuntimeError::Error(e.to_string()))?;
-        Ok(Value::String(String::from(buffer.trim_end())))
+    fn compile(&self, state: &mut State, _: Vec<SExpr>, _: &Rc<Scope>) -> CompilationResult {
+        todo!()
     }
 }
 

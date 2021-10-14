@@ -29,14 +29,16 @@ use std::{
 
 use dyn_clone::DynClone;
 
-use crate::compiler::{SExpr, Scope, Value};
+use crate::compiler::{SExpr, Scope, State};
+
+use super::state::Instruction;
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult;
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult;
 
-    fn arity_err(&self, expected: &'static str) -> ExecutionResult {
-        Err(RuntimeError::ArityError(self.name(), expected))
+    fn arity_err(&self, expected: &'static str) -> CompilationResult {
+        Err(CompilationError::ArityError(self.name(), expected))
     }
 
     fn is_user_defined(&self) -> bool {
@@ -46,35 +48,33 @@ pub trait Callable: Display + Debug + DynClone {
 
 dyn_clone::clone_trait_object!(Callable);
 
-pub type ExecutionResult = Result<Value, RuntimeError>;
+pub type CompilationResult = Result<Vec<Instruction>, CompilationError>;
 
 #[derive(Debug)]
-pub enum RuntimeError {
+pub enum CompilationError {
     ArityError(&'static str, &'static str),
     WrongArgument(&'static str, &'static str, &'static str),
     NotDefined(String),
-    DivisionByZero,
     Error(String),
 }
 
-impl Display for RuntimeError {
+impl Display for CompilationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuntimeError::ArityError(callable, args) => write!(
+            CompilationError::ArityError(callable, args) => write!(
                 f,
                 "Callable {0} called with wrong number of arguments, should be called as ({0} {1})",
                 callable, args
             ),
-            RuntimeError::WrongArgument(callable, expect, got) => write!(
+            CompilationError::WrongArgument(callable, expect, got) => write!(
                 f,
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
             ),
-            RuntimeError::NotDefined(symbol) => {
+            CompilationError::NotDefined(symbol) => {
                 write!(f, "Symbol \"{}\" not defined in the current scope", symbol)
             }
-            RuntimeError::DivisionByZero => write!(f, "Division by zero is undefined behavior"),
-            RuntimeError::Error(s) => write!(f, "{}", s),
+            CompilationError::Error(s) => write!(f, "{}", s),
         }
     }
 }

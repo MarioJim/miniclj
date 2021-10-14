@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use crate::compiler::{
-    callables::{Callable, ExecutionResult},
-    SExpr, Scope, Value,
+    callables::{Callable, CompilationResult},
+    SExpr, Scope, State,
 };
 
 #[derive(Debug, Clone)]
@@ -13,12 +13,8 @@ impl Callable for Do {
         "do"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
-        let mut result = Value::Nil;
-        for arg in args {
-            result = arg.eval(scope)?;
-        }
-        Ok(result)
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+        todo!()
     }
 }
 
