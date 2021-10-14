@@ -1,14 +1,8 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    rc::Rc,
-};
-
-use num::{Signed, Zero};
+use std::rc::Rc;
 
 use crate::compiler::{
-    callables::{Callable, ExecutionResult, RuntimeError},
-    value::list::List,
-    SExpr, Scope, Value,
+    callables::{Callable, CompilationResult},
+    SExpr, Scope, State,
 };
 
 #[derive(Debug, Clone)]
@@ -19,16 +13,11 @@ impl Callable for First {
         "first"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let maybe_coll = args.into_iter().next().unwrap().eval(scope)?;
-        let maybe_coll_type = maybe_coll.type_str();
-        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
-        })?;
-        Ok(coll_as_list.pop_front().unwrap_or(Value::Nil))
+        todo!()
     }
 }
 
@@ -42,17 +31,11 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let maybe_coll = args.into_iter().next().unwrap().eval(scope)?;
-        let maybe_coll_type = maybe_coll.type_str();
-        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
-        })?;
-        coll_as_list.pop_front();
-        Ok(Value::List(coll_as_list))
+        todo!()
     }
 }
 
@@ -66,19 +49,11 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        let mut args_iter = args.into_iter();
-        let maybe_value = args_iter.next().unwrap();
-        let maybe_coll = args_iter.next().unwrap().eval(scope)?;
-        let maybe_coll_type = maybe_coll.type_str();
-        let mut coll_as_list = List::try_from(maybe_coll).map_err(|_| {
-            RuntimeError::WrongArgument(self.name(), "a collection", maybe_coll_type)
-        })?;
-        coll_as_list.push_front(maybe_value.eval(scope)?);
-        Ok(Value::List(coll_as_list))
+        todo!()
     }
 }
 
@@ -92,42 +67,11 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        let mut args_iter = args.into_iter();
-        let val = args_iter.next().unwrap().eval(scope)?;
-        let maybe_collection = args_iter.next().unwrap().eval(scope)?;
-        match maybe_collection {
-            Value::List(mut list) => {
-                list.push_front(val);
-                Ok(Value::List(list))
-            }
-            Value::Vector(mut vector) => {
-                vector.push(val);
-                Ok(Value::Vector(vector))
-            }
-            Value::Set(mut set) => {
-                set.insert(val);
-                Ok(Value::Set(set))
-            }
-            Value::Map(mut map) => match val {
-                Value::Vector(v) if v.len() == 2 => {
-                    let (key, value) = v.try_into().unwrap();
-                    map.insert(key, value);
-                    Ok(Value::Map(map))
-                }
-                _ => Err(RuntimeError::Error(String::from(
-                    "Only vectors with two elements (key-value pair) can be added to a map",
-                ))),
-            },
-            _ => Err(RuntimeError::WrongArgument(
-                self.name(),
-                "a collection",
-                maybe_collection.type_str(),
-            )),
-        }
+        todo!()
     }
 }
 
@@ -141,44 +85,11 @@ impl Callable for Get {
         "get"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
-        let mut args_iter = args.into_iter();
-        let coll = args_iter.next().unwrap().eval(scope)?;
-        let key = args_iter.next().unwrap().eval(scope)?;
-        match coll {
-            Value::List(l) => l.get(&key),
-            Value::Vector(v) => v.get(&key),
-            Value::Set(s) => s.get(&key),
-            Value::Map(m) => m.get(&key),
-            Value::String(s) => {
-                if let Value::Number(n) = &key {
-                    if n.is_integer() && !n.is_negative() {
-                        Ok(s.chars()
-                            .nth(usize::try_from(*n.numer()).unwrap())
-                            .map(|chr| Value::String(String::from(chr)))
-                            .unwrap_or(Value::Nil))
-                    } else {
-                        Err(RuntimeError::Error(format!(
-                            "String can only be indexed by positive integers, not by {}",
-                            n
-                        )))
-                    }
-                } else {
-                    Err(RuntimeError::Error(format!(
-                        "String can't be indexed by {}",
-                        key
-                    )))
-                }
-            }
-            _ => Err(RuntimeError::WrongArgument(
-                self.name(),
-                "a collection",
-                coll.type_str(),
-            )),
-        }
+        todo!()
     }
 }
 
@@ -192,26 +103,11 @@ impl Callable for Len {
         "len"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        let coll = args.into_iter().next().unwrap().eval(scope)?;
-        let len = match coll {
-            Value::List(l) => l.len(),
-            Value::Vector(v) => v.len(),
-            Value::Set(s) => s.len(),
-            Value::Map(m) => m.len(),
-            Value::String(s) => s.len(),
-            _ => {
-                return Err(RuntimeError::WrongArgument(
-                    self.name(),
-                    "a collection",
-                    coll.type_str(),
-                ))
-            }
-        };
-        Ok(Value::from(i64::try_from(len).unwrap()))
+        todo!()
     }
 }
 
@@ -225,15 +121,11 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn call(&self, args: Vec<SExpr>, scope: &Rc<Scope>) -> ExecutionResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        if let Value::Number(n) = Len.call(args, scope)? {
-            Ok(Value::from(n.is_zero()))
-        } else {
-            unreachable!("Call to len returned something that isn't a number")
-        }
+        todo!()
     }
 }
 

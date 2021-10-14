@@ -4,7 +4,7 @@ use num::Rational64;
 
 use crate::compiler::{
     callables::{Callable, ComparisonOp, FactorOp},
-    SExpr, Value,
+    Literal, SExpr,
 };
 
 grammar;
@@ -17,7 +17,7 @@ List<T>: Vec<T> = {
 };
 
 pub SExprs = List<SExpr>;
-Values = List<Value>;
+Literals = List<Literal>;
 
 SExpr: Box<SExpr> = {
     "(" <SExprs> ")" => Box::new(SExpr::Expr(<>)),
@@ -26,17 +26,17 @@ SExpr: Box<SExpr> = {
     "[" <SExprs> "]" => Box::new(SExpr::Vector(<>)),
     "{" <SExprs> "}" => Box::new(SExpr::Map(<>)),
     "#{" <SExprs> "}" => Box::new(SExpr::Set(<>)),
-    Value => Box::new(SExpr::Value(<>)),
+    Literal => Box::new(SExpr::Literal(<>)),
 };
 
-Value: Value = {
-    "nil" => Value::Nil,
-    "%" => Value::Symbol(String::from("%")),
-    ComparisonOp => Value::Symbol(String::from(<>.name())),
-    FactorOp => Value::Symbol(String::from(<>.name())),
-    Symbol => Value::Symbol(<>),
-    StringLiteral => Value::String(<>),
-    NumberLiteral => Value::Number(<>),
+Literal: Literal = {
+    "nil" => Literal::Nil,
+    "%" => Literal::Symbol(String::from("%")),
+    ComparisonOp => Literal::Symbol(String::from(<>.name())),
+    FactorOp => Literal::Symbol(String::from(<>.name())),
+    Symbol => Literal::Symbol(<>),
+    StringLiteral => Literal::String(<>),
+    NumberLiteral => Literal::Number(<>),
 };
 
 pub NumberLiteral: Rational64 = {
