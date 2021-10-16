@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, Scope, State,
+    SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -26,7 +26,12 @@ impl Callable for LambdaFn {
         "*fn"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         todo!()
     }
 
@@ -44,7 +49,12 @@ impl Callable for AnonymousFn {
         "fn"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, _: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        _: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<arguments vector> <expression>");
         }

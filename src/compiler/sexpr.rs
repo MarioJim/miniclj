@@ -1,9 +1,4 @@
-use std::{
-    fmt::{Display, Formatter},
-    rc::Rc,
-};
-
-use crate::compiler::{callables::CompilationResult, Literal, Scope, State};
+use crate::compiler::Literal;
 
 pub type SExprs = Vec<Box<SExpr>>;
 
@@ -18,80 +13,6 @@ pub enum SExpr {
     Literal(Literal),
 }
 
-impl Display for SExpr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SExpr::Expr(exprs) => {
-                write!(f, "(")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, ")")
-            }
-            SExpr::Lambda(exprs) => {
-                write!(f, "#(")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, ")")
-            }
-            SExpr::List(exprs) => {
-                write!(f, "'(")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, ")")
-            }
-            SExpr::Vector(exprs) => {
-                write!(f, "[")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, "]")
-            }
-            SExpr::Set(exprs) => {
-                write!(f, "#{{")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, "}}")
-            }
-            SExpr::Map(exprs) => {
-                write!(f, "{{")?;
-                let mut it = exprs.iter();
-                if let Some(e) = it.next() {
-                    write!(f, "{}", e)?;
-                }
-                for expr in it {
-                    write!(f, " {}", expr)?;
-                }
-                write!(f, "}}")
-            }
-            SExpr::Literal(v) => write!(f, "{}", v),
-        }
-    }
-}
-
 impl SExpr {
     pub fn type_str(&self) -> &'static str {
         match self {
@@ -103,13 +24,5 @@ impl SExpr {
             SExpr::Map(_) => "a map",
             SExpr::Literal(v) => v.type_str(),
         }
-    }
-
-    pub fn compile(self, state: &mut State, scope: &Rc<Scope>) -> CompilationResult {
-        todo!()
-    }
-
-    pub fn compile_inside_list(self) -> CompilationResult {
-        todo!()
     }
 }

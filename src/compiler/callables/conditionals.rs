@@ -4,7 +4,7 @@ use num::Zero;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    Literal, SExpr, Scope, State,
+    Literal, SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,12 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
@@ -46,7 +51,12 @@ impl Callable for If {
         "if"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 3 {
             return self.arity_err("<condition> <true expression> <false expression>");
         }
@@ -64,7 +74,12 @@ impl Callable for And {
         "and"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         todo!()
     }
 }
@@ -79,7 +94,12 @@ impl Callable for Or {
         "or"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         todo!()
     }
 }

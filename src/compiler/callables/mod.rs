@@ -29,13 +29,18 @@ use std::{
 
 use dyn_clone::DynClone;
 
-use crate::compiler::{SExpr, Scope, State};
+use crate::compiler::{SExpr, State, SymbolTable};
 
-use super::state::Instruction;
+use super::instruction::Instruction;
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult;
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult;
 
     fn arity_err(&self, expected: &'static str) -> CompilationResult {
         Err(CompilationError::ArityError(self.name(), expected))

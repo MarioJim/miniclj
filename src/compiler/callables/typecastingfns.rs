@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, Scope, State,
+    SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +13,12 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
@@ -31,7 +36,12 @@ impl Callable for StringCast {
         "str"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         todo!()
     }
 }
@@ -46,7 +56,12 @@ impl Callable for Ord {
         "ord"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
@@ -64,7 +79,12 @@ impl Callable for Chr {
         "chr"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<number>");
         }
