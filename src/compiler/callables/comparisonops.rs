@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, Scope, State,
+    SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -27,7 +27,12 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.is_empty() {
             return self.arity_err("<...args>");
         }

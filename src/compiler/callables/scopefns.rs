@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationError, CompilationResult},
-    Literal, SExpr, Scope, State,
+    Literal, SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +13,12 @@ impl Callable for Def {
         "def"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<symbol> <value>");
         }
@@ -31,7 +36,12 @@ impl Callable for Defn {
         "defn"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 3 {
             return self.arity_err("<symbol> <arguments vector> <expression>");
         }
@@ -62,7 +72,12 @@ impl Callable for Let {
         "let"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<vector of bindings> <body>");
         }
@@ -93,7 +108,7 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<Scope>) -> CompilationResult {
+    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<SymbolTable>) -> CompilationResult {
         todo!()
     }
 }
@@ -108,7 +123,7 @@ impl Callable for Recur {
         "recur"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<Scope>) -> CompilationResult {
+    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<SymbolTable>) -> CompilationResult {
         todo!()
     }
 }

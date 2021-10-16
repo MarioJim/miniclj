@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, Scope, State,
+    SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +13,12 @@ impl Callable for Map {
         "map"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -32,7 +37,12 @@ impl Callable for Filter {
         "filter"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -51,7 +61,12 @@ impl Callable for Reduce {
         "reduce"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }

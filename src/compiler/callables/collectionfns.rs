@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, Scope, State,
+    SExpr, State, SymbolTable,
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +13,12 @@ impl Callable for First {
         "first"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -31,7 +36,12 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -49,7 +59,12 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
@@ -67,7 +82,12 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
@@ -85,7 +105,12 @@ impl Callable for Get {
         "get"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
@@ -103,7 +128,12 @@ impl Callable for Len {
         "len"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
@@ -121,7 +151,12 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>, scope: &Rc<Scope>) -> CompilationResult {
+    fn compile(
+        &self,
+        state: &mut State,
+        args: Vec<SExpr>,
+        scope: &Rc<SymbolTable>,
+    ) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
