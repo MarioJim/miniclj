@@ -30,9 +30,8 @@ fn main() -> Result<(), String> {
                 .map_err(|e| format!("{:#?}", e))?;
 
             let mut compiler_state = compiler::State::new();
-            let mut root_symbol_table = compiler::SymbolTable::new(None);
             for expr in tree {
-                compiler_state.compile(*expr, &mut root_symbol_table);
+                compiler_state.compile(*expr);
             }
             compiler_state.write_to(output_file);
         }
@@ -49,9 +48,8 @@ fn main() -> Result<(), String> {
                 .map_err(|e| format!("{:#?}", e))?;
 
             let mut compiler_state = compiler::State::new();
-            let mut root_symbol_table = compiler::SymbolTable::new(None);
             for expr in tree {
-                compiler_state.compile(*expr, &mut root_symbol_table);
+                compiler_state.compile(*expr);
             }
 
             let mut vm_state = vm::State::from_compiler_state(compiler_state);

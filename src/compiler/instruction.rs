@@ -1,16 +1,18 @@
 use std::fmt::{self, Display};
 
+use super::{InstructionPtr, MemAddress};
+
 #[derive(Debug)]
 pub enum Instruction {
     Call {
-        register_idx: usize,
-        instruction: String,
-        registers: Vec<String>,
+        instruction: MemAddress,
+        parameters: Vec<MemAddress>,
+        result_address: MemAddress,
     },
-    ConditionalJump(usize),
-    InconditionalJump(usize),
-    PushScope,
-    PopScope,
+    ConditionalJump(MemAddress, InstructionPtr),
+    InconditionalJump(InstructionPtr),
+    GoSub(MemAddress),
+    EndFunc,
 }
 
 impl Display for Instruction {
@@ -18,19 +20,25 @@ impl Display for Instruction {
         match self {
             Instruction::Call {
                 instruction,
-                register_idx,
-                registers,
+                parameters,
+                result_address,
             } => write!(
                 f,
-                "t{} {} {}",
-                instruction,
-                register_idx,
-                registers.join(" ")
+                "{} {} {}",
+                usize::from(instruction),
+                parameters
+                    .iter()
+                    .map(|a| usize::from(a).to_string())
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                usize::from(result_address)
             ),
-            Instruction::ConditionalJump(line) => write!(f, "jne {}", line),
-            Instruction::InconditionalJump(line) => write!(f, "jmp {}", line),
-            Instruction::PushScope => write!(f, "push"),
-            Instruction::PopScope => write!(f, "pop"),
+            Instruction::ConditionalJump(addr, ins_ptr) => {
+                write!(f, "jne {} {}", usize::from(addr), ins_ptr)
+            }
+            Instruction::InconditionalJump(ins_ptr) => write!(f, "jmp {}", ins_ptr),
+            Instruction::GoSub(addr) => write!(f, "gosub {}", usize::from(addr)),
+            Instruction::EndFunc => write!(f, "endfunc"),
         }
     }
 }

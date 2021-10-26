@@ -23,15 +23,13 @@ pub use comparisonops::ComparisonOp;
 pub use factorops::FactorOp;
 
 use std::{
-    fmt::{self, Debug, Display},
+    fmt::{Debug, Display},
     rc::Rc,
 };
 
 use dyn_clone::DynClone;
 
-use crate::compiler::{SExpr, State, SymbolTable};
-
-use super::instruction::Instruction;
+use crate::compiler::{CompilationError, CompilationResult, SExpr, State, SymbolTable};
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
@@ -52,34 +50,3 @@ pub trait Callable: Display + Debug + DynClone {
 }
 
 dyn_clone::clone_trait_object!(Callable);
-
-pub type CompilationResult = Result<Vec<Instruction>, CompilationError>;
-
-#[derive(Debug)]
-pub enum CompilationError {
-    ArityError(&'static str, &'static str),
-    WrongArgument(&'static str, &'static str, &'static str),
-    NotDefined(String),
-    Error(String),
-}
-
-impl Display for CompilationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            CompilationError::ArityError(callable, args) => write!(
-                f,
-                "Callable {0} called with wrong number of arguments, should be called as ({0} {1})",
-                callable, args
-            ),
-            CompilationError::WrongArgument(callable, expect, got) => write!(
-                f,
-                "Callable {} called with wrong argument, expected {}, got {}",
-                callable, expect, got
-            ),
-            CompilationError::NotDefined(symbol) => {
-                write!(f, "Symbol \"{}\" not defined in the current scope", symbol)
-            }
-            CompilationError::Error(s) => write!(f, "{}", s),
-        }
-    }
-}
