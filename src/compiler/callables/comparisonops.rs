@@ -1,8 +1,6 @@
-use std::rc::Rc;
-
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, State, SymbolTable,
+    SExpr, State,
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -27,12 +25,7 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.is_empty() {
             return self.arity_err("<...args>");
         }

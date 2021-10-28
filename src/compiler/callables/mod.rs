@@ -14,7 +14,6 @@ pub mod conditionals;
 pub mod factorops;
 pub mod groupingfns;
 pub mod iofns;
-pub mod lambdafns;
 pub mod scopefns;
 pub mod seqtransformfns;
 pub mod typecastingfns;
@@ -22,23 +21,15 @@ pub mod typecastingfns;
 pub use comparisonops::ComparisonOp;
 pub use factorops::FactorOp;
 
-use std::{
-    fmt::{Debug, Display},
-    rc::Rc,
-};
+use std::fmt::{Debug, Display};
 
 use dyn_clone::DynClone;
 
-use crate::compiler::{CompilationError, CompilationResult, SExpr, State, SymbolTable};
+use crate::compiler::{CompilationError, CompilationResult, SExpr, State};
 
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult;
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult;
 
     fn arity_err(&self, expected: &'static str) -> CompilationResult {
         Err(CompilationError::ArityError(self.name(), expected))

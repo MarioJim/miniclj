@@ -19,21 +19,17 @@ List<T>: Vec<T> = {
 pub SExprs = List<SExpr>;
 Literals = List<Literal>;
 
-SExpr: Box<SExpr> = {
-    "(" <SExprs> ")" => Box::new(SExpr::Expr(<>)),
-    "#(" <SExprs> ")" => Box::new(SExpr::Lambda(<>)),
-    "'(" <SExprs> ")" => Box::new(SExpr::List(<>)),
-    "[" <SExprs> "]" => Box::new(SExpr::Vector(<>)),
-    "{" <SExprs> "}" => Box::new(SExpr::Map(<>)),
-    "#{" <SExprs> "}" => Box::new(SExpr::Set(<>)),
-    Literal => Box::new(SExpr::Literal(<>)),
+SExpr: SExpr = {
+    "(" <Symbol> <SExprs> ")" => SExpr::Expr(<>),
+    "'(" <SExprs> ")" => SExpr::List(<>),
+    "[" <SExprs> "]" => SExpr::Vector(<>),
+    "{" <SExprs> "}" => SExpr::Map(<>),
+    "#{" <SExprs> "}" => SExpr::Set(<>),
+    Literal => SExpr::Literal(<>),
 };
 
 Literal: Literal = {
     "nil" => Literal::Nil,
-    "%" => Literal::Symbol(String::from("%")),
-    ComparisonOp => Literal::Symbol(String::from(<>.name())),
-    FactorOp => Literal::Symbol(String::from(<>.name())),
     Symbol => Literal::Symbol(<>),
     StringLiteral => Literal::String(<>),
     NumberLiteral => Literal::Number(<>),
@@ -51,9 +47,13 @@ pub NumberLiteral: Rational64 = {
         let numer = (integer * 10_i64.pow(exp)) + decimals;
         Rational64::new(numer, 10_i64.pow(exp))
     },
-    IntegerLiteral => {
-        Rational64::from_str(<>).unwrap()
-    },
+    IntegerLiteral => Rational64::from_str(<>).unwrap(),
+};
+
+Symbol: String = {
+    ComparisonOp => String::from(<>.name()),
+    FactorOp => String::from(<>.name()),
+    r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>),
 };
 
 ComparisonOp: ComparisonOp = {
@@ -72,7 +72,6 @@ FactorOp: FactorOp = {
     "/" => FactorOp::Div,
 };
 
-Symbol: String = r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>);
 StringLiteral: String = r#""[^"]*""# => {
     let mut chars = <>.chars();
     chars.next();

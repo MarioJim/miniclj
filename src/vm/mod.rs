@@ -15,11 +15,11 @@ pub struct State {
 }
 
 impl State {
-    pub fn from_compiler_state(compiler: compiler::State) -> Self {
+    pub fn from_compiler_state(_compiler: compiler::State) -> Self {
         todo!()
     }
 
-    pub fn try_from_string(string: String) -> Result<Self, String> {
+    pub fn try_from_string(_string: String) -> Result<Self, String> {
         todo!()
     }
 

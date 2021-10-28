@@ -8,7 +8,8 @@ pub type CompilationResult = Result<MemAddress, CompilationError>;
 pub enum CompilationError {
     ArityError(&'static str, &'static str),
     WrongArgument(&'static str, &'static str, &'static str),
-    NotDefined(String),
+    CallableNotDefined(String),
+    SymbolNotDefined(String),
     Error(String),
 }
 
@@ -25,7 +26,14 @@ impl Display for CompilationError {
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
             ),
-            CompilationError::NotDefined(symbol) => {
+            CompilationError::CallableNotDefined(callable_name) => {
+                write!(
+                    f,
+                    "Callable \"{}\" not defined in the current scope",
+                    callable_name
+                )
+            }
+            CompilationError::SymbolNotDefined(symbol) => {
                 write!(f, "Symbol \"{}\" not defined in the current scope", symbol)
             }
             CompilationError::Error(s) => write!(f, "{}", s),

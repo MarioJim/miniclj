@@ -1,8 +1,6 @@
-use std::rc::Rc;
-
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, State, SymbolTable,
+    SExpr, State,
 };
 
 #[derive(Debug, Clone)]
@@ -13,12 +11,7 @@ impl Callable for Map {
         "map"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -37,12 +30,7 @@ impl Callable for Filter {
         "filter"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }
@@ -61,12 +49,7 @@ impl Callable for Reduce {
         "reduce"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<function> <collection>");
         }

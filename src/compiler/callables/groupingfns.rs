@@ -1,8 +1,6 @@
-use std::rc::Rc;
-
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, State, SymbolTable,
+    SExpr, State,
 };
 
 #[derive(Debug, Clone)]
@@ -13,12 +11,7 @@ impl Callable for Do {
         "do"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
         todo!()
     }
 }

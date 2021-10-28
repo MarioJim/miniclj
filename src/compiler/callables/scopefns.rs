@@ -1,8 +1,6 @@
-use std::rc::Rc;
-
 use crate::compiler::{
     callables::{Callable, CompilationError, CompilationResult},
-    Literal, SExpr, State, SymbolTable,
+    Literal, SExpr, State,
 };
 
 #[derive(Debug, Clone)]
@@ -13,12 +11,7 @@ impl Callable for Def {
         "def"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<symbol> <value>");
         }
@@ -36,19 +29,14 @@ impl Callable for Defn {
         "defn"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
             return self.arity_err("<symbol> <arguments vector> <expression>");
         }
 
         let mut args_iter = args.into_iter();
         let maybe_symbol = args_iter.next().unwrap();
-        let symbol = if let SExpr::Literal(Literal::Symbol(sym)) = maybe_symbol {
+        let _symbol = if let SExpr::Literal(Literal::Symbol(sym)) = maybe_symbol {
             sym
         } else {
             return Err(CompilationError::WrongArgument(
@@ -72,12 +60,7 @@ impl Callable for Let {
         "let"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<vector of bindings> <body>");
         }
@@ -88,7 +71,7 @@ impl Callable for Let {
         )));
 
         let mut args_iter = args.into_iter();
-        let bindings_vector = if let SExpr::Vector(v) = args_iter.next().unwrap() {
+        let _bindings_vector = if let SExpr::Vector(v) = args_iter.next().unwrap() {
             v
         } else {
             return first_arg_error;
@@ -108,7 +91,7 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<SymbolTable>) -> CompilationResult {
+    fn compile(&self, _: &mut State, _: Vec<SExpr>) -> CompilationResult {
         todo!()
     }
 }
@@ -123,7 +106,7 @@ impl Callable for Recur {
         "recur"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>, _: &Rc<SymbolTable>) -> CompilationResult {
+    fn compile(&self, _: &mut State, _: Vec<SExpr>) -> CompilationResult {
         todo!()
     }
 }

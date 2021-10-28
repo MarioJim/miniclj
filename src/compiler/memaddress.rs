@@ -21,6 +21,14 @@ impl MemAddress {
             idx,
         }
     }
+
+    pub fn new_temp(datatype: DataType, idx: usize) -> MemAddress {
+        MemAddress {
+            lifetime: Lifetime::Temporal,
+            datatype,
+            idx,
+        }
+    }
 }
 
 impl From<&MemAddress> for usize {
