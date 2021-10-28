@@ -29,11 +29,14 @@ fn main() -> Result<(), String> {
                 .parse(&input)
                 .map_err(|e| format!("{:#?}", e))?;
 
-            let mut compiler_state = compiler::State::new();
+            let mut compiler_state = compiler::State::default();
             for expr in tree {
-                compiler_state.compile(*expr);
+                compiler_state
+                    .compile(expr)
+                    .map_err(|err| format!("Compilation error: {}", err))?;
             }
-            compiler_state.write_to(output_file);
+            println!("{:#?}", compiler_state);
+            // compiler_state.write_to(output_file);
         }
         ("exec", opts) => {
             let input = read_file_from_opts(opts)?;
@@ -47,9 +50,11 @@ fn main() -> Result<(), String> {
                 .parse(&input)
                 .map_err(|e| format!("{:#?}", e))?;
 
-            let mut compiler_state = compiler::State::new();
+            let mut compiler_state = compiler::State::default();
             for expr in tree {
-                compiler_state.compile(*expr);
+                compiler_state
+                    .compile(expr)
+                    .map_err(|err| format!("Compilation error: {}", err))?;
             }
 
             let mut vm_state = vm::State::from_compiler_state(compiler_state);

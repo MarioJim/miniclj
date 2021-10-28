@@ -1,39 +1,17 @@
-use std::rc::Rc;
-
-use num::Zero;
-
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    Literal, SExpr, State, SymbolTable,
+    SExpr, State,
 };
 
 #[derive(Debug, Clone)]
 pub struct IsTrue;
-
-impl IsTrue {
-    pub fn inner_call(&self, val: &Literal) -> bool {
-        match val {
-            Literal::Symbol(_) => {
-                unreachable!("IsTrue::inner_call called with a symbol")
-            }
-            Literal::Number(n) => !n.is_zero(),
-            Literal::Nil => false,
-            _ => true,
-        }
-    }
-}
 
 impl Callable for IsTrue {
     fn name(&self) -> &'static str {
         "true?"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
@@ -51,12 +29,7 @@ impl Callable for If {
         "if"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
             return self.arity_err("<condition> <true expression> <false expression>");
         }
@@ -74,12 +47,7 @@ impl Callable for And {
         "and"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
         todo!()
     }
 }
@@ -94,12 +62,7 @@ impl Callable for Or {
         "or"
     }
 
-    fn compile(
-        &self,
-        state: &mut State,
-        args: Vec<SExpr>,
-        scope: &Rc<SymbolTable>,
-    ) -> CompilationResult {
+    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
         todo!()
     }
 }

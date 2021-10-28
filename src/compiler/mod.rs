@@ -1,6 +1,7 @@
-use std::{borrow::Borrow, collections::VecDeque, io::Write, rc::Rc};
+use std::{borrow::Borrow, io::Write, rc::Rc};
 
 pub mod callables;
+pub mod callablestable;
 pub mod constant;
 pub mod error;
 pub mod function;
@@ -11,15 +12,14 @@ pub mod sexpr;
 pub mod symboltable;
 
 pub use callables::Callable;
+pub use callablestable::CallablesTable;
 pub use constant::Constant;
 pub use error::{CompilationError, CompilationResult};
 pub use instruction::Instruction;
 pub use literal::Literal;
-pub use memaddress::MemAddress;
+pub use memaddress::{DataType, MemAddress};
 pub use sexpr::SExpr;
 pub use symboltable::SymbolTable;
-
-use self::callables::FactorOp;
 
 pub type InstructionPtr = usize;
 
@@ -27,43 +27,19 @@ pub type InstructionPtr = usize;
 pub struct State {
     instructions: Vec<Instruction>,
     symbol_table: Rc<SymbolTable>,
+    callables_table: CallablesTable,
     constants: Vec<Constant>,
-    callables: Vec<Box<dyn Callable>>,
+    temp_var_idx: usize,
 }
 
 impl State {
-    pub fn new() -> State {
-        let mut state = State::default();
-        for c in [FactorOp::Add, FactorOp::Sub, FactorOp::Mul, FactorOp::Div] {
-            let idx = state.callables.len();
-            state
-                .symbol_table
-                .insert(c.name().to_string(), MemAddress::new_builtin_callable(idx));
-            state.callables.push(Box::new(c));
-        }
-        state
-    }
-
     pub fn compile(&mut self, expr: SExpr) -> CompilationResult {
         match expr {
-            SExpr::Expr(values) => {
-                let mut params_queue = values.into_iter().map(|v| *v).collect::<VecDeque<_>>();
-                let callable_addr = match params_queue.pop_front() {
-                    Some(expr) => match expr {
-                        SExpr::Expr(_) => todo!(),
-                        SExpr::Lambda(_) => todo!(),
-                        SExpr::List(_) => todo!(),
-                        SExpr::Vector(_) => todo!(),
-                        SExpr::Set(_) => todo!(),
-                        SExpr::Map(_) => todo!(),
-                        SExpr::Literal(_) => todo!(),
-                    },
-                    None => todo!(), // Call list
-                };
-
-                todo!()
-            }
-            SExpr::Lambda(_) => todo!(),
+            SExpr::Expr(symbol, exprs) => self
+                .callables_table
+                .get(&symbol)
+                .ok_or(CompilationError::CallableNotDefined(symbol))?
+                .compile(self, exprs),
             SExpr::List(_) => todo!(),
             SExpr::Vector(_) => todo!(),
             SExpr::Set(_) => todo!(),
@@ -72,7 +48,7 @@ impl State {
                 if let Literal::Symbol(symbol) = lit {
                     self.symbol_table
                         .get(&symbol)
-                        .ok_or(CompilationError::NotDefined(symbol))
+                        .ok_or(CompilationError::SymbolNotDefined(symbol))
                 } else {
                     let constant: Constant = lit.into();
                     let datatype = constant.data_type();
@@ -97,15 +73,25 @@ impl State {
         };
     }
 
-    pub fn write_to(&self, file: impl Write) {
+    pub fn write_to(&self, _file: impl Write) {
         todo!()
     }
 
-    pub fn add_new_literals(&mut self, literal: Literal) -> MemAddress {
+    pub fn add_new_literals(&mut self, _literal: Literal) -> MemAddress {
         todo!()
     }
 
     pub fn instruction_ptr(&self) -> usize {
         self.instructions.len()
+    }
+
+    pub fn add_instruction(&mut self, instruction: Instruction) {
+        self.instructions.push(instruction)
+    }
+
+    pub fn new_tmp_address(&mut self, datatype: DataType) -> MemAddress {
+        let addr = MemAddress::new_temp(datatype, self.temp_var_idx);
+        self.temp_var_idx += 1;
+        addr
     }
 }
