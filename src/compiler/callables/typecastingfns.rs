@@ -1,6 +1,6 @@
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, State,
+    DataType, Instruction, SExpr, State,
 };
 
 #[derive(Debug, Clone)]
@@ -11,11 +11,18 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<string>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::Number);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 

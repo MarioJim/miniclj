@@ -1,7 +1,4 @@
-use crate::compiler::{
-    callables::{Callable, CompilationResult},
-    SExpr, State,
-};
+use crate::compiler::{Callable, CompilationResult, DataType, Instruction, SExpr, State};
 
 #[derive(Debug, Clone)]
 pub struct First;
@@ -11,11 +8,18 @@ impl Callable for First {
         "first"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::Unknown);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -29,11 +33,18 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::List);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -47,11 +58,23 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<value> <collection>");
         }
-        todo!()
+        let mut args_iter = args.into_iter();
+        let value_arg = args_iter.next().unwrap();
+        let coll_arg = args_iter.next().unwrap();
+
+        let value_addr = state.compile(value_arg)?;
+        let coll_addr = state.compile(coll_arg)?;
+
+        let res_addr = state.new_tmp_address(DataType::List);
+        let instruction =
+            Instruction::new_builtin_call(self.name(), vec![value_addr, coll_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -65,11 +88,23 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return self.arity_err("<value> <collection>");
+            return self.arity_err("<collection> <value>");
         }
-        todo!()
+        let mut args_iter = args.into_iter();
+        let coll_arg = args_iter.next().unwrap();
+        let value_arg = args_iter.next().unwrap();
+
+        let coll_addr = state.compile(coll_arg)?;
+        let value_addr = state.compile(value_arg)?;
+
+        let res_addr = state.new_tmp_address(DataType::Unknown);
+        let instruction =
+            Instruction::new_builtin_call(self.name(), vec![coll_addr, value_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -83,11 +118,23 @@ impl Callable for Get {
         "get"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return self.arity_err("<collection> <key>");
         }
-        todo!()
+        let mut args_iter = args.into_iter();
+        let coll_arg = args_iter.next().unwrap();
+        let key_arg = args_iter.next().unwrap();
+
+        let coll_addr = state.compile(coll_arg)?;
+        let key_addr = state.compile(key_arg)?;
+
+        let res_addr = state.new_tmp_address(DataType::Unknown);
+        let instruction =
+            Instruction::new_builtin_call(self.name(), vec![coll_addr, key_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -101,11 +148,18 @@ impl Callable for Len {
         "len"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::Number);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -119,11 +173,18 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<collection>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::Number);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 

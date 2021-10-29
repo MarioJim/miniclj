@@ -1,7 +1,4 @@
-use crate::compiler::{
-    callables::{Callable, CompilationResult},
-    DataType, Instruction, SExpr, State,
-};
+use crate::compiler::{Callable, CompilationResult, DataType, Instruction, SExpr, State};
 
 #[derive(Debug, Clone)]
 pub struct IsTrue;
@@ -16,10 +13,10 @@ impl Callable for IsTrue {
             return self.arity_err("<value>");
         }
         let arg = args.into_iter().next().unwrap();
-        let arg_mem_addr = state.compile(arg)?;
+        let arg_addr = state.compile(arg)?;
         let res_addr = state.new_tmp_address(DataType::Number);
 
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_mem_addr], res_addr);
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
         state.add_instruction(instruction);
 
         Ok(res_addr)
