@@ -1,7 +1,4 @@
-use std::{
-    fmt::{self, Display, Formatter},
-    hash::{Hash, Hasher},
-};
+use std::fmt::{self, Display, Formatter};
 
 use num::Rational64;
 
@@ -46,31 +43,5 @@ impl Display for Literal {
             Literal::Nil => String::from("nil"),
         };
         write!(f, "{}", string)
-    }
-}
-
-#[derive(Hash)]
-struct NilHash;
-
-impl Hash for Literal {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Literal::Symbol(s) => s.hash(state),
-            Literal::String(s) => s.hash(state),
-            Literal::Number(n) => n.hash(state),
-            Literal::Nil => NilHash.hash(state),
-        }
-    }
-}
-
-impl From<i64> for Literal {
-    fn from(n: i64) -> Self {
-        Literal::Number(Rational64::from_integer(n))
-    }
-}
-
-impl From<bool> for Literal {
-    fn from(b: bool) -> Self {
-        Literal::from(if b { 1 } else { 0 })
     }
 }

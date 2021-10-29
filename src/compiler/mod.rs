@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, io::Write, rc::Rc};
+use std::{borrow::Borrow, collections::HashMap, io::Write, rc::Rc};
 
 pub mod callables;
 pub mod callablestable;
@@ -25,11 +25,12 @@ pub type InstructionPtr = usize;
 
 #[derive(Debug, Default)]
 pub struct State {
+    constant_var_idx: usize,
+    temporal_var_idx: usize,
     instructions: Vec<Instruction>,
     symbol_table: Rc<SymbolTable>,
+    constants: HashMap<Constant, MemAddress>,
     callables_table: CallablesTable,
-    constants: Vec<Constant>,
-    temp_var_idx: usize,
 }
 
 impl State {
@@ -51,10 +52,18 @@ impl State {
                         .ok_or(CompilationError::SymbolNotDefined(symbol))
                 } else {
                     let constant: Constant = lit.into();
-                    let datatype = constant.data_type();
-                    let idx = self.constants.len();
-                    self.constants.push(constant);
-                    Ok(MemAddress::new_constant(datatype, idx))
+                    match self.constants.get(&constant) {
+                        Some(addr) => Ok(*addr),
+                        None => {
+                            let addr = MemAddress::new_constant(
+                                constant.data_type(),
+                                self.constant_var_idx,
+                            );
+                            self.constants.insert(constant, addr);
+                            self.constant_var_idx += 1;
+                            Ok(addr)
+                        }
+                    }
                 }
             }
         }
@@ -73,25 +82,39 @@ impl State {
         };
     }
 
-    pub fn write_to(&self, _file: impl Write) {
-        todo!()
-    }
-
-    pub fn add_new_literals(&mut self, _literal: Literal) -> MemAddress {
-        todo!()
-    }
-
+    /// Returns the index of the next instruction to be inserted
     pub fn instruction_ptr(&self) -> usize {
         self.instructions.len()
     }
 
-    pub fn add_instruction(&mut self, instruction: Instruction) {
-        self.instructions.push(instruction)
+    pub fn add_instruction(&mut self, instruction: Instruction) -> InstructionPtr {
+        self.instructions.push(instruction);
+        self.instructions.len() - 1
+    }
+
+    pub fn fill_jump(&mut self, instruction_ptr: InstructionPtr, goto: InstructionPtr) {
+        let instr = self.instructions.get_mut(instruction_ptr).unwrap();
+        match instr {
+            Instruction::Jump(ptr) => *ptr = goto,
+            Instruction::JumpOnTrue(_, ptr) => *ptr = goto,
+            Instruction::JumpOnFalse(_, ptr) => *ptr = goto,
+            _ => panic!("Trying to fill a jump where a different instruction was found"),
+        }
     }
 
     pub fn new_tmp_address(&mut self, datatype: DataType) -> MemAddress {
-        let addr = MemAddress::new_temp(datatype, self.temp_var_idx);
-        self.temp_var_idx += 1;
+        let addr = MemAddress::new_temp(datatype, self.temporal_var_idx);
+        self.temporal_var_idx += 1;
         addr
+    }
+
+    pub fn write_to<T: Write>(&self, writer: &mut T) -> std::io::Result<()> {
+        for (constant, addr) in &self.constants {
+            writer.write_fmt(format_args!("{} {}\n", addr, constant))?;
+        }
+        for instruction in &self.instructions {
+            writer.write_fmt(format_args!("{}\n", instruction))?;
+        }
+        Ok(())
     }
 }

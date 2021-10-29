@@ -1,6 +1,6 @@
 use crate::compiler::{
     callables::{Callable, CompilationResult},
-    SExpr, State,
+    DataType, Instruction, SExpr, State,
 };
 
 #[derive(Debug, Clone)]
@@ -11,11 +11,18 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 1 {
             return self.arity_err("<value>");
         }
-        todo!()
+        let arg = args.into_iter().next().unwrap();
+        let arg_mem_addr = state.compile(arg)?;
+        let res_addr = state.new_tmp_address(DataType::Number);
+
+        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_mem_addr], res_addr);
+        state.add_instruction(instruction);
+
+        Ok(res_addr)
     }
 }
 
@@ -29,11 +36,34 @@ impl Callable for If {
         "if"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
             return self.arity_err("<condition> <true expression> <false expression>");
         }
-        todo!()
+        let mut args_iter = args.into_iter();
+        let cond_arg = args_iter.next().unwrap();
+        let true_arg = args_iter.next().unwrap();
+        let false_arg = args_iter.next().unwrap();
+
+        let cond_addr = IsTrue.compile(state, vec![cond_arg])?;
+        let jump_on_false_ins = Instruction::new_jump(Some((false, cond_addr)));
+        let jump_on_false_ins_ptr = state.add_instruction(jump_on_false_ins);
+
+        let return_addr = state.new_tmp_address(DataType::Unknown);
+
+        let true_addr = state.compile(true_arg)?;
+        let assign_true_to_return_addr_ins = Instruction::new_assignment(true_addr, return_addr);
+        state.add_instruction(assign_true_to_return_addr_ins);
+        let jump_ins = Instruction::new_jump(None);
+        let jump_ins_ptr = state.add_instruction(jump_ins);
+
+        state.fill_jump(jump_on_false_ins_ptr, state.instruction_ptr());
+        let false_addr = state.compile(false_arg)?;
+        let assign_false_to_return_addr_ins = Instruction::new_assignment(false_addr, return_addr);
+        state.add_instruction(assign_false_to_return_addr_ins);
+        state.fill_jump(jump_ins_ptr, state.instruction_ptr());
+
+        Ok(return_addr)
     }
 }
 

@@ -1,4 +1,6 @@
-#[derive(Debug, Clone)]
+use std::fmt::{self, Display, Formatter};
+
+#[derive(Debug, Clone, Copy)]
 pub struct MemAddress {
     lifetime: Lifetime,
     datatype: DataType,
@@ -52,9 +54,14 @@ impl TryFrom<usize> for MemAddress {
     }
 }
 
-#[derive(Debug, Clone)]
+impl Display for MemAddress {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", usize::from(self))
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Lifetime {
-    BuiltIn,
     Constant,
     Variable,
     Temporal,
@@ -64,10 +71,9 @@ impl From<&Lifetime> for usize {
     fn from(life: &Lifetime) -> Self {
         let bits = 28;
         match life {
-            Lifetime::BuiltIn => (2 << bits),
-            Lifetime::Constant => 2 * (2 << bits),
-            Lifetime::Variable => 3 * (2 << bits),
-            Lifetime::Temporal => 4 * (2 << bits),
+            Lifetime::Constant => (2 << bits),
+            Lifetime::Variable => 2 * (2 << bits),
+            Lifetime::Temporal => 3 * (2 << bits),
         }
     }
 }
@@ -78,16 +84,15 @@ impl TryFrom<usize> for Lifetime {
     fn try_from(num: usize) -> Result<Self, Self::Error> {
         let life_bits = (num >> 28) & 0xF;
         match life_bits {
-            1 => Ok(Lifetime::BuiltIn),
-            2 => Ok(Lifetime::Constant),
-            3 => Ok(Lifetime::Variable),
-            4 => Ok(Lifetime::Temporal),
+            1 => Ok(Lifetime::Constant),
+            2 => Ok(Lifetime::Variable),
+            3 => Ok(Lifetime::Temporal),
             _ => Err(()),
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum DataType {
     Number,
     String,
@@ -97,6 +102,7 @@ pub enum DataType {
     Map,
     Callable,
     Nil,
+    Unknown,
 }
 
 impl From<&DataType> for usize {
@@ -111,6 +117,7 @@ impl From<&DataType> for usize {
             DataType::Map => 6 * (2 << bits),
             DataType::Callable => 7 * (2 << bits),
             DataType::Nil => 8 * (2 << bits),
+            DataType::Unknown => 9 * (2 << bits),
         }
     }
 }
@@ -129,6 +136,7 @@ impl TryFrom<usize> for DataType {
             6 => Ok(DataType::Map),
             7 => Ok(DataType::Callable),
             8 => Ok(DataType::Nil),
+            9 => Ok(DataType::Unknown),
             _ => Err(()),
         }
     }

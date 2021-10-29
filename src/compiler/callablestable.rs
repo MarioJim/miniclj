@@ -1,7 +1,11 @@
 use std::{collections::HashMap, rc::Rc};
 
 use crate::compiler::{
-    callables::{iofns::Print, FactorOp},
+    callables::{
+        conditionals::{If, IsTrue},
+        iofns::Print,
+        FactorOp,
+    },
     Callable,
 };
 
@@ -17,6 +21,8 @@ impl Default for CallablesTable {
         for c in [FactorOp::Add, FactorOp::Sub, FactorOp::Mul, FactorOp::Div] {
             builtin.insert(c.name().to_string(), Rc::new(c));
         }
+        builtin.insert(If.name().into(), Rc::new(If));
+        builtin.insert(IsTrue.name().into(), Rc::new(IsTrue));
         builtin.insert(Print.name().into(), Rc::new(Print));
 
         CallablesTable {

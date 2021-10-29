@@ -1,8 +1,10 @@
+use std::fmt::{self, Display, Formatter};
+
 use num::Rational64;
 
 use crate::compiler::{memaddress::DataType, Literal};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Constant {
     String(String),
     Number(Rational64),
@@ -26,6 +28,16 @@ impl From<Literal> for Constant {
             Literal::String(s) => Constant::String(s),
             Literal::Number(n) => Constant::Number(n),
             Literal::Nil => Constant::Nil,
+        }
+    }
+}
+
+impl Display for Constant {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Constant::String(string) => write!(f, "\"{}\"", string),
+            Constant::Number(num) => write!(f, "{}/{}", num.numer(), num.denom()),
+            Constant::Nil => write!(f, "nil"),
         }
     }
 }
