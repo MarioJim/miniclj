@@ -6,7 +6,8 @@ pub type CompilationResult = Result<MemAddress, CompilationError>;
 
 #[derive(Debug)]
 pub enum CompilationError {
-    ArityError(&'static str, &'static str),
+    Arity(&'static str, &'static str),
+    EmptyArgs(&'static str),
     WrongArgument(&'static str, &'static str, &'static str),
     CallableNotDefined(String),
     SymbolNotDefined(String),
@@ -16,10 +17,15 @@ pub enum CompilationError {
 impl Display for CompilationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CompilationError::ArityError(callable, args) => write!(
+            CompilationError::Arity(callable, args) => write!(
                 f,
                 "Callable {0} called with wrong number of arguments, should be called as ({0} {1})",
                 callable, args
+            ),
+            CompilationError::EmptyArgs(callable) => write!(
+                f,
+                "Callable {} expected at least one argument, none were provided",
+                callable
             ),
             CompilationError::WrongArgument(callable, expect, got) => write!(
                 f,

@@ -32,7 +32,7 @@ pub trait Callable: Display + Debug + DynClone {
     fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult;
 
     fn arity_err(&self, expected: &'static str) -> CompilationResult {
-        Err(CompilationError::ArityError(self.name(), expected))
+        Err(CompilationError::Arity(self.name(), expected))
     }
 
     fn is_user_defined(&self) -> bool {
