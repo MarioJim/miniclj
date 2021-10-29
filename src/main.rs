@@ -24,7 +24,7 @@ fn main() -> Result<(), String> {
         }
         ("build", opts) => {
             let input = read_file_from_opts(opts)?;
-            let output_file = output_file_from_opts(opts)?;
+            let mut output_file = output_file_from_opts(opts)?;
             let tree = parser::SExprsParser::new()
                 .parse(&input)
                 .map_err(|e| format!("{:#?}", e))?;
@@ -36,7 +36,9 @@ fn main() -> Result<(), String> {
                     .map_err(|err| format!("Compilation error: {}", err))?;
             }
             println!("{:#?}", compiler_state);
-            // compiler_state.write_to(output_file);
+            compiler_state
+                .write_to(&mut output_file)
+                .map_err(|err| format!("File error: {}", err))?;
         }
         ("exec", opts) => {
             let input = read_file_from_opts(opts)?;

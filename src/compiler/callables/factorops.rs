@@ -23,7 +23,10 @@ impl Callable for FactorOp {
 
     fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
         if args.is_empty() && (matches!(self, FactorOp::Sub) || matches!(self, FactorOp::Div)) {
-            return self.arity_err("at least one argument");
+            return Err(CompilationError::Error(format!(
+                "Callable {} expected at least one argument",
+                self.name()
+            )));
         }
         let arg_mem_addrs = args
             .into_iter()
@@ -31,8 +34,7 @@ impl Callable for FactorOp {
             .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
 
         let res_addr = state.new_tmp_address(DataType::Number);
-        let instruction =
-            Instruction::new_call(self.name().to_string(), arg_mem_addrs, res_addr.clone());
+        let instruction = Instruction::new_builtin_call(self.name(), arg_mem_addrs, res_addr);
 
         state.add_instruction(instruction);
 
