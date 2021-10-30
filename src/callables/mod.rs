@@ -18,25 +18,20 @@ pub mod scopefns;
 pub mod seqtransformfns;
 pub mod typecastingfns;
 
-pub use comparisonops::ComparisonOp;
-pub use factorops::FactorOp;
-
-use std::fmt::{Debug, Display};
-
-use dyn_clone::DynClone;
-
-use crate::compiler::{CompilationError, CompilationResult, SExpr, State};
-
-pub trait Callable: Display + Debug + DynClone {
+pub trait Callable: std::fmt::Display + std::fmt::Debug + dyn_clone::DynClone {
     fn name(&self) -> &'static str;
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult;
 
-    fn arity_err(&self, expected: &'static str) -> CompilationResult {
-        Err(CompilationError::Arity(self.name(), expected))
-    }
+    fn compile(
+        &self,
+        state: &mut crate::compiler::State,
+        args: Vec<crate::compiler::SExpr>,
+    ) -> crate::compiler::CompilationResult;
 
-    fn is_user_defined(&self) -> bool {
-        false
+    fn arity_err(&self, expected: &'static str) -> crate::compiler::CompilationResult {
+        Err(crate::compiler::CompilationError::Arity(
+            self.name(),
+            expected,
+        ))
     }
 }
 

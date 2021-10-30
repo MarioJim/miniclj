@@ -1,31 +1,30 @@
-use crate::compiler::{
-    Callable, CompilationError, CompilationResult, DataType, Instruction, MemAddress, SExpr, State,
+use crate::{
+    callables::Callable,
+    compiler::{CompilationError, CompilationResult, SExpr, State},
+    instruction::Instruction,
+    memaddress::{DataType, MemAddress},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum ComparisonOp {
-    Eq,
-    Ne,
-    Gt,
-    Lt,
-    Ge,
-    Le,
+pub enum FactorOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
 }
 
-impl Callable for ComparisonOp {
+impl Callable for FactorOp {
     fn name(&self) -> &'static str {
         match self {
-            ComparisonOp::Eq => "=",
-            ComparisonOp::Ne => "!=",
-            ComparisonOp::Gt => ">",
-            ComparisonOp::Lt => "<",
-            ComparisonOp::Ge => ">=",
-            ComparisonOp::Le => "<=",
+            FactorOp::Add => "+",
+            FactorOp::Sub => "-",
+            FactorOp::Mul => "*",
+            FactorOp::Div => "/",
         }
     }
 
     fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.is_empty() {
+        if args.is_empty() && (matches!(self, FactorOp::Sub) || matches!(self, FactorOp::Div)) {
             return Err(CompilationError::EmptyArgs(self.name()));
         }
         let arg_addrs = args
@@ -42,4 +41,4 @@ impl Callable for ComparisonOp {
     }
 }
 
-display_for_callable!(ComparisonOp);
+display_for_callable!(FactorOp);

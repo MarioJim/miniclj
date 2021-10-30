@@ -1,11 +1,9 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::compiler::{
-    callables::{
-        conditionals::{If, IsTrue},
-        iofns::Print,
-        FactorOp,
-    },
+use crate::callables::{
+    conditionals::{If, IsTrue},
+    factorops::FactorOp,
+    iofns::Print,
     Callable,
 };
 

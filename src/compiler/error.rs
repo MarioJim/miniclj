@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use super::MemAddress;
+use crate::memaddress::MemAddress;
 
 pub type CompilationResult = Result<MemAddress, CompilationError>;
 

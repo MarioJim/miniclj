@@ -1,6 +1,8 @@
-use crate::compiler::{
-    callables::{Callable, CompilationResult},
-    CompilationError, DataType, Instruction, MemAddress, SExpr, State,
+use crate::{
+    callables::Callable,
+    compiler::{CompilationError, CompilationResult, SExpr, State},
+    instruction::Instruction,
+    memaddress::{DataType, MemAddress},
 };
 
 #[derive(Debug, Clone)]

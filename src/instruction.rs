@@ -1,6 +1,8 @@
 use std::fmt::{self, Display};
 
-use super::{InstructionPtr, MemAddress};
+use crate::memaddress::MemAddress;
+
+pub type InstructionPtr = usize;
 
 #[derive(Debug)]
 pub enum Instruction {

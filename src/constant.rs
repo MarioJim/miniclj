@@ -2,7 +2,7 @@ use std::fmt::{self, Display, Formatter};
 
 use num::Rational64;
 
-use crate::compiler::{memaddress::DataType, Literal};
+use crate::{compiler::Literal, memaddress::DataType};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Constant {

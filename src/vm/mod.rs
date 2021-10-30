@@ -1,4 +1,4 @@
-use crate::compiler::{self, Instruction};
+use crate::{compiler, instruction::Instruction};
 
 // pub mod callables;
 // pub mod scope;

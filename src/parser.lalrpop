@@ -2,9 +2,9 @@ use std::str::FromStr;
 
 use num::Rational64;
 
-use crate::compiler::{
-    callables::{Callable, ComparisonOp, FactorOp},
-    Literal, SExpr,
+use crate::{
+    callables::{comparisonops::ComparisonOp, factorops::FactorOp, Callable},
+    compiler::{Literal, SExpr},
 };
 
 grammar;

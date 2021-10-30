@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::compiler::MemAddress;
+use crate::memaddress::MemAddress;
 
 type Table = RefCell<HashMap<String, MemAddress>>;
 
