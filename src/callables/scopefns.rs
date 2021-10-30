@@ -1,6 +1,6 @@
-use crate::compiler::{
-    callables::{Callable, CompilationError, CompilationResult},
-    Literal, SExpr, State,
+use crate::{
+    callables::Callable,
+    compiler::{CompilationError, CompilationResult, Literal, SExpr, State},
 };
 
 #[derive(Debug, Clone)]

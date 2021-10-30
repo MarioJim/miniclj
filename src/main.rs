@@ -1,12 +1,15 @@
 use lalrpop_util::lalrpop_mod;
 
 lalrpop_mod!(#[allow(dead_code)] #[allow(clippy::all)] pub parser);
+mod callables;
 mod cli;
 mod compiler;
+mod constant;
+mod instruction;
+mod memaddress;
 mod vm;
 
 use crate::cli::{output_file_from_opts, read_file_from_opts};
-
 fn main() -> Result<(), String> {
     match cli::args().get_matches().subcommand().unwrap() {
         ("check", opts) => {

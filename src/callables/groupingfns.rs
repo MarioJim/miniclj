@@ -1,4 +1,7 @@
-use crate::compiler::{Callable, CompilationError, CompilationResult, SExpr, State};
+use crate::{
+    callables::Callable,
+    compiler::{CompilationError, CompilationResult, SExpr, State},
+};
 
 #[derive(Debug, Clone)]
 pub struct Do;

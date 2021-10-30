@@ -1,4 +1,9 @@
-use crate::compiler::{Callable, CompilationResult, DataType, Instruction, SExpr, State};
+use crate::{
+    callables::Callable,
+    compiler::{CompilationResult, SExpr, State},
+    instruction::Instruction,
+    memaddress::DataType,
+};
 
 #[derive(Debug, Clone)]
 pub struct First;
