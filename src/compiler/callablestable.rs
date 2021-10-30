@@ -38,6 +38,7 @@ impl CallablesTable {
             .cloned()
     }
 
+    #[allow(dead_code)]
     pub fn insert(&mut self, symbol: String, value: Rc<dyn Callable>) {
         self.custom.insert(symbol, value);
     }

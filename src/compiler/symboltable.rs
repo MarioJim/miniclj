@@ -37,6 +37,7 @@ impl SymbolTable {
         }
     }
 
+    #[allow(dead_code)]
     pub fn insert(&self, symbol: String, value: MemAddress) {
         match self {
             SymbolTable::RootScope(t) => t,
@@ -46,6 +47,7 @@ impl SymbolTable {
         .insert(symbol, value);
     }
 
+    #[allow(dead_code)]
     pub fn insert_in_root(&self, symbol: String, value: MemAddress) {
         match self {
             SymbolTable::LocalScope(_, s) => s.insert_in_root(symbol, value),
