@@ -10,7 +10,7 @@ use crate::{callables::Callable, compiler::Literal, instruction::InstructionPtr}
 #[derive(Debug, Clone)]
 pub enum Constant {
     Callable(Box<dyn Callable>),
-    Lambda(InstructionPtr),
+    Lambda(InstructionPtr, usize),
 
     String(String),
     Number(Rational64),
@@ -18,8 +18,8 @@ pub enum Constant {
 }
 
 impl Constant {
-    pub fn new_lambda(instruction_ptr: InstructionPtr) -> Constant {
-        Constant::Lambda(instruction_ptr)
+    pub fn new_lambda(instruction_ptr: InstructionPtr, arity: usize) -> Constant {
+        Constant::Lambda(instruction_ptr, arity)
     }
 }
 
@@ -44,7 +44,9 @@ impl Display for Constant {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Constant::Callable(c) => write!(f, "{}", c.name()),
-            Constant::Lambda(instruction_ptr) => write!(f, "fn@{}", instruction_ptr),
+            Constant::Lambda(instruction_ptr, arity) => {
+                write!(f, "fn@{}@{}", instruction_ptr, arity)
+            }
             Constant::String(string) => write!(f, "\"{}\"", string),
             Constant::Number(num) => write!(f, "{}/{}", num.numer(), num.denom()),
             Constant::Nil => write!(f, "nil"),
@@ -59,7 +61,7 @@ impl Hash for Constant {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             Constant::Callable(c) => c.name().hash(state),
-            Constant::Lambda(instr_ptr) => instr_ptr.hash(state),
+            Constant::Lambda(instr_ptr, _) => instr_ptr.hash(state),
             Constant::String(s) => s.hash(state),
             Constant::Number(n) => n.hash(state),
             Constant::Nil => NilHash.hash(state),
@@ -71,7 +73,7 @@ impl PartialEq for Constant {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Constant::Callable(c1), Constant::Callable(c2)) => c1.name() == c2.name(),
-            (Constant::Lambda(ptr1), Constant::Lambda(ptr2)) => ptr1 == ptr2,
+            (Constant::Lambda(ptr1, _), Constant::Lambda(ptr2, _)) => ptr1 == ptr2,
             (Constant::String(s1), Constant::String(s2)) => s1 == s2,
             (Constant::Number(n1), Constant::Number(n2)) => n1 == n2,
             (Constant::Nil, Constant::Nil) => true,

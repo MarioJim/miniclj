@@ -22,7 +22,7 @@ mod typecastingfns;
 
 use std::collections::HashMap;
 
-pub use callable::Callable;
+pub use callable::{Callable, CallableResult};
 pub use comparisonops::ComparisonOp;
 pub use factorops::FactorOp;
 
@@ -65,6 +65,7 @@ impl Default for CallablesTable {
         add_fn!(table, groupingfns::Do);
 
         add_fn!(table, iofns::Print);
+        add_fn!(table, iofns::Println);
         add_fn!(table, iofns::Read);
 
         add_fn!(table, lambda::Lambda);

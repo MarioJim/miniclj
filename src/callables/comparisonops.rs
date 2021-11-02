@@ -31,9 +31,9 @@ impl Callable for ComparisonOp {
         num_args: usize,
     ) -> CompilationResult {
         if num_args == 0 {
-            Ok(state.get_callable_addr(Box::new(*self)))
-        } else {
             Err(CompilationError::EmptyArgs(self.name()))
+        } else {
+            Ok(state.get_callable_addr(Box::new(*self)))
         }
     }
 }

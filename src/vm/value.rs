@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use num::Rational64;
 
-use crate::{callables::Callable, instruction::InstructionPtr};
+use crate::{callables::Callable, constant::Constant, instruction::InstructionPtr};
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    Fn(Box<dyn Callable>),
+    Callable(Box<dyn Callable>),
     Lambda(InstructionPtr, usize),
 
     List(VecDeque<Value>),
@@ -23,7 +23,7 @@ pub enum Value {
 impl Value {
     pub fn type_str(&self) -> &'static str {
         match self {
-            Value::Fn(_) | Value::Lambda(..) => "a function",
+            Value::Callable(_) | Value::Lambda(..) => "a function",
             Value::List(_) => "a list",
             Value::Vector(_) => "a vector",
             Value::Set(_) => "a set",
@@ -32,6 +32,29 @@ impl Value {
             Value::String(_) => "a string",
             Value::Number(_) => "a number",
             Value::Nil => "nil",
+        }
+    }
+
+    pub fn as_bool(&self) -> Result<bool, &'static str> {
+        if let Value::Number(n) = self {
+            if n == &Rational64::from(0) {
+                return Ok(false);
+            } else if n == &Rational64::from(1) {
+                return Ok(true);
+            }
+        }
+        Err(self.type_str())
+    }
+}
+
+impl From<Constant> for Value {
+    fn from(constant: Constant) -> Self {
+        match constant {
+            Constant::Callable(c) => Value::Callable(c),
+            Constant::Lambda(ptr, arity) => Value::Lambda(ptr, arity),
+            Constant::String(s) => Value::String(s),
+            Constant::Number(n) => Value::Number(n),
+            Constant::Nil => Value::Nil,
         }
     }
 }

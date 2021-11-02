@@ -1,10 +1,9 @@
 use std::collections::VecDeque;
 
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    memaddress::MemAddress,
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
+    vm::{RuntimeError, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -27,22 +26,14 @@ impl Callable for First {
         }
     }
 
-    fn execute(
-        &self,
-        state: &mut VMState,
-        args_addrs: Vec<MemAddress>,
-        result_addr: MemAddress,
-    ) -> RuntimeResult {
-        let maybe_coll_addr = args_addrs.into_iter().next().unwrap();
-        let maybe_coll = state.get(&maybe_coll_addr);
+    fn execute(&self, args: Vec<Value>) -> CallableResult {
+        let maybe_coll = args.into_iter().next().unwrap();
         let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
 
         let first = coll_as_list.pop_front().unwrap_or(Value::Nil);
-        state.store(result_addr, first);
-
-        Ok(())
+        Ok(first)
     }
 }
 
@@ -66,15 +57,6 @@ impl Callable for Rest {
         } else {
             Err(CompilationError::Arity(self.name(), "<collection>"))
         }
-    }
-
-    fn execute(
-        &self,
-        _state: &mut VMState,
-        _args_addrs: Vec<MemAddress>,
-        _result_addr: MemAddress,
-    ) -> RuntimeResult {
-        todo!()
     }
 }
 

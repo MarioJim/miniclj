@@ -1,6 +1,8 @@
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
+    constant::Constant,
+    instruction::Instruction,
 };
 
 #[derive(Debug, Clone)]
@@ -101,8 +103,16 @@ impl Callable for Defn {
             ))
         }?;
 
-        let lambda_addr = state.compile_lambda(arg_names, body_arg)?;
+        let jump_lambda_instr = Instruction::new_jump(None);
+        let jump_lambda_instr_ptr = state.add_instruction(jump_lambda_instr);
+        let lambda_start_ptr = state.instruction_ptr();
+        let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
+        let lambda_addr = state.insert_in_consttbl(lambda_const);
         state.insert_in_root_symtbl(symbol, lambda_addr);
+
+        state.compile_lambda(arg_names, body_arg)?;
+        state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
+
         Ok(lambda_addr)
     }
 

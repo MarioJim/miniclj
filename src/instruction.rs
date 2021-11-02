@@ -59,15 +59,15 @@ impl Display for Instruction {
                 args,
                 result_addr,
             } => {
-                write!(f, "{}", callable,)?;
+                write!(f, "call {}", callable,)?;
                 for arg in args {
                     write!(f, " {}", arg)?;
                 }
                 write!(f, " {}", result_addr)
             }
             Instruction::Return(addr) => write!(f, "ret {}", addr),
-            Instruction::Assignment { src, dst } => write!(f, "= {} {}", src, dst),
-            Instruction::Jump(ins_ptr) => write!(f, "jump {}", ins_ptr),
+            Instruction::Assignment { src, dst } => write!(f, "mov {} {}", src, dst),
+            Instruction::Jump(ins_ptr) => write!(f, "jmp {}", ins_ptr),
             Instruction::JumpOnTrue(addr, ins_ptr) => {
                 write!(f, "jmpT {} {}", addr, ins_ptr)
             }

@@ -17,16 +17,16 @@ impl MemAddress {
         }
     }
 
-    pub fn new_var(idx: usize) -> MemAddress {
+    pub fn new_global_var(idx: usize) -> MemAddress {
         MemAddress {
-            lifetime: Lifetime::Variable,
+            lifetime: Lifetime::GlobalVar,
             idx,
         }
     }
 
-    pub fn new_arg(idx: usize) -> MemAddress {
+    pub fn new_local_var(idx: usize) -> MemAddress {
         MemAddress {
-            lifetime: Lifetime::Argument,
+            lifetime: Lifetime::LocalVar,
             idx,
         }
     }
@@ -38,7 +38,11 @@ impl MemAddress {
         }
     }
 
-    pub fn get_idx(&self) -> usize {
+    pub fn lifetime(&self) -> Lifetime {
+        self.lifetime
+    }
+
+    pub fn idx(&self) -> usize {
         self.idx
     }
 }
@@ -81,8 +85,8 @@ impl Hash for MemAddress {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Lifetime {
     Constant,
-    Variable,
-    Argument,
+    GlobalVar,
+    LocalVar,
     Temporal,
 }
 
@@ -95,8 +99,8 @@ impl From<&Lifetime> for usize {
         let base = 1 << LIFETIME_SHIFT;
         match life {
             Lifetime::Constant => base,
-            Lifetime::Variable => 2 * base,
-            Lifetime::Argument => 3 * base,
+            Lifetime::GlobalVar => 2 * base,
+            Lifetime::LocalVar => 3 * base,
             Lifetime::Temporal => 4 * base,
         }
     }
@@ -108,8 +112,8 @@ impl TryFrom<usize> for Lifetime {
     fn try_from(num: usize) -> Result<Self, Self::Error> {
         match (num >> LIFETIME_SHIFT) & LIFETIME_MASK {
             1 => Ok(Lifetime::Constant),
-            2 => Ok(Lifetime::Variable),
-            3 => Ok(Lifetime::Argument),
+            2 => Ok(Lifetime::GlobalVar),
+            3 => Ok(Lifetime::LocalVar),
             4 => Ok(Lifetime::Temporal),
             _ => Err(()),
         }

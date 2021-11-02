@@ -4,6 +4,8 @@ pub type RuntimeResult = Result<(), RuntimeError>;
 
 pub enum RuntimeError {
     WrongDataType(&'static str, &'static str, &'static str),
+    NotACallable(&'static str),
+    WrongArity(usize, usize),
     DivisionByZero,
 }
 
@@ -14,6 +16,14 @@ impl Display for RuntimeError {
                 f,
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
+            ),
+            RuntimeError::NotACallable(value_type) => {
+                write!(f, "Couldn't execute {} as a callable", value_type)
+            }
+            RuntimeError::WrongArity(expect, got) => write!(
+                f,
+                "User defined callable called with wrong number of arguments, expected {}, got {}",
+                expect, got
             ),
             RuntimeError::DivisionByZero => write!(f, "Division by zero"),
         }

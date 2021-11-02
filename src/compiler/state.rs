@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap, io::Write, rc::Rc};
+use std::{collections::HashMap, io::Write, rc::Rc};
 
 use crate::{
     callables::{Callable, CallablesTable},
@@ -10,10 +10,9 @@ use crate::{
 
 #[derive(Debug, Default)]
 pub struct CompilerState {
-    temporal_var_idx: usize,
+    constants: HashMap<Constant, MemAddress>,
     instructions: Vec<Instruction>,
     symbol_table: Rc<SymbolTable>,
-    constants: HashMap<Constant, MemAddress>,
     callables_table: CallablesTable,
 }
 
@@ -49,7 +48,15 @@ impl CompilerState {
                 Ok(res_addr)
             }
             SExpr::ShortLambda(exprs) => {
-                self.compile_lambda(vec!["%".to_string()], SExpr::Expr(exprs))
+                let jump_lambda_instr = Instruction::new_jump(None);
+                let jump_lambda_instr_ptr = self.add_instruction(jump_lambda_instr);
+                let lambda_start_ptr = self.instruction_ptr();
+                let lambda_const = Constant::new_lambda(lambda_start_ptr, 1);
+                let lambda_addr = self.insert_in_consttbl(lambda_const);
+
+                self.compile_lambda(vec!["%".to_string()], SExpr::Expr(exprs))?;
+                self.fill_jump(jump_lambda_instr_ptr, self.instruction_ptr());
+                Ok(lambda_addr)
             }
             SExpr::List(_) => todo!(),
             SExpr::Vector(_) => todo!(),
@@ -67,29 +74,22 @@ impl CompilerState {
         }
     }
 
-    pub fn compile_lambda(&mut self, arg_names: Vec<String>, body: SExpr) -> CompilationResult {
-        let jump_lambda_instr = Instruction::new_jump(None);
-        let jump_lambda_instr_ptr = self.add_instruction(jump_lambda_instr);
-
-        let lambda_start_ptr = self.instruction_ptr();
-
+    pub fn compile_lambda(
+        &mut self,
+        arg_names: Vec<String>,
+        body: SExpr,
+    ) -> Result<(), CompilationError> {
         self.symbol_table = Rc::new(SymbolTable::new(Some(self.symbol_table.clone())));
         for (arg_idx, arg_name) in arg_names.into_iter().enumerate() {
-            let addr = MemAddress::new_arg(arg_idx);
+            let addr = MemAddress::new_local_var(arg_idx);
             self.symbol_table.insert(arg_name, addr);
         }
         let res_addr = self.compile(body)?;
-        self.symbol_table = match self.symbol_table.borrow() {
-            SymbolTable::RootScope(_) => unreachable!(),
-            SymbolTable::LocalScope(_, parent_table) => parent_table.clone(),
-        };
+        self.symbol_table = self.symbol_table.get_top_scope().unwrap();
 
         let ret_instr = Instruction::new_return(res_addr);
         self.add_instruction(ret_instr);
-        self.fill_jump(jump_lambda_instr_ptr, self.instruction_ptr());
-
-        let lambda_const = Constant::new_lambda(lambda_start_ptr);
-        Ok(self.insert_in_consttbl(lambda_const))
+        Ok(())
     }
 
     pub fn has_symbol_in_symtbl(&self, symbol: &str) -> bool {
@@ -111,7 +111,7 @@ impl CompilerState {
                 let next_idx = self
                     .constants
                     .iter()
-                    .map(|(_, a)| a.get_idx() + 1)
+                    .map(|(_, a)| a.idx() + 1)
                     .max()
                     .unwrap_or(0);
                 let addr = MemAddress::new_const(next_idx);
@@ -146,9 +146,7 @@ impl CompilerState {
     }
 
     pub fn new_tmp_address(&mut self) -> MemAddress {
-        let addr = MemAddress::new_temp(self.temporal_var_idx);
-        self.temporal_var_idx += 1;
-        addr
+        MemAddress::new_temp(self.symbol_table.get_new_temp_addr_idx())
     }
 
     pub fn write_to<T: Write>(&self, writer: &mut T) -> std::io::Result<()> {

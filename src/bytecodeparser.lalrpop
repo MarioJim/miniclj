@@ -1,0 +1,113 @@
+use std::{collections::HashMap, str::FromStr};
+
+use lalrpop_util::ParseError;
+use num::Rational64;
+
+use crate::{
+    callables::{Callable, CallablesTable, ComparisonOp, FactorOp},
+    constant::Constant,
+    instruction::{Instruction, InstructionPtr},
+    memaddress::MemAddress,
+};
+
+grammar<'ast>(callables_table: &'ast CallablesTable);
+
+extern { type Error = String; }
+
+// Bytecode-specific parsers
+pub Bytecode: (HashMap<MemAddress, Constant>, Vec<Instruction>) = 
+    <constants:List<AddressConstantPair>> "***" <instructions:List<Instruction>> => {
+        let mut constants_map = HashMap::new();
+        for (address, constant) in constants {
+            constants_map.insert(address, constant);
+        }
+        (constants_map, instructions)
+    };
+
+
+AddressConstantPair: (MemAddress, Constant) = <a:Address> <c:Constant> => (a, c);
+
+Address: MemAddress = r"[0-9]+" =>?
+    MemAddress::try_from(usize::from_str(<>).unwrap())
+        .map_err(|_| ParseError::User { error: format!("Invalid address {}", <>) });
+
+Constant: Constant = {
+    "nil" => Constant::Nil,
+    Symbol =>? match callables_table.get(&<>) {
+        Some(callable) => Ok(Constant::Callable(callable)),
+        None => Err(ParseError::User { error: format!("Callable \"{}\" not found", <>) }),
+    },
+    LambdaConst => Constant::Lambda(<>.0, <>.1),
+    StringLiteral => Constant::String(<>),
+    FractionLiteral => Constant::Number(<>),
+};
+
+LambdaConst: (usize, usize) = r"fn@[0-9]+@[0-9]+" => {
+    let mut parts = <>.split("@");
+    parts.next(); // Ignore 'fn' part
+    let ptr = usize::from_str(parts.next().unwrap()).unwrap();
+    let arity = usize::from_str(parts.next().unwrap()).unwrap();
+    (ptr, arity)
+};
+
+FractionLiteral: Rational64 = r"[-]?[0-9]+/[0-9]+" => {
+    let mut parts = <>.split("/");
+    let numer = i64::from_str(parts.next().unwrap()).unwrap();
+    let denom = i64::from_str(parts.next().unwrap()).unwrap();
+    Rational64::new_raw(numer, denom)
+};
+
+Instruction: Instruction = {
+    "call" <c:Address> <mut a:List<Address>> => {
+        let result_addr = a.pop().unwrap();
+        Instruction::Call {
+            callable: c,
+            args: a,
+            result_addr,
+        }
+    },
+    "ret" <Address> => Instruction::Return(<>),
+    "mov" <src:Address> <dst:Address> => Instruction::Assignment { src, dst },
+    "jmp" <p:InstrPtr> => Instruction::Jump(p),
+    "jmpT" <a:Address> <p:InstrPtr> => Instruction::JumpOnTrue(a, p),
+    "jmpF" <a:Address> <p:InstrPtr> => Instruction::JumpOnFalse(a, p),
+};
+
+InstrPtr: InstructionPtr = r"[0-9]+" => InstructionPtr::from_str(<>).unwrap();
+
+// Shared parsers
+List<T>: Vec<T> = {
+    <mut v:T*> <e:T> => {
+        v.push(e);
+        v
+    }
+};
+
+Symbol: String = {
+    ComparisonOp => String::from(<>.name()),
+    FactorOp => String::from(<>.name()),
+    r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>),
+};
+
+ComparisonOp: ComparisonOp = {
+    "==" => ComparisonOp::Eq,
+    "!=" => ComparisonOp::Ne,
+    ">" => ComparisonOp::Gt,
+    "<" => ComparisonOp::Lt,
+    ">=" => ComparisonOp::Ge,
+    "<=" => ComparisonOp::Le,
+};
+
+FactorOp: FactorOp = {
+    "+" => FactorOp::Add,
+    "-" => FactorOp::Sub,
+    "*" => FactorOp::Mul,
+    "/" => FactorOp::Div,
+};
+
+StringLiteral: String = r#""[^"]*""# => {
+    let mut chars = <>.chars();
+    chars.next();
+    chars.next_back();
+    String::from(chars.as_str())
+};

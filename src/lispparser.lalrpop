@@ -9,13 +9,7 @@ use crate::{
 
 grammar;
 
-List<T>: Vec<T> = {
-    <mut v:T*> <e:T> => {
-        v.push(e);
-        v
-    }
-};
-
+// Compiler-specific parsers
 pub SExprs = List<SExpr>;
 Literals = List<Literal>;
 
@@ -37,7 +31,7 @@ Literal: Literal = {
 };
 
 pub NumberLiteral: Rational64 = {
-    DecimalLiteral => {
+    r"[-]?[0-9]+\.[0-9]+" => {
         let num_parts: Vec<&str> = <>.split(".").collect();
         let integer = i64::from_str(num_parts[0]).unwrap();
         let mut decimals = i64::from_str(num_parts[1]).unwrap();
@@ -48,7 +42,15 @@ pub NumberLiteral: Rational64 = {
         let numer = (integer * 10_i64.pow(exp)) + decimals;
         Rational64::new(numer, 10_i64.pow(exp))
     },
-    IntegerLiteral => Rational64::from_str(<>).unwrap(),
+    r"[-]?[0-9]+" => Rational64::from_str(<>).unwrap(),
+};
+
+// Shared parser rules
+List<T>: Vec<T> = {
+    <mut v:T*> <e:T> => {
+        v.push(e);
+        v
+    }
 };
 
 Symbol: String = {
@@ -79,5 +81,3 @@ StringLiteral: String = r#""[^"]*""# => {
     chars.next_back();
     String::from(chars.as_str())
 };
-IntegerLiteral: &'input str = r"[-]?[0-9]+" => <>;
-DecimalLiteral: &'input str = r"[-]?[0-9]+\.[0-9]+" => <>;
