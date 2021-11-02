@@ -1,8 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationError, CompilationResult, SExpr, State},
-    instruction::Instruction,
-    memaddress::{DataType, MemAddress},
+    compiler::{CompilationError, CompilationResult, CompilerState},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -23,21 +21,17 @@ impl Callable for FactorOp {
         }
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.is_empty() && (matches!(self, FactorOp::Sub) || matches!(self, FactorOp::Div)) {
-            return Err(CompilationError::EmptyArgs(self.name()));
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        match (self, num_args) {
+            (FactorOp::Sub, 0) | (FactorOp::Div, 0) => {
+                Err(CompilationError::EmptyArgs(self.name()))
+            }
+            _ => Ok(state.get_callable_addr(Box::new(*self))),
         }
-        let arg_addrs = args
-            .into_iter()
-            .map(|expr| state.compile(expr))
-            .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
-
-        let res_addr = state.new_tmp_address(DataType::Number);
-        let instruction = Instruction::new_builtin_call(self.name(), arg_addrs, res_addr);
-
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 

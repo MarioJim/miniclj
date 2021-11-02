@@ -1,29 +1,9 @@
-use crate::{compiler, instruction::Instruction};
+pub mod error;
+pub mod scope;
+pub mod state;
+pub mod value;
 
-// pub mod callables;
-// pub mod scope;
-// pub mod sexpr;
-// pub mod value;
-
-// pub use scope::Scope;
-// pub use sexpr::SExpr;
-// pub use value::Value;
-
-#[derive(Debug)]
-pub struct State {
-    instructions: Vec<Instruction>,
-}
-
-impl State {
-    pub fn from_compiler_state(_compiler: compiler::State) -> Self {
-        todo!()
-    }
-
-    pub fn try_from_string(_string: String) -> Result<Self, String> {
-        todo!()
-    }
-
-    pub fn execute(&mut self) {
-        todo!()
-    }
-}
+pub use error::{RuntimeError, RuntimeResult};
+pub use scope::Scope;
+pub use state::VMState;
+pub use value::Value;

@@ -1,8 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationError, CompilationResult, SExpr, State},
-    instruction::Instruction,
-    memaddress::{DataType, MemAddress},
+    compiler::{CompilationError, CompilationResult, CompilerState},
 };
 
 #[derive(Debug, Clone)]
@@ -13,21 +11,16 @@ impl Callable for Print {
         "print"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.is_empty() {
-            return Err(CompilationError::EmptyArgs(self.name()));
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 0 {
+            Err(CompilationError::EmptyArgs(self.name()))
+        } else {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
         }
-        let arg_addrs = args
-            .into_iter()
-            .map(|expr| state.compile(expr))
-            .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
-
-        let res_addr = state.new_tmp_address(DataType::Nil);
-        let instruction = Instruction::new_builtin_call(self.name(), arg_addrs, res_addr);
-
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -41,21 +34,8 @@ impl Callable for Println {
         "println"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.is_empty() {
-            return Err(CompilationError::EmptyArgs(self.name()));
-        }
-        let arg_addrs = args
-            .into_iter()
-            .map(|expr| state.compile(expr))
-            .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
-
-        let res_addr = state.new_tmp_address(DataType::Nil);
-        let instruction = Instruction::new_builtin_call(self.name(), arg_addrs, res_addr);
-
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
+    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
+        Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 }
 
@@ -69,15 +49,16 @@ impl Callable for Read {
         "read"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if !args.is_empty() {
-            return Err(CompilationError::Arity(self.name(), ""));
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 0 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), ""))
         }
-        let res_addr = state.new_tmp_address(DataType::String);
-        let instruction = Instruction::new_builtin_call(self.name(), vec![], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 

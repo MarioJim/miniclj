@@ -3,7 +3,7 @@ use std::str::FromStr;
 use num::Rational64;
 
 use crate::{
-    callables::{comparisonops::ComparisonOp, factorops::FactorOp, Callable},
+    callables::{Callable, ComparisonOp, FactorOp},
     compiler::{Literal, SExpr},
 };
 
@@ -20,7 +20,8 @@ pub SExprs = List<SExpr>;
 Literals = List<Literal>;
 
 SExpr: SExpr = {
-    "(" <Symbol> <SExprs> ")" => SExpr::Expr(<>),
+    "(" <SExprs> ")" => SExpr::Expr(<>),
+    "#(" <SExprs> ")" => SExpr::ShortLambda(<>),
     "'(" <SExprs> ")" => SExpr::List(<>),
     "[" <SExprs> "]" => SExpr::Vector(<>),
     "{" <SExprs> "}" => SExpr::Map(<>),
@@ -57,7 +58,7 @@ Symbol: String = {
 };
 
 ComparisonOp: ComparisonOp = {
-    "=" => ComparisonOp::Eq,
+    "==" => ComparisonOp::Eq,
     "!=" => ComparisonOp::Ne,
     ">" => ComparisonOp::Gt,
     "<" => ComparisonOp::Lt,

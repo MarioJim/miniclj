@@ -1,6 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationResult, SExpr, State},
+    compiler::{CompilationError, CompilationResult, CompilerState},
 };
 
 #[derive(Debug, Clone)]
@@ -11,12 +11,19 @@ impl Callable for Map {
         "map"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<function> <collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(
+                self.name(),
+                "<function> <collection>",
+            ))
         }
-
-        todo!()
     }
 }
 
@@ -30,12 +37,19 @@ impl Callable for Filter {
         "filter"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<function> <collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(
+                self.name(),
+                "<function> <collection>",
+            ))
         }
-
-        todo!()
     }
 }
 
@@ -49,12 +63,19 @@ impl Callable for Reduce {
         "reduce"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<function> <collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(
+                self.name(),
+                "<function> <collection>",
+            ))
         }
-
-        todo!()
     }
 }
 

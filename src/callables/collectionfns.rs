@@ -1,8 +1,10 @@
+use std::collections::VecDeque;
+
 use crate::{
     callables::Callable,
-    compiler::{CompilationResult, SExpr, State},
-    instruction::Instruction,
-    memaddress::DataType,
+    compiler::{CompilationError, CompilationResult, CompilerState},
+    memaddress::MemAddress,
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -13,18 +15,34 @@ impl Callable for First {
         "first"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::Unknown);
+    }
 
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
+    fn execute(
+        &self,
+        state: &mut VMState,
+        args_addrs: Vec<MemAddress>,
+        result_addr: MemAddress,
+    ) -> RuntimeResult {
+        let maybe_coll_addr = args_addrs.into_iter().next().unwrap();
+        let maybe_coll = state.get(&maybe_coll_addr);
+        let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+            RuntimeError::WrongDataType(self.name(), "a collection", type_str)
+        })?;
 
-        Ok(res_addr)
+        let first = coll_as_list.pop_front().unwrap_or(Value::Nil);
+        state.store(result_addr, first);
+
+        Ok(())
     }
 }
 
@@ -38,18 +56,25 @@ impl Callable for Rest {
         "rest"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::List);
+    }
 
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
+    fn execute(
+        &self,
+        _state: &mut VMState,
+        _args_addrs: Vec<MemAddress>,
+        _result_addr: MemAddress,
+    ) -> RuntimeResult {
+        todo!()
     }
 }
 
@@ -63,23 +88,16 @@ impl Callable for Cons {
         "cons"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<value> <collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<value> <collection>"))
         }
-        let mut args_iter = args.into_iter();
-        let value_arg = args_iter.next().unwrap();
-        let coll_arg = args_iter.next().unwrap();
-
-        let value_addr = state.compile(value_arg)?;
-        let coll_addr = state.compile(coll_arg)?;
-
-        let res_addr = state.new_tmp_address(DataType::List);
-        let instruction =
-            Instruction::new_builtin_call(self.name(), vec![value_addr, coll_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -93,23 +111,16 @@ impl Callable for Conj {
         "conj"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<collection> <value>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection> <value>"))
         }
-        let mut args_iter = args.into_iter();
-        let coll_arg = args_iter.next().unwrap();
-        let value_arg = args_iter.next().unwrap();
-
-        let coll_addr = state.compile(coll_arg)?;
-        let value_addr = state.compile(value_arg)?;
-
-        let res_addr = state.new_tmp_address(DataType::Unknown);
-        let instruction =
-            Instruction::new_builtin_call(self.name(), vec![coll_addr, value_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -123,23 +134,16 @@ impl Callable for Get {
         "get"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return self.arity_err("<collection> <key>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 2 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection> <key>"))
         }
-        let mut args_iter = args.into_iter();
-        let coll_arg = args_iter.next().unwrap();
-        let key_arg = args_iter.next().unwrap();
-
-        let coll_addr = state.compile(coll_arg)?;
-        let key_addr = state.compile(key_arg)?;
-
-        let res_addr = state.new_tmp_address(DataType::Unknown);
-        let instruction =
-            Instruction::new_builtin_call(self.name(), vec![coll_addr, key_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -153,18 +157,16 @@ impl Callable for Len {
         "len"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::Number);
-
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -178,18 +180,16 @@ impl Callable for IsEmpty {
         "empty?"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<collection>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<collection>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::Number);
-
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 

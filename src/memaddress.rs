@@ -1,41 +1,51 @@
-use std::fmt::{self, Display, Formatter};
+use std::{
+    fmt::{self, Display, Formatter},
+    hash::Hash,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct MemAddress {
     lifetime: Lifetime,
-    datatype: DataType,
     idx: usize,
 }
 
 impl MemAddress {
-    pub fn new_builtin_callable(idx: usize) -> MemAddress {
+    pub fn new_const(idx: usize) -> MemAddress {
         MemAddress {
             lifetime: Lifetime::Constant,
-            datatype: DataType::Callable,
             idx,
         }
     }
 
-    pub fn new_constant(datatype: DataType, idx: usize) -> MemAddress {
+    pub fn new_var(idx: usize) -> MemAddress {
         MemAddress {
-            lifetime: Lifetime::Constant,
-            datatype,
+            lifetime: Lifetime::Variable,
             idx,
         }
     }
 
-    pub fn new_temp(datatype: DataType, idx: usize) -> MemAddress {
+    pub fn new_arg(idx: usize) -> MemAddress {
+        MemAddress {
+            lifetime: Lifetime::Argument,
+            idx,
+        }
+    }
+
+    pub fn new_temp(idx: usize) -> MemAddress {
         MemAddress {
             lifetime: Lifetime::Temporal,
-            datatype,
             idx,
         }
+    }
+
+    pub fn get_idx(&self) -> usize {
+        self.idx
     }
 }
 
 impl From<&MemAddress> for usize {
     fn from(address: &MemAddress) -> Self {
-        usize::from(&address.lifetime) + usize::from(&address.datatype) + address.idx
+        usize::from(&address.lifetime) + address.idx
     }
 }
 
@@ -43,14 +53,9 @@ impl TryFrom<usize> for MemAddress {
     type Error = ();
 
     fn try_from(num: usize) -> Result<Self, Self::Error> {
-        let life = Lifetime::try_from(num)?;
-        let data = DataType::try_from(num)?;
+        let lifetime = Lifetime::try_from(num)?;
         let idx = num & 0xFFFFFF;
-        Ok(MemAddress {
-            lifetime: life,
-            datatype: data,
-            idx,
-        })
+        Ok(MemAddress { lifetime, idx })
     }
 }
 
@@ -60,20 +65,39 @@ impl Display for MemAddress {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+impl PartialEq for MemAddress {
+    fn eq(&self, other: &Self) -> bool {
+        usize::from(self) == usize::from(other)
+    }
+}
+impl Eq for MemAddress {}
+
+impl Hash for MemAddress {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        usize::from(self).hash(state)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Lifetime {
     Constant,
     Variable,
+    Argument,
     Temporal,
 }
 
+const LIFETIME_SHIFT: usize = 28;
+const LIFETIME_BITS: usize = 4;
+const LIFETIME_MASK: usize = (1 << LIFETIME_BITS) - 1;
+
 impl From<&Lifetime> for usize {
     fn from(life: &Lifetime) -> Self {
-        let bits = 28;
+        let base = 1 << LIFETIME_SHIFT;
         match life {
-            Lifetime::Constant => (2 << bits),
-            Lifetime::Variable => 2 * (2 << bits),
-            Lifetime::Temporal => 3 * (2 << bits),
+            Lifetime::Constant => base,
+            Lifetime::Variable => 2 * base,
+            Lifetime::Argument => 3 * base,
+            Lifetime::Temporal => 4 * base,
         }
     }
 }
@@ -82,61 +106,11 @@ impl TryFrom<usize> for Lifetime {
     type Error = ();
 
     fn try_from(num: usize) -> Result<Self, Self::Error> {
-        let life_bits = (num >> 28) & 0xF;
-        match life_bits {
+        match (num >> LIFETIME_SHIFT) & LIFETIME_MASK {
             1 => Ok(Lifetime::Constant),
             2 => Ok(Lifetime::Variable),
-            3 => Ok(Lifetime::Temporal),
-            _ => Err(()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum DataType {
-    Number,
-    String,
-    List,
-    Vector,
-    Set,
-    Map,
-    Callable,
-    Nil,
-    Unknown,
-}
-
-impl From<&DataType> for usize {
-    fn from(data: &DataType) -> Self {
-        let bits = 24;
-        match data {
-            DataType::Number => (2 << bits),
-            DataType::String => 2 * (2 << bits),
-            DataType::List => 3 * (2 << bits),
-            DataType::Vector => 4 * (2 << bits),
-            DataType::Set => 5 * (2 << bits),
-            DataType::Map => 6 * (2 << bits),
-            DataType::Callable => 7 * (2 << bits),
-            DataType::Nil => 8 * (2 << bits),
-            DataType::Unknown => 9 * (2 << bits),
-        }
-    }
-}
-
-impl TryFrom<usize> for DataType {
-    type Error = ();
-
-    fn try_from(num: usize) -> Result<Self, Self::Error> {
-        let data_bits = (num >> 24) & 0xF;
-        match data_bits {
-            1 => Ok(DataType::Number),
-            2 => Ok(DataType::String),
-            3 => Ok(DataType::List),
-            4 => Ok(DataType::Vector),
-            5 => Ok(DataType::Set),
-            6 => Ok(DataType::Map),
-            7 => Ok(DataType::Callable),
-            8 => Ok(DataType::Nil),
-            9 => Ok(DataType::Unknown),
+            3 => Ok(Lifetime::Argument),
+            4 => Ok(Lifetime::Temporal),
             _ => Err(()),
         }
     }

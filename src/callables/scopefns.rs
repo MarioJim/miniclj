@@ -1,6 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationError, CompilationResult, Literal, SExpr, State},
+    compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
 };
 
 #[derive(Debug, Clone)]
@@ -11,11 +11,34 @@ impl Callable for Def {
         "def"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return self.arity_err("<symbol> <value>");
+            return Err(CompilationError::Arity(self.name(), "<symbol> <value>"));
         }
-        todo!()
+        let mut args_iter = args.into_iter();
+        let symbol_arg = args_iter.next().unwrap();
+        let value_arg = args_iter.next().unwrap();
+
+        let symbol = if let SExpr::Literal(Literal::Symbol(symbol)) = symbol_arg {
+            Ok(symbol)
+        } else {
+            Err(CompilationError::WrongArgument(
+                self.name(),
+                "a symbol",
+                symbol_arg.type_str(),
+            ))
+        }?;
+        if state.has_symbol_in_symtbl(&symbol) {
+            Err(CompilationError::SymbolAlreadyDefined(symbol))
+        } else {
+            let value_addr = state.compile(value_arg)?;
+            state.insert_in_root_symtbl(symbol, value_addr);
+            Ok(value_addr)
+        }
+    }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
     }
 }
 
@@ -29,24 +52,62 @@ impl Callable for Defn {
         "defn"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
-            return self.arity_err("<symbol> <arguments vector> <expression>");
+            return Err(CompilationError::Arity(
+                self.name(),
+                "<symbol> <args vector> <body>",
+            ));
         }
 
         let mut args_iter = args.into_iter();
-        let maybe_symbol = args_iter.next().unwrap();
-        let _symbol = if let SExpr::Literal(Literal::Symbol(sym)) = maybe_symbol {
-            sym
+        let symbol_arg = args_iter.next().unwrap();
+        let args_vec_arg = args_iter.next().unwrap();
+        let body_arg = args_iter.next().unwrap();
+
+        let symbol = if let SExpr::Literal(Literal::Symbol(symbol)) = symbol_arg {
+            Ok(symbol)
         } else {
-            return Err(CompilationError::WrongArgument(
+            Err(CompilationError::WrongArgument(
                 self.name(),
                 "a symbol",
-                maybe_symbol.type_str(),
-            ));
-        };
+                symbol_arg.type_str(),
+            ))
+        }?;
+        if state.has_symbol_in_symtbl(&symbol) {
+            return Err(CompilationError::SymbolAlreadyDefined(symbol));
+        }
 
-        todo!()
+        let arg_names = if let SExpr::Vector(vector) = args_vec_arg {
+            vector
+                .into_iter()
+                .map(|expr| {
+                    if let SExpr::Literal(Literal::Symbol(arg_name)) = expr {
+                        Ok(arg_name)
+                    } else {
+                        Err(CompilationError::WrongArgument(
+                            self.name(),
+                            "a vector of symbols",
+                            "a vector of something else",
+                        ))
+                    }
+                })
+                .collect::<Result<Vec<String>, CompilationError>>()
+        } else {
+            Err(CompilationError::WrongArgument(
+                self.name(),
+                "a vector of symbols",
+                args_vec_arg.type_str(),
+            ))
+        }?;
+
+        let lambda_addr = state.compile_lambda(arg_names, body_arg)?;
+        state.insert_in_root_symtbl(symbol, lambda_addr);
+        Ok(lambda_addr)
+    }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
     }
 }
 
@@ -60,9 +121,12 @@ impl Callable for Let {
         "let"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, _state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return self.arity_err("<vector of bindings> <body>");
+            return Err(CompilationError::Arity(
+                self.name(),
+                "<bindings vector> <body>",
+            ));
         }
 
         let first_arg_error = Err(CompilationError::Error(format!(
@@ -79,6 +143,10 @@ impl Callable for Let {
 
         todo!()
     }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(Let);
@@ -91,8 +159,12 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, _: &mut CompilerState, _: Vec<SExpr>) -> CompilationResult {
         todo!()
+    }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
     }
 }
 
@@ -106,8 +178,12 @@ impl Callable for Recur {
         "recur"
     }
 
-    fn compile(&self, _: &mut State, _: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, _: &mut CompilerState, _: Vec<SExpr>) -> CompilationResult {
         todo!()
+    }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
     }
 }
 

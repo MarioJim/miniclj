@@ -1,6 +1,6 @@
 use lalrpop_util::lalrpop_mod;
 
-lalrpop_mod!(#[allow(dead_code)] #[allow(clippy::all)] pub parser);
+lalrpop_mod!(#[allow(clippy::all)] pub parser);
 mod callables;
 mod cli;
 mod compiler;
@@ -9,9 +9,10 @@ mod instruction;
 mod memaddress;
 mod vm;
 
-use crate::cli::{output_file_from_opts, read_file_from_opts};
+use crate::cli::{args, output_file_from_opts, read_file_from_opts};
+
 fn main() -> Result<(), String> {
-    match cli::args().get_matches().subcommand().unwrap() {
+    match args().get_matches().subcommand().unwrap() {
         ("check", opts) => {
             let input = read_file_from_opts(opts)?;
             if let Err(err) = parser::SExprsParser::new().parse(&input) {
@@ -32,7 +33,7 @@ fn main() -> Result<(), String> {
                 .parse(&input)
                 .map_err(|e| format!("{:#?}", e))?;
 
-            let mut compiler_state = compiler::State::default();
+            let mut compiler_state = compiler::CompilerState::default();
             for expr in tree {
                 compiler_state
                     .compile(expr)
@@ -45,9 +46,10 @@ fn main() -> Result<(), String> {
         }
         ("exec", opts) => {
             let input = read_file_from_opts(opts)?;
-            let mut vm_state =
-                vm::State::try_from_string(input).map_err(|e| format!("Execution error: {}", e))?;
-            vm_state.execute();
+            vm::VMState::try_from(input)
+                .map_err(|e| format!("Bytecode error: {}", e))?
+                .execute()
+                .map_err(|err| format!("Runtime error: {}", err))?
         }
         ("run", opts) => {
             let input = read_file_from_opts(opts)?;
@@ -55,15 +57,16 @@ fn main() -> Result<(), String> {
                 .parse(&input)
                 .map_err(|e| format!("{:#?}", e))?;
 
-            let mut compiler_state = compiler::State::default();
+            let mut compiler_state = compiler::CompilerState::default();
             for expr in tree {
                 compiler_state
                     .compile(expr)
                     .map_err(|err| format!("Compilation error: {}", err))?;
             }
 
-            let mut vm_state = vm::State::from_compiler_state(compiler_state);
-            vm_state.execute();
+            vm::VMState::from(compiler_state)
+                .execute()
+                .map_err(|err| format!("Runtime error: {}", err))?
         }
         (_, _) => unreachable!(),
     }

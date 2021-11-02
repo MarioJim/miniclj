@@ -1,8 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationResult, SExpr, State},
-    instruction::Instruction,
-    memaddress::DataType,
+    compiler::{CompilationError, CompilationResult, CompilerState},
 };
 
 #[derive(Debug, Clone)]
@@ -13,18 +11,16 @@ impl Callable for NumberCast {
         "num"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<string>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<string>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::Number);
-
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -38,8 +34,8 @@ impl Callable for StringCast {
         "str"
     }
 
-    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
-        todo!()
+    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
+        Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 }
 
@@ -53,11 +49,16 @@ impl Callable for Ord {
         "ord"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<string>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<string>"))
         }
-        todo!()
     }
 }
 
@@ -71,11 +72,16 @@ impl Callable for Chr {
         "chr"
     }
 
-    fn compile(&self, _state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<number>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<number>"))
         }
-        todo!()
     }
 }
 

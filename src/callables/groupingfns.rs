@@ -1,6 +1,6 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationError, CompilationResult, SExpr, State},
+    compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
 };
 
 #[derive(Debug, Clone)]
@@ -11,7 +11,7 @@ impl Callable for Do {
         "do"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.is_empty() {
             return Err(CompilationError::EmptyArgs(self.name()));
         }
@@ -23,6 +23,10 @@ impl Callable for Do {
         }
 
         Ok(res_addr)
+    }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
     }
 }
 

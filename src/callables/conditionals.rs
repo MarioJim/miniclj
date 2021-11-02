@@ -1,8 +1,7 @@
 use crate::{
     callables::Callable,
-    compiler::{CompilationResult, SExpr, State},
+    compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
-    memaddress::DataType,
 };
 
 #[derive(Debug, Clone)]
@@ -13,18 +12,16 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 1 {
-            return self.arity_err("<value>");
+    fn find_callable_by_arity(
+        &self,
+        state: &mut CompilerState,
+        num_args: usize,
+    ) -> CompilationResult {
+        if num_args == 1 {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
+        } else {
+            Err(CompilationError::Arity(self.name(), "<value>"))
         }
-        let arg = args.into_iter().next().unwrap();
-        let arg_addr = state.compile(arg)?;
-        let res_addr = state.new_tmp_address(DataType::Number);
-
-        let instruction = Instruction::new_builtin_call(self.name(), vec![arg_addr], res_addr);
-        state.add_instruction(instruction);
-
-        Ok(res_addr)
     }
 }
 
@@ -38,9 +35,12 @@ impl Callable for If {
         "if"
     }
 
-    fn compile(&self, state: &mut State, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
-            return self.arity_err("<condition> <true expression> <false expression>");
+            return Err(CompilationError::Arity(
+                self.name(),
+                "<condition> <true expression> <false expression>",
+            ));
         }
         let mut args_iter = args.into_iter();
         let cond_arg = args_iter.next().unwrap();
@@ -51,7 +51,7 @@ impl Callable for If {
         let jump_on_false_ins = Instruction::new_jump(Some((false, cond_addr)));
         let jump_on_false_ins_ptr = state.add_instruction(jump_on_false_ins);
 
-        let return_addr = state.new_tmp_address(DataType::Unknown);
+        let return_addr = state.new_tmp_address();
 
         let true_addr = state.compile(true_arg)?;
         let assign_true_to_return_addr_ins = Instruction::new_assignment(true_addr, return_addr);
@@ -67,6 +67,10 @@ impl Callable for If {
 
         Ok(return_addr)
     }
+
+    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(If);
@@ -79,8 +83,8 @@ impl Callable for And {
         "and"
     }
 
-    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
-        todo!()
+    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
+        Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 }
 
@@ -94,8 +98,8 @@ impl Callable for Or {
         "or"
     }
 
-    fn compile(&self, _state: &mut State, _args: Vec<SExpr>) -> CompilationResult {
-        todo!()
+    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
+        Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 }
 

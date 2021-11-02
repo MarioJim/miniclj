@@ -7,36 +7,39 @@ pub type InstructionPtr = usize;
 #[derive(Debug)]
 pub enum Instruction {
     Call {
-        callable: String,
+        callable: MemAddress,
         args: Vec<MemAddress>,
         result_addr: MemAddress,
+    },
+    Return(MemAddress),
+    Assignment {
+        src: MemAddress,
+        dst: MemAddress,
     },
     Jump(InstructionPtr),
     JumpOnTrue(MemAddress, InstructionPtr),
     JumpOnFalse(MemAddress, InstructionPtr),
-    GoSub(MemAddress),
-    Return(MemAddress),
 }
 
 impl Instruction {
-    pub fn new_builtin_call(
-        callable: &str,
+    pub fn new_call(
+        callable: MemAddress,
         args: Vec<MemAddress>,
         result_addr: MemAddress,
     ) -> Instruction {
         Instruction::Call {
-            callable: callable.to_string(),
+            callable,
             args,
             result_addr,
         }
     }
 
-    pub fn new_assignment(from: MemAddress, to: MemAddress) -> Instruction {
-        Instruction::Call {
-            callable: String::from("="),
-            args: vec![from],
-            result_addr: to,
-        }
+    pub fn new_return(return_addr: MemAddress) -> Instruction {
+        Instruction::Return(return_addr)
+    }
+
+    pub fn new_assignment(src: MemAddress, dst: MemAddress) -> Instruction {
+        Instruction::Assignment { src, dst }
     }
 
     pub fn new_jump(direction: Option<(bool, MemAddress)>) -> Instruction {
@@ -62,6 +65,8 @@ impl Display for Instruction {
                 }
                 write!(f, " {}", result_addr)
             }
+            Instruction::Return(addr) => write!(f, "ret {}", addr),
+            Instruction::Assignment { src, dst } => write!(f, "= {} {}", src, dst),
             Instruction::Jump(ins_ptr) => write!(f, "jump {}", ins_ptr),
             Instruction::JumpOnTrue(addr, ins_ptr) => {
                 write!(f, "jmpT {} {}", addr, ins_ptr)
@@ -69,8 +74,6 @@ impl Display for Instruction {
             Instruction::JumpOnFalse(addr, ins_ptr) => {
                 write!(f, "jmpF {} {}", addr, ins_ptr)
             }
-            Instruction::GoSub(addr) => write!(f, "gosub {}", addr),
-            Instruction::Return(addr) => write!(f, "ret {}", addr),
         }
     }
 }
