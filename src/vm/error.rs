@@ -6,7 +6,9 @@ pub enum RuntimeError {
     WrongDataType(&'static str, &'static str, &'static str),
     NotACallable(&'static str),
     WrongArity(usize, usize),
+    IndexOutOfBounds(&'static str),
     DivisionByZero,
+    Error(String),
 }
 
 impl Display for RuntimeError {
@@ -25,7 +27,11 @@ impl Display for RuntimeError {
                 "User defined callable called with wrong number of arguments, expected {}, got {}",
                 expect, got
             ),
+            RuntimeError::IndexOutOfBounds(value_type) => {
+                write!(f, "Index of out bounds while indexing {}", value_type)
+            }
             RuntimeError::DivisionByZero => write!(f, "Division by zero"),
+            RuntimeError::Error(err) => write!(f, "{}", err),
         }
     }
 }

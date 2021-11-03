@@ -1,6 +1,9 @@
+use num::{Rational64, Zero};
+
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
+    vm::{RuntimeError, Value},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -31,6 +34,51 @@ impl Callable for FactorOp {
                 Err(CompilationError::EmptyArgs(self.name()))
             }
             _ => Ok(state.get_callable_addr(Box::new(*self))),
+        }
+    }
+
+    fn execute(&self, args: Vec<Value>) -> CallableResult {
+        let one = Rational64::from_integer(1);
+        let zero = Rational64::from_integer(0);
+
+        let mut nums = args
+            .into_iter()
+            .map(|value| match value {
+                Value::Number(n) => Ok(n),
+                _ => Err(RuntimeError::WrongDataType(
+                    self.name(),
+                    "a number",
+                    value.type_str(),
+                )),
+            })
+            .collect::<Result<Vec<Rational64>, RuntimeError>>()?
+            .into_iter();
+
+        match self {
+            FactorOp::Add => Ok(Value::Number(nums.fold(zero, |a, b| a + b))),
+            FactorOp::Sub => match nums.len() {
+                0 => unreachable!(),
+                1 => Ok(Value::Number(-nums.next().unwrap())),
+                _ => {
+                    let positive = nums.next().unwrap();
+                    let negative = nums.fold(zero, |a, b| a + b);
+                    Ok(Value::Number(positive - negative))
+                }
+            },
+            FactorOp::Mul => Ok(Value::Number(nums.fold(one, |a, b| a * b))),
+            FactorOp::Div => match nums.len() {
+                0 => unreachable!(),
+                1 => Ok(Value::Number(nums.next().unwrap().recip())),
+                _ => {
+                    let numerator = nums.next().unwrap();
+                    let denominator = nums.fold(one, |a, b| a * b);
+                    if denominator.is_zero() {
+                        Err(RuntimeError::DivisionByZero)
+                    } else {
+                        Ok(Value::Number(numerator / denominator))
+                    }
+                }
+            },
         }
     }
 }

@@ -41,8 +41,9 @@ impl Default for CallablesTable {
         add_fn!(table, collectionfns::Rest);
         add_fn!(table, collectionfns::Cons);
         add_fn!(table, collectionfns::Conj);
+        add_fn!(table, collectionfns::Nth);
         add_fn!(table, collectionfns::Get);
-        add_fn!(table, collectionfns::Len);
+        add_fn!(table, collectionfns::Count);
         add_fn!(table, collectionfns::IsEmpty);
 
         add_fn!(table, comparisonops::ComparisonOp::Eq);

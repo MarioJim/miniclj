@@ -74,7 +74,9 @@ impl Scope {
         let table = self.get_table_by_lifetime(address.lifetime());
         let table_len = table.borrow().len();
         let address_idx = address.idx();
-        table.borrow_mut().resize(max(table_len, address_idx), None);
+        table
+            .borrow_mut()
+            .resize(max(table_len, address_idx + 1), None);
 
         let _ = table
             .borrow_mut()
