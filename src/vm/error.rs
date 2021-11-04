@@ -8,6 +8,7 @@ pub enum RuntimeError {
     WrongArity(usize, usize),
     IndexOutOfBounds(&'static str),
     DivisionByZero,
+    CompilerError(String),
     Error(String),
 }
 
@@ -31,6 +32,7 @@ impl Display for RuntimeError {
                 write!(f, "Index of out bounds while indexing {}", value_type)
             }
             RuntimeError::DivisionByZero => write!(f, "Division by zero"),
+            RuntimeError::CompilerError(err) => write!(f, "Compiler error: {}", err),
             RuntimeError::Error(err) => write!(f, "{}", err),
         }
     }

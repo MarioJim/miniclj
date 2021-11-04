@@ -1,8 +1,9 @@
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
+    vm::Value,
 };
 
 #[derive(Debug, Clone)]
@@ -40,6 +41,10 @@ impl Callable for Def {
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
+    }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
         unimplemented!()
     }
 }
@@ -119,6 +124,10 @@ impl Callable for Defn {
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
         unimplemented!()
     }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(Defn);
@@ -157,6 +166,10 @@ impl Callable for Let {
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
         unimplemented!()
     }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(Let);
@@ -176,6 +189,10 @@ impl Callable for Loop {
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
         unimplemented!()
     }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(Loop);
@@ -193,6 +210,10 @@ impl Callable for Recur {
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
+    }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
         unimplemented!()
     }
 }

@@ -33,9 +33,7 @@ pub trait Callable: Display + Debug + DynClone {
         num_args: usize,
     ) -> CompilationResult;
 
-    fn execute(&self, _args: Vec<Value>) -> CallableResult {
-        todo!()
-    }
+    fn execute(&self, args: Vec<Value>) -> CallableResult;
 }
 
 dyn_clone::clone_trait_object!(Callable);

@@ -1,6 +1,11 @@
+use std::io;
+
+use escape8259::unescape;
+
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
+    vm::{RuntimeError, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -22,6 +27,25 @@ impl Callable for Print {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         }
     }
+
+    fn execute(&self, args: Vec<Value>) -> CallableResult {
+        let mut args_iter = args.into_iter();
+        if let Some(v) = args_iter.next() {
+            if let Value::String(s) = v {
+                print!("{}", unescape(&s).unwrap());
+            } else {
+                print!("{}", v);
+            }
+        }
+        for v in args_iter {
+            if let Value::String(s) = v {
+                print!(" {}", unescape(&s).unwrap());
+            } else {
+                print!(" {}", v);
+            }
+        }
+        Ok(Value::Nil)
+    }
 }
 
 display_for_callable!(Print);
@@ -36,6 +60,12 @@ impl Callable for Println {
 
     fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
         Ok(state.get_callable_addr(Box::new(self.clone())))
+    }
+
+    fn execute(&self, args: Vec<Value>) -> CallableResult {
+        let result = Print.execute(args)?;
+        println!();
+        Ok(result)
     }
 }
 
@@ -59,6 +89,14 @@ impl Callable for Read {
         } else {
             Err(CompilationError::Arity(self.name(), ""))
         }
+    }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
+        let mut buffer = String::new();
+        io::stdin()
+            .read_line(&mut buffer)
+            .map_err(|e| RuntimeError::Error(e.to_string()))?;
+        Ok(Value::String(String::from(buffer.trim_end())))
     }
 }
 

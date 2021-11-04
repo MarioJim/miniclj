@@ -1,11 +1,24 @@
+use num::Zero;
+
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
+    vm::Value,
 };
 
 #[derive(Debug, Clone)]
 pub struct IsTrue;
+
+impl IsTrue {
+    pub fn inner_execute(&self, val: &Value) -> bool {
+        match val {
+            Value::Number(n) => !n.is_zero(),
+            Value::Nil => false,
+            _ => true,
+        }
+    }
+}
 
 impl Callable for IsTrue {
     fn name(&self) -> &'static str {
@@ -22,6 +35,11 @@ impl Callable for IsTrue {
         } else {
             Err(CompilationError::Arity(self.name(), "<value>"))
         }
+    }
+
+    fn execute(&self, args: Vec<Value>) -> CallableResult {
+        let val = args.get(0).unwrap();
+        Ok(Value::from(IsTrue.inner_execute(val)))
     }
 }
 
@@ -71,6 +89,10 @@ impl Callable for If {
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
         unimplemented!()
     }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
+        unimplemented!()
+    }
 }
 
 display_for_callable!(If);
@@ -86,6 +108,15 @@ impl Callable for And {
     fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
+
+    fn execute(&self, args: Vec<crate::vm::Value>) -> CallableResult {
+        for arg in args.into_iter() {
+            if IsTrue.execute(vec![arg])? == Value::from(false) {
+                return Ok(Value::from(false));
+            }
+        }
+        Ok(Value::from(true))
+    }
 }
 
 display_for_callable!(And);
@@ -100,6 +131,15 @@ impl Callable for Or {
 
     fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
         Ok(state.get_callable_addr(Box::new(self.clone())))
+    }
+
+    fn execute(&self, args: Vec<crate::vm::Value>) -> CallableResult {
+        for arg in args.into_iter() {
+            if IsTrue.execute(vec![arg])? == Value::from(true) {
+                return Ok(Value::from(true));
+            }
+        }
+        Ok(Value::from(false))
     }
 }
 

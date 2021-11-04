@@ -1,8 +1,9 @@
 use crate::{
-    callables::Callable,
+    callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
+    vm::Value,
 };
 
 #[derive(Debug, Clone)]
@@ -57,6 +58,10 @@ impl Callable for Lambda {
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
+        unimplemented!()
+    }
+
+    fn execute(&self, _: Vec<Value>) -> CallableResult {
         unimplemented!()
     }
 }
