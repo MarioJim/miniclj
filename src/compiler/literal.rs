@@ -22,7 +22,7 @@ impl Literal {
 }
 
 impl PartialEq for Literal {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
             (Literal::Symbol(r), Literal::Symbol(l)) => r == l,
             (Literal::String(r), Literal::String(l)) => r == l,

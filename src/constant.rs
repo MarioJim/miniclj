@@ -24,13 +24,13 @@ impl Constant {
 }
 
 impl From<Box<dyn Callable>> for Constant {
-    fn from(callable: Box<dyn Callable>) -> Self {
+    fn from(callable: Box<dyn Callable>) -> Constant {
         Constant::Callable(callable)
     }
 }
 
 impl From<Literal> for Constant {
-    fn from(literal: Literal) -> Self {
+    fn from(literal: Literal) -> Constant {
         match literal {
             Literal::Symbol(_) => panic!("Trying to convert a symbol literal to a constant"),
             Literal::String(s) => Constant::String(s),

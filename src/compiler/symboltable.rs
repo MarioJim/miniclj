@@ -3,23 +3,22 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::memaddress::MemAddress;
 
 type Table = RefCell<HashMap<String, MemAddress>>;
-type Counter = RefCell<usize>;
 
 #[derive(Debug)]
 pub enum SymbolTable {
     RootTable {
         symbols: Table,
-        temp_counter: Counter,
+        temp_counter: RefCell<usize>,
     },
     LocalTable {
         symbols: Table,
-        temp_counter: Counter,
+        temp_counter: RefCell<usize>,
         top_scope: Rc<SymbolTable>,
     },
 }
 
 impl Default for SymbolTable {
-    fn default() -> Self {
+    fn default() -> SymbolTable {
         SymbolTable::RootTable {
             symbols: RefCell::new(HashMap::new()),
             temp_counter: RefCell::new(0),
@@ -52,13 +51,14 @@ impl SymbolTable {
         }
     }
 
-    pub fn get_new_temp_addr_idx(&self) -> usize {
+    pub fn get_new_temp_addr(&self) -> MemAddress {
         let temp_counter = match self {
             SymbolTable::RootTable { temp_counter, .. } => temp_counter,
             SymbolTable::LocalTable { temp_counter, .. } => temp_counter,
         };
+        let addr_idx = *temp_counter.borrow();
         *temp_counter.borrow_mut() += 1;
-        *temp_counter.borrow() - 1
+        MemAddress::new_temp(addr_idx)
     }
 
     pub fn insert(&self, symbol: String, value: MemAddress) {

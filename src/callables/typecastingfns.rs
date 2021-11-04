@@ -1,10 +1,10 @@
 use num::Signed;
 
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
     lispparser::NumberLiteralParser,
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -23,22 +23,17 @@ impl Callable for NumberCast {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<string>"))
+            Err(CompilationError::WrongArity(self.name(), "<string>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_string = args.into_iter().next().unwrap();
-        if let Value::String(s) = maybe_string {
+        if let Value::String(string) = maybe_string {
             NumberLiteralParser::new()
-                .parse(&s)
+                .parse(&string)
                 .map(Value::Number)
-                .map_err(|_| {
-                    RuntimeError::Error(format!(
-                        "The string \"{}\" couldn't be parsed as a number",
-                        s
-                    ))
-                })
+                .map_err(|_| RuntimeError::CouldntParse(format!("\"{}\"", string), "a number"))
         } else {
             Err(RuntimeError::WrongDataType(
                 self.name(),
@@ -63,7 +58,7 @@ impl Callable for StringCast {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let formatted_args = args
             .into_iter()
             .map(|value| {
@@ -96,11 +91,11 @@ impl Callable for Ord {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<string>"))
+            Err(CompilationError::WrongArity(self.name(), "<string>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_string = args.into_iter().next().unwrap();
         if let Value::String(s) = maybe_string {
             match s.chars().next() {
@@ -139,11 +134,11 @@ impl Callable for Chr {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<number>"))
+            Err(CompilationError::WrongArity(self.name(), "<number>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_num = args.into_iter().next().unwrap();
         if let Value::Number(n) = maybe_num {
             if !n.is_integer() || n.is_negative() {
@@ -155,11 +150,10 @@ impl Callable for Chr {
             } else {
                 match char::from_u32(*n.numer() as u32) {
                     Some(c) => Ok(Value::String(String::from(c))),
-                    None => Err(RuntimeError::Error(format!(
-                        "{} couldn't convert the number {} to a valid character",
-                        self.name(),
-                        n.numer()
-                    ))),
+                    None => Err(RuntimeError::CouldntParse(
+                        format!("{}", n.numer()),
+                        "a character",
+                    )),
                 }
             }
         } else {

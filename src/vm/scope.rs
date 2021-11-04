@@ -1,9 +1,8 @@
 use std::{cell::RefCell, cmp::max};
 
-use crate::vm::{RuntimeError, Value};
+use crate::vm::{RuntimeError, RuntimeResult, Value};
 
 type ValuesTable = RefCell<Vec<Option<Value>>>;
-type GetResult = Result<Value, RuntimeError>;
 
 #[derive(Debug, Default)]
 pub struct Scope {
@@ -12,7 +11,7 @@ pub struct Scope {
 }
 
 impl Scope {
-    pub fn get_var(&self, index: usize) -> GetResult {
+    pub fn get_var(&self, index: usize) -> RuntimeResult<Value> {
         self.vars
             .borrow()
             .get(index)
@@ -23,7 +22,7 @@ impl Scope {
             })
     }
 
-    pub fn get_temp(&self, index: usize) -> GetResult {
+    pub fn get_temp(&self, index: usize) -> RuntimeResult<Value> {
         self.temps
             .borrow()
             .get(index)

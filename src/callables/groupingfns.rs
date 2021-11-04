@@ -1,7 +1,7 @@
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -30,7 +30,7 @@ impl Callable for Do {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()

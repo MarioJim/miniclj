@@ -1,9 +1,9 @@
 use num::Rational64;
 
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -40,7 +40,7 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let args_as_nums = |args: Vec<Value>| {
             args.into_iter()
                 .map(|v| {
@@ -54,7 +54,7 @@ impl Callable for ComparisonOp {
                         ))
                     }
                 })
-                .collect::<Result<Vec<Rational64>, RuntimeError>>()
+                .collect::<RuntimeResult<Vec<Rational64>>>()
         };
 
         Ok(Value::from(match self {

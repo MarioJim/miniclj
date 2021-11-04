@@ -52,7 +52,7 @@ impl CompilerState {
                 let jump_lambda_instr_ptr = self.add_instruction(jump_lambda_instr);
                 let lambda_start_ptr = self.instruction_ptr();
                 let lambda_const = Constant::new_lambda(lambda_start_ptr, 1);
-                let lambda_addr = self.insert_in_consttbl(lambda_const);
+                let lambda_addr = self.insert_constant(lambda_const);
 
                 self.compile_lambda(vec!["%".to_string()], SExpr::Expr(exprs))?;
                 self.fill_jump(jump_lambda_instr_ptr, self.instruction_ptr());
@@ -62,13 +62,13 @@ impl CompilerState {
             SExpr::Vector(exprs) => Vector.compile(self, exprs),
             SExpr::Set(exprs) => Set.compile(self, exprs),
             SExpr::Map(exprs) => HashMap.compile(self, exprs),
-            SExpr::Literal(lit) => {
-                if let Literal::Symbol(symbol) = lit {
+            SExpr::Literal(literal) => {
+                if let Literal::Symbol(symbol) = literal {
                     self.symbol_table
                         .get(&symbol)
                         .ok_or(CompilationError::SymbolNotDefined(symbol))
                 } else {
-                    Ok(self.insert_in_consttbl(lit.into()))
+                    Ok(self.insert_constant(literal.into()))
                 }
             }
         }
@@ -92,19 +92,19 @@ impl CompilerState {
         Ok(())
     }
 
-    pub fn has_symbol_in_symtbl(&self, symbol: &str) -> bool {
+    pub fn symbol_exists(&self, symbol: &str) -> bool {
         self.symbol_table.get(symbol).is_some()
     }
 
-    pub fn insert_in_symtbl(&mut self, symbol: String, value: MemAddress) {
+    pub fn insert_local_symbol(&self, symbol: String, value: MemAddress) {
         self.symbol_table.insert(symbol, value);
     }
 
-    pub fn insert_in_root_symtbl(&mut self, symbol: String, value: MemAddress) {
+    pub fn insert_root_symbol(&self, symbol: String, value: MemAddress) {
         self.symbol_table.insert_in_root(symbol, value);
     }
 
-    pub fn insert_in_consttbl(&mut self, constant: Constant) -> MemAddress {
+    pub fn insert_constant(&mut self, constant: Constant) -> MemAddress {
         match self.constants.get(&constant) {
             Some(addr) => *addr,
             None => {
@@ -142,11 +142,11 @@ impl CompilerState {
     }
 
     pub fn get_callable_addr(&mut self, callable: Box<dyn Callable>) -> MemAddress {
-        self.insert_in_consttbl(callable.into())
+        self.insert_constant(callable.into())
     }
 
-    pub fn new_tmp_address(&mut self) -> MemAddress {
-        MemAddress::new_temp(self.symbol_table.get_new_temp_addr_idx())
+    pub fn new_tmp_address(&self) -> MemAddress {
+        self.symbol_table.get_new_temp_addr()
     }
 
     pub fn write_to<T: Write>(&self, writer: &mut T) -> std::io::Result<()> {

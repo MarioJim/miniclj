@@ -48,7 +48,7 @@ impl MemAddress {
 }
 
 impl From<&MemAddress> for usize {
-    fn from(address: &MemAddress) -> Self {
+    fn from(address: &MemAddress) -> usize {
         usize::from(&address.lifetime) + address.idx
     }
 }
@@ -56,7 +56,7 @@ impl From<&MemAddress> for usize {
 impl TryFrom<usize> for MemAddress {
     type Error = ();
 
-    fn try_from(num: usize) -> Result<Self, Self::Error> {
+    fn try_from(num: usize) -> Result<MemAddress, Self::Error> {
         let lifetime = Lifetime::try_from(num)?;
         let idx = num & 0xFFFFFF;
         Ok(MemAddress { lifetime, idx })
@@ -70,7 +70,7 @@ impl Display for MemAddress {
 }
 
 impl PartialEq for MemAddress {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &MemAddress) -> bool {
         usize::from(self) == usize::from(other)
     }
 }
@@ -95,7 +95,7 @@ const LIFETIME_BITS: usize = 4;
 const LIFETIME_MASK: usize = (1 << LIFETIME_BITS) - 1;
 
 impl From<&Lifetime> for usize {
-    fn from(life: &Lifetime) -> Self {
+    fn from(life: &Lifetime) -> usize {
         let base = 1 << LIFETIME_SHIFT;
         match life {
             Lifetime::Constant => base,
@@ -109,7 +109,7 @@ impl From<&Lifetime> for usize {
 impl TryFrom<usize> for Lifetime {
     type Error = ();
 
-    fn try_from(num: usize) -> Result<Self, Self::Error> {
+    fn try_from(num: usize) -> Result<Lifetime, Self::Error> {
         match (num >> LIFETIME_SHIFT) & LIFETIME_MASK {
             1 => Ok(Lifetime::Constant),
             2 => Ok(Lifetime::GlobalVar),

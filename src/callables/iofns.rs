@@ -3,9 +3,9 @@ use std::io;
 use escape8259::unescape;
 
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ impl Callable for Print {
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         if let Some(v) = args_iter.next() {
             if let Value::String(s) = v {
@@ -62,7 +62,7 @@ impl Callable for Println {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let result = Print.execute(state, args)?;
         println!();
         Ok(result)
@@ -87,11 +87,11 @@ impl Callable for Read {
         if num_args == 0 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), ""))
+            Err(CompilationError::WrongArity(self.name(), ""))
         }
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         let mut buffer = String::new();
         io::stdin()
             .read_line(&mut buffer)

@@ -1,9 +1,9 @@
 use std::collections::VecDeque;
 
 use crate::{
-    callables::{conditionals::IsTrue, Callable, CallableResult},
+    callables::{conditionals::IsTrue, Callable},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -22,14 +22,14 @@ impl Callable for Map {
         if num_args >= 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <...collections>",
             ))
         }
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let fn_value = match maybe_fn {
@@ -97,14 +97,14 @@ impl Callable for Filter {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <collection>",
             ))
         }
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -165,14 +165,14 @@ impl Callable for Reduce {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <collection>",
             ))
         }
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();

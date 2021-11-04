@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    callables::CallableResult,
+    callables::IsTrue,
     constant::Constant,
     instruction::{Instruction, InstructionPtr},
     memaddress::{Lifetime, MemAddress},
@@ -27,7 +27,7 @@ impl VMState {
         }
     }
 
-    pub fn execute(&self) -> RuntimeResult {
+    pub fn execute(&self) -> RuntimeResult<()> {
         match self.inner_execute(0, &self.global_scope)? {
             Some(addr) => Err(RuntimeError::CompilerError(format!(
                 "Trying to return address {} from the root scope",
@@ -42,7 +42,7 @@ impl VMState {
         new_instruction_ptr: InstructionPtr,
         arity: usize,
         args: Vec<Value>,
-    ) -> CallableResult {
+    ) -> RuntimeResult<Value> {
         if args.len() != arity {
             return Err(RuntimeError::WrongArity(
                 "User defined callable",
@@ -69,7 +69,7 @@ impl VMState {
         &self,
         starting_instruction_ptr: usize,
         current_scope: &Scope,
-    ) -> Result<Option<MemAddress>, RuntimeError> {
+    ) -> RuntimeResult<Option<MemAddress>> {
         let mut instruction_ptr = starting_instruction_ptr;
 
         while let Some(instruction) = self.instructions.get(instruction_ptr) {
@@ -83,7 +83,7 @@ impl VMState {
                     let args = arg_addrs
                         .iter()
                         .map(|addr| self.get(current_scope, addr))
-                        .collect::<Result<Vec<Value>, RuntimeError>>()?;
+                        .collect::<RuntimeResult<Vec<Value>>>()?;
                     match callable {
                         Value::Callable(builtin_callable) => {
                             let result = builtin_callable.execute(self, args)?;
@@ -112,16 +112,7 @@ impl VMState {
                     Ok(())
                 }
                 Instruction::JumpOnTrue(addr, new_instr_ptr) => {
-                    let condition =
-                        self.get(current_scope, addr)?
-                            .as_bool()
-                            .map_err(|type_str| {
-                                RuntimeError::CompilerError(format!(
-                                    "jmpT instruction at {} received {}, expected a 0/1 number",
-                                    instruction_ptr, type_str
-                                ))
-                            })?;
-                    if condition {
+                    if IsTrue.inner_execute(&self.get(current_scope, addr)?) {
                         instruction_ptr = *new_instr_ptr;
                     } else {
                         instruction_ptr += 1;
@@ -129,16 +120,7 @@ impl VMState {
                     Ok(())
                 }
                 Instruction::JumpOnFalse(addr, new_instr_ptr) => {
-                    let condition =
-                        self.get(current_scope, addr)?
-                            .as_bool()
-                            .map_err(|type_str| {
-                                RuntimeError::CompilerError(format!(
-                                    "jmpF instruction at {} received {}, expected a 0/1 number",
-                                    instruction_ptr, type_str
-                                ))
-                            })?;
-                    if condition {
+                    if IsTrue.inner_execute(&self.get(current_scope, addr)?) {
                         instruction_ptr += 1;
                     } else {
                         instruction_ptr = *new_instr_ptr;
@@ -151,7 +133,7 @@ impl VMState {
         Ok(None)
     }
 
-    pub fn get(&self, current_scope: &Scope, address: &MemAddress) -> Result<Value, RuntimeError> {
+    pub fn get(&self, current_scope: &Scope, address: &MemAddress) -> RuntimeResult<Value> {
         match address.lifetime() {
             Lifetime::Constant => self
                 .constants
@@ -168,7 +150,12 @@ impl VMState {
         }
     }
 
-    pub fn store(&self, current_scope: &Scope, address: MemAddress, value: Value) -> RuntimeResult {
+    pub fn store(
+        &self,
+        current_scope: &Scope,
+        address: MemAddress,
+        value: Value,
+    ) -> RuntimeResult<()> {
         let index = address.idx();
         match address.lifetime() {
             Lifetime::Constant => Err(RuntimeError::CompilerError(

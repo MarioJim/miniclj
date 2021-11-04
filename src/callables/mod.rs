@@ -21,9 +21,10 @@ mod typecastingfns;
 
 use std::collections::HashMap as RustHashMap;
 
-pub use callable::{Callable, CallableResult};
+pub use callable::Callable;
 pub use collection::creation::{HashMap, List, Set, Vector};
 pub use comparisonops::ComparisonOp;
+pub use conditionals::IsTrue;
 pub use factorops::FactorOp;
 
 macro_rules! add_fn {

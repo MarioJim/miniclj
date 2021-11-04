@@ -3,9 +3,9 @@ use std::collections::VecDeque;
 use num::{Signed, ToPrimitive};
 
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -24,11 +24,11 @@ impl Callable for First {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection>"))
+            Err(CompilationError::WrongArity(self.name(), "<collection>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_coll = args.into_iter().next().unwrap();
         let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -57,11 +57,11 @@ impl Callable for Rest {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection>"))
+            Err(CompilationError::WrongArity(self.name(), "<collection>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_coll = args.into_iter().next().unwrap();
         let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -90,11 +90,14 @@ impl Callable for Cons {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<value> <collection>"))
+            Err(CompilationError::WrongArity(
+                self.name(),
+                "<value> <collection>",
+            ))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let value = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -126,11 +129,14 @@ impl Callable for Conj {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection> <value>"))
+            Err(CompilationError::WrongArity(
+                self.name(),
+                "<collection> <value>",
+            ))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let value = args_iter.next().unwrap();
@@ -156,9 +162,7 @@ impl Callable for Conj {
                     map.insert(key, val);
                     Ok(Value::Map(map))
                 }
-                _ => Err(RuntimeError::Error(String::from(
-                    "Only vectors with two elements (key-value pair) can be added to a map",
-                ))),
+                _ => Err(RuntimeError::InvalidMapEntry),
             },
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
@@ -187,11 +191,14 @@ impl Callable for Nth {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection> <index>"))
+            Err(CompilationError::WrongArity(
+                self.name(),
+                "<collection> <index>",
+            ))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let maybe_coll_type = maybe_coll.type_str();
@@ -259,11 +266,14 @@ impl Callable for Get {
         if num_args == 2 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection> <key>"))
+            Err(CompilationError::WrongArity(
+                self.name(),
+                "<collection> <key>",
+            ))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let key = args_iter.next().unwrap();
@@ -326,11 +336,11 @@ impl Callable for Count {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection>"))
+            Err(CompilationError::WrongArity(self.name(), "<collection>"))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_coll = args.into_iter().next().unwrap();
         match maybe_coll {
             Value::List(l) => Ok(l.len()),
@@ -367,11 +377,11 @@ impl Callable for IsEmpty {
         if num_args == 1 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<collection>"))
+            Err(CompilationError::WrongArity(self.name(), "<collection>"))
         }
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         Count
             .execute(state, args)
             .map(|count| Value::from(count.as_int().unwrap() == 0))

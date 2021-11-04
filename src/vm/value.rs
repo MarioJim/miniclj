@@ -92,7 +92,7 @@ impl From<bool> for Value {
 impl TryFrom<Value> for VecDeque<Value> {
     type Error = &'static str;
 
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<VecDeque<Value>, Self::Error> {
         match value {
             Value::List(l) => Ok(l),
             Value::Vector(v) => Ok(v.into_iter().collect()),

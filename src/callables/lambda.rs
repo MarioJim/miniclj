@@ -1,9 +1,9 @@
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -16,7 +16,10 @@ impl Callable for Lambda {
 
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return Err(CompilationError::Arity(self.name(), "<args vector> <body>"));
+            return Err(CompilationError::WrongArity(
+                self.name(),
+                "<args vector> <body>",
+            ));
         }
 
         let mut args_iter = args.into_iter();
@@ -50,7 +53,7 @@ impl Callable for Lambda {
         let jump_lambda_instr_ptr = state.add_instruction(jump_lambda_instr);
         let lambda_start_ptr = state.instruction_ptr();
         let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
-        let lambda_addr = state.insert_in_consttbl(lambda_const);
+        let lambda_addr = state.insert_constant(lambda_const);
 
         state.compile_lambda(arg_names, body_arg)?;
         state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
@@ -61,7 +64,7 @@ impl Callable for Lambda {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()

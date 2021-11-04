@@ -1,9 +1,9 @@
 use std::collections::HashMap as RustHashMap;
 
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ impl Callable for List {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         Ok(Value::List(args.into_iter().collect()))
     }
 }
@@ -37,7 +37,7 @@ impl Callable for Vector {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         Ok(Value::Vector(args))
     }
 }
@@ -56,7 +56,7 @@ impl Callable for Set {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         Ok(Value::Set(args.into_iter().collect()))
     }
 }
@@ -79,11 +79,14 @@ impl Callable for HashMap {
         if num_args % 2 == 0 {
             Ok(state.get_callable_addr(Box::new(self.clone())))
         } else {
-            Err(CompilationError::Arity(self.name(), "<...pairs of values>"))
+            Err(CompilationError::WrongArity(
+                self.name(),
+                "<...pairs of values>",
+            ))
         }
     }
 
-    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         if args.len() % 2 == 1 {
             return Err(RuntimeError::Error(format!("{} called with wrong number of arguments, expected a pair number of values, got {}", self.name(), args.len())));
         }

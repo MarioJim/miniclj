@@ -1,9 +1,9 @@
 use crate::{
-    callables::{Callable, CallableResult},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
-    vm::{RuntimeError, VMState, Value},
+    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -16,7 +16,10 @@ impl Callable for Def {
 
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return Err(CompilationError::Arity(self.name(), "<symbol> <value>"));
+            return Err(CompilationError::WrongArity(
+                self.name(),
+                "<symbol> <value>",
+            ));
         }
         let mut args_iter = args.into_iter();
         let symbol_arg = args_iter.next().unwrap();
@@ -33,7 +36,7 @@ impl Callable for Def {
         }?;
 
         let value_addr = state.compile(value_arg)?;
-        state.insert_in_root_symtbl(symbol, value_addr);
+        state.insert_root_symbol(symbol, value_addr);
         Ok(value_addr)
     }
 
@@ -41,7 +44,7 @@ impl Callable for Def {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()
@@ -61,7 +64,7 @@ impl Callable for Defn {
 
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 3 {
-            return Err(CompilationError::Arity(
+            return Err(CompilationError::WrongArity(
                 self.name(),
                 "<symbol> <args vector> <body>",
             ));
@@ -109,8 +112,8 @@ impl Callable for Defn {
         let jump_lambda_instr_ptr = state.add_instruction(jump_lambda_instr);
         let lambda_start_ptr = state.instruction_ptr();
         let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
-        let lambda_addr = state.insert_in_consttbl(lambda_const);
-        state.insert_in_root_symtbl(symbol, lambda_addr);
+        let lambda_addr = state.insert_constant(lambda_const);
+        state.insert_root_symbol(symbol, lambda_addr);
 
         state.compile_lambda(arg_names, body_arg)?;
         state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
@@ -122,7 +125,7 @@ impl Callable for Defn {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()
@@ -142,23 +145,24 @@ impl Callable for Let {
 
     fn compile(&self, _state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
-            return Err(CompilationError::Arity(
+            return Err(CompilationError::WrongArity(
                 self.name(),
                 "<bindings vector> <body>",
             ));
         }
 
-        let first_arg_error = Err(CompilationError::Error(format!(
-            "First argument of {} must be a vector with symbol - value pairs",
-            self.name()
-        )));
-
         let mut args_iter = args.into_iter();
-        let _bindings_vector = if let SExpr::Vector(v) = args_iter.next().unwrap() {
-            v
-        } else {
-            return first_arg_error;
-        };
+        let bindings_vector_arg = args_iter.next().unwrap();
+        let _bindings_vector = match bindings_vector_arg {
+            SExpr::Vector(vector) if vector.len() % 2 == 0 => Ok(vector),
+            other => Err(CompilationError::WrongArgument(
+                self.name(),
+                "a vector of symbol-value pairs",
+                other.type_str(),
+            )),
+        }?;
+
+        let _body_arg = args_iter.next().unwrap();
 
         todo!()
     }
@@ -167,7 +171,7 @@ impl Callable for Let {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()
@@ -193,7 +197,7 @@ impl Callable for Loop {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()
@@ -219,7 +223,7 @@ impl Callable for Recur {
         unimplemented!()
     }
 
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
             self.name()
