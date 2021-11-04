@@ -3,7 +3,7 @@ use num::{Rational64, Zero};
 use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -37,7 +37,7 @@ impl Callable for FactorOp {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let one = Rational64::from_integer(1);
         let zero = Rational64::from_integer(0);
 

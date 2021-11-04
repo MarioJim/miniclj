@@ -4,7 +4,7 @@ use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
-    vm::Value,
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -37,7 +37,7 @@ impl Callable for IsTrue {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let val = args.get(0).unwrap();
         Ok(Value::from(IsTrue.inner_execute(val)))
     }
@@ -90,8 +90,11 @@ impl Callable for If {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 
@@ -109,9 +112,9 @@ impl Callable for And {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, args: Vec<crate::vm::Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<crate::vm::Value>) -> CallableResult {
         for arg in args.into_iter() {
-            if IsTrue.execute(vec![arg])? == Value::from(false) {
+            if IsTrue.execute(state, vec![arg])? == Value::from(false) {
                 return Ok(Value::from(false));
             }
         }
@@ -133,9 +136,9 @@ impl Callable for Or {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, args: Vec<crate::vm::Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<crate::vm::Value>) -> CallableResult {
         for arg in args.into_iter() {
-            if IsTrue.execute(vec![arg])? == Value::from(true) {
+            if IsTrue.execute(state, vec![arg])? == Value::from(true) {
                 return Ok(Value::from(true));
             }
         }

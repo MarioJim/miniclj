@@ -5,7 +5,7 @@ use num::{Signed, ToPrimitive};
 use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ impl Callable for First {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_coll = args.into_iter().next().unwrap();
         let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -61,7 +61,7 @@ impl Callable for Rest {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_coll = args.into_iter().next().unwrap();
         let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -94,7 +94,7 @@ impl Callable for Cons {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let value = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -130,7 +130,7 @@ impl Callable for Conj {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let value = args_iter.next().unwrap();
@@ -191,7 +191,7 @@ impl Callable for Nth {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let maybe_coll_type = maybe_coll.type_str();
@@ -263,7 +263,7 @@ impl Callable for Get {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let key = args_iter.next().unwrap();
@@ -330,7 +330,7 @@ impl Callable for Count {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_coll = args.into_iter().next().unwrap();
         match maybe_coll {
             Value::List(l) => Ok(l.len()),
@@ -371,9 +371,9 @@ impl Callable for IsEmpty {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
         Count
-            .execute(args)
+            .execute(state, args)
             .map(|count| Value::from(count.as_int().unwrap() == 0))
             .map_err(|_| RuntimeError::WrongDataType(self.name(), "a collection", "another value"))
     }

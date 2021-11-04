@@ -6,7 +6,7 @@ use crate::{
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
     memaddress::MemAddress,
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 pub trait Callable: Display + Debug + DynClone {
@@ -33,7 +33,7 @@ pub trait Callable: Display + Debug + DynClone {
         num_args: usize,
     ) -> CompilationResult;
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult;
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult;
 }
 
 dyn_clone::clone_trait_object!(Callable);

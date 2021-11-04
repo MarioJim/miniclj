@@ -5,7 +5,7 @@ use escape8259::unescape;
 use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ impl Callable for Print {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         if let Some(v) = args_iter.next() {
             if let Value::String(s) = v {
@@ -62,8 +62,8 @@ impl Callable for Println {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
-        let result = Print.execute(args)?;
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
+        let result = Print.execute(state, args)?;
         println!();
         Ok(result)
     }
@@ -91,7 +91,7 @@ impl Callable for Read {
         }
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
         let mut buffer = String::new();
         io::stdin()
             .read_line(&mut buffer)

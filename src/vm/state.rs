@@ -82,7 +82,7 @@ impl VMState {
                         .collect::<Result<Vec<Value>, RuntimeError>>()?;
                     match callable {
                         Value::Callable(builtin_callable) => {
-                            let result = builtin_callable.execute(args)?;
+                            let result = builtin_callable.execute(self, args)?;
                             self.store(current_scope, *result_addr, result)?;
                             instruction_ptr += 1;
                             Ok(())

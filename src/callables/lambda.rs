@@ -3,7 +3,7 @@ use crate::{
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
-    vm::Value,
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -61,8 +61,11 @@ impl Callable for Lambda {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 

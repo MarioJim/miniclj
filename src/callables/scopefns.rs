@@ -3,7 +3,7 @@ use crate::{
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
-    vm::Value,
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -44,8 +44,11 @@ impl Callable for Def {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 
@@ -125,8 +128,11 @@ impl Callable for Defn {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 
@@ -167,8 +173,11 @@ impl Callable for Let {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 
@@ -190,8 +199,11 @@ impl Callable for Loop {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 
@@ -213,8 +225,11 @@ impl Callable for Recur {
         unimplemented!()
     }
 
-    fn execute(&self, _: Vec<Value>) -> CallableResult {
-        unimplemented!()
+    fn execute(&self, _: &VMState, _: Vec<Value>) -> CallableResult {
+        Err(RuntimeError::CompilerError(format!(
+            "Compiler shouldn't output \"{}\" calls",
+            self.name()
+        )))
     }
 }
 

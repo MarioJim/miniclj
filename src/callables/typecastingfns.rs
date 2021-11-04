@@ -4,7 +4,7 @@ use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
     lispparser::NumberLiteralParser,
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -27,7 +27,7 @@ impl Callable for NumberCast {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_string = args.into_iter().next().unwrap();
         if let Value::String(s) = maybe_string {
             NumberLiteralParser::new()
@@ -63,7 +63,7 @@ impl Callable for StringCast {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let formatted_args = args
             .into_iter()
             .map(|value| {
@@ -100,7 +100,7 @@ impl Callable for Ord {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_string = args.into_iter().next().unwrap();
         if let Value::String(s) = maybe_string {
             match s.chars().next() {
@@ -143,7 +143,7 @@ impl Callable for Chr {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let maybe_num = args.into_iter().next().unwrap();
         if let Value::Number(n) = maybe_num {
             if !n.is_integer() || n.is_negative() {

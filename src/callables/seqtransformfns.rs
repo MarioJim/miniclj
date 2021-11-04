@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::{
     callables::{conditionals::IsTrue, Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -29,7 +29,7 @@ impl Callable for Map {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let fn_value = match maybe_fn {
@@ -64,10 +64,12 @@ impl Callable for Map {
                 }
             }
             let current_result = match &fn_value {
-                Value::Callable(callable) => callable.execute(args_for_callable)?,
-                Value::Lambda(_, _) => todo!(),
+                Value::Callable(callable) => callable.execute(state, args_for_callable),
+                Value::Lambda(ins_ptr, arity) => {
+                    state.execute_lambda(*ins_ptr, *arity, args_for_callable)
+                }
                 _ => unreachable!(),
-            };
+            }?;
             result.push_back(current_result);
         }
     }
@@ -98,7 +100,7 @@ impl Callable for Filter {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -125,11 +127,14 @@ impl Callable for Filter {
 
         let mut result = VecDeque::new();
         for val in coll {
+            let args_for_callable = vec![val.clone()];
             let current_result = match &fn_value {
-                Value::Callable(callable) => callable.execute(vec![val.clone()])?,
-                Value::Lambda(_, _) => todo!(),
+                Value::Callable(callable) => callable.execute(state, args_for_callable),
+                Value::Lambda(ins_ptr, arity) => {
+                    state.execute_lambda(*ins_ptr, *arity, args_for_callable)
+                }
                 _ => unreachable!(),
-            };
+            }?;
             if IsTrue.inner_execute(&current_result) {
                 result.push_back(val);
             }
@@ -163,7 +168,7 @@ impl Callable for Reduce {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, state: &VMState, args: Vec<Value>) -> CallableResult {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -190,10 +195,10 @@ impl Callable for Reduce {
 
         let mut reduce_result = match coll.len() {
             0 => match fn_value {
-                Value::Callable(callable) => return callable.execute(Vec::new()),
-                Value::Lambda(_, arity) => {
+                Value::Callable(callable) => return callable.execute(state, Vec::new()),
+                Value::Lambda(ins_ptr, arity) => {
                     return if arity == 0 {
-                        todo!()
+                        state.execute_lambda(ins_ptr, arity, Vec::new())
                     } else {
                         Err(RuntimeError::WrongArity(arity, args_iter.len()))
                     }
@@ -204,11 +209,12 @@ impl Callable for Reduce {
             _ => {
                 let first_val = coll.pop_front().unwrap();
                 let second_val = coll.pop_front().unwrap();
+                let args_for_callable = vec![first_val, second_val];
                 match &fn_value {
-                    Value::Callable(callable) => callable.execute(vec![first_val, second_val]),
-                    Value::Lambda(_, arity) => {
+                    Value::Callable(callable) => callable.execute(state, args_for_callable),
+                    Value::Lambda(ins_ptr, arity) => {
                         if *arity == 2 {
-                            todo!()
+                            state.execute_lambda(*ins_ptr, *arity, args_for_callable)
                         } else {
                             Err(RuntimeError::WrongArity(*arity, args_iter.len()))
                         }
@@ -219,9 +225,12 @@ impl Callable for Reduce {
         };
 
         for val in coll {
+            let args_for_callable = vec![reduce_result, val];
             reduce_result = match &fn_value {
-                Value::Callable(callable) => callable.execute(vec![reduce_result, val]),
-                Value::Lambda(_, _) => todo!(),
+                Value::Callable(callable) => callable.execute(state, args_for_callable),
+                Value::Lambda(ins_ptr, arity) => {
+                    state.execute_lambda(*ins_ptr, *arity, args_for_callable)
+                }
                 _ => unreachable!(),
             }?;
         }

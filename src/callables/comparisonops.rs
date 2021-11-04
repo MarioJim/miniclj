@@ -3,7 +3,7 @@ use num::Rational64;
 use crate::{
     callables::{Callable, CallableResult},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, Value},
+    vm::{RuntimeError, VMState, Value},
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -40,7 +40,7 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn execute(&self, args: Vec<Value>) -> CallableResult {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> CallableResult {
         let args_as_nums = |args: Vec<Value>| {
             args.into_iter()
                 .map(|v| {
