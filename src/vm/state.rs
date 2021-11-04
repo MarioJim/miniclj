@@ -44,7 +44,11 @@ impl VMState {
         args: Vec<Value>,
     ) -> CallableResult {
         if args.len() != arity {
-            return Err(RuntimeError::WrongArity(arity, args.len()));
+            return Err(RuntimeError::WrongArity(
+                "User defined callable",
+                arity,
+                args.len(),
+            ));
         }
 
         let local_scope = Scope::default();
@@ -119,6 +123,8 @@ impl VMState {
                             })?;
                     if condition {
                         instruction_ptr = *new_instr_ptr;
+                    } else {
+                        instruction_ptr += 1;
                     }
                     Ok(())
                 }
@@ -132,7 +138,9 @@ impl VMState {
                                     instruction_ptr, type_str
                                 ))
                             })?;
-                    if !condition {
+                    if condition {
+                        instruction_ptr += 1;
+                    } else {
                         instruction_ptr = *new_instr_ptr;
                     }
                     Ok(())

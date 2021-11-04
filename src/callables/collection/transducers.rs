@@ -38,7 +38,11 @@ impl Callable for Map {
                 if arity == args_iter.len() {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity(arity, args_iter.len()))
+                    Err(RuntimeError::WrongArity(
+                        "User defined callable",
+                        arity,
+                        args_iter.len(),
+                    ))
                 }
             }
             _ => Err(RuntimeError::WrongDataType(
@@ -111,7 +115,7 @@ impl Callable for Filter {
                 if arity == 1 {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity(arity, 1))
+                    Err(RuntimeError::WrongArity("User defined callable", arity, 1))
                 }
             }
             _ => Err(RuntimeError::WrongDataType(
@@ -179,7 +183,11 @@ impl Callable for Reduce {
                 if arity == 0 || arity == 2 {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity(arity, args_iter.len()))
+                    Err(RuntimeError::WrongArity(
+                        "User defined callable",
+                        arity,
+                        args_iter.len(),
+                    ))
                 }
             }
             _ => Err(RuntimeError::WrongDataType(
@@ -200,7 +208,11 @@ impl Callable for Reduce {
                     return if arity == 0 {
                         state.execute_lambda(ins_ptr, arity, Vec::new())
                     } else {
-                        Err(RuntimeError::WrongArity(arity, args_iter.len()))
+                        Err(RuntimeError::WrongArity(
+                            "User defined callable",
+                            arity,
+                            args_iter.len(),
+                        ))
                     }
                 }
                 _ => unreachable!(),
@@ -216,7 +228,11 @@ impl Callable for Reduce {
                         if *arity == 2 {
                             state.execute_lambda(*ins_ptr, *arity, args_for_callable)
                         } else {
-                            Err(RuntimeError::WrongArity(*arity, args_iter.len()))
+                            Err(RuntimeError::WrongArity(
+                                "User defined callable",
+                                *arity,
+                                args_iter.len(),
+                            ))
                         }
                     }
                     _ => unreachable!(),

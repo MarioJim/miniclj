@@ -1,7 +1,7 @@
-use std::{collections::HashMap, io::Write, rc::Rc};
+use std::{collections::HashMap as RustHashMap, io::Write, rc::Rc};
 
 use crate::{
-    callables::{Callable, CallablesTable},
+    callables::{Callable, CallablesTable, HashMap, List, Set, Vector},
     compiler::{CompilationError, CompilationResult, Literal, SExpr, SymbolTable},
     constant::Constant,
     instruction::{Instruction, InstructionPtr},
@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Debug, Default)]
 pub struct CompilerState {
-    constants: HashMap<Constant, MemAddress>,
+    constants: RustHashMap<Constant, MemAddress>,
     instructions: Vec<Instruction>,
     symbol_table: Rc<SymbolTable>,
     callables_table: CallablesTable,
@@ -58,10 +58,10 @@ impl CompilerState {
                 self.fill_jump(jump_lambda_instr_ptr, self.instruction_ptr());
                 Ok(lambda_addr)
             }
-            SExpr::List(_) => todo!(),
-            SExpr::Vector(_) => todo!(),
-            SExpr::Set(_) => todo!(),
-            SExpr::Map(_) => todo!(),
+            SExpr::List(exprs) => List.compile(self, exprs),
+            SExpr::Vector(exprs) => Vector.compile(self, exprs),
+            SExpr::Set(exprs) => Set.compile(self, exprs),
+            SExpr::Map(exprs) => HashMap.compile(self, exprs),
             SExpr::Literal(lit) => {
                 if let Literal::Symbol(symbol) = lit {
                     self.symbol_table
@@ -160,7 +160,7 @@ impl CompilerState {
         Ok(())
     }
 
-    pub fn into_parts(self) -> (HashMap<Constant, MemAddress>, Vec<Instruction>) {
+    pub fn into_parts(self) -> (RustHashMap<Constant, MemAddress>, Vec<Instruction>) {
         (self.constants, self.instructions)
     }
 }

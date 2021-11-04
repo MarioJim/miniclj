@@ -11,7 +11,6 @@ pub enum CompilationError {
     WrongArgument(&'static str, &'static str, &'static str),
     CallableNotDefined(String),
     SymbolNotDefined(String),
-    SymbolAlreadyDefined(String),
     Error(String),
 }
 
@@ -42,13 +41,6 @@ impl Display for CompilationError {
             }
             CompilationError::SymbolNotDefined(symbol) => {
                 write!(f, "Symbol \"{}\" not defined in the current scope", symbol)
-            }
-            CompilationError::SymbolAlreadyDefined(symbol) => {
-                write!(
-                    f,
-                    "Symbol \"{}\" has already been defined in the current scope",
-                    symbol
-                )
             }
             CompilationError::Error(s) => write!(f, "{}", s),
         }

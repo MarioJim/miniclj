@@ -31,13 +31,10 @@ impl Callable for Def {
                 symbol_arg.type_str(),
             ))
         }?;
-        if state.has_symbol_in_symtbl(&symbol) {
-            Err(CompilationError::SymbolAlreadyDefined(symbol))
-        } else {
-            let value_addr = state.compile(value_arg)?;
-            state.insert_in_root_symtbl(symbol, value_addr);
-            Ok(value_addr)
-        }
+
+        let value_addr = state.compile(value_arg)?;
+        state.insert_in_root_symtbl(symbol, value_addr);
+        Ok(value_addr)
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
@@ -84,9 +81,6 @@ impl Callable for Defn {
                 symbol_arg.type_str(),
             ))
         }?;
-        if state.has_symbol_in_symtbl(&symbol) {
-            return Err(CompilationError::SymbolAlreadyDefined(symbol));
-        }
 
         let arg_names = if let SExpr::Vector(vector) = args_vec_arg {
             vector

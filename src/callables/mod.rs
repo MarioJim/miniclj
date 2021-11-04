@@ -9,7 +9,7 @@ macro_rules! display_for_callable {
 }
 
 mod callable;
-mod collectionfns;
+mod collection;
 mod comparisonops;
 mod conditionals;
 mod factorops;
@@ -17,12 +17,12 @@ mod groupingfns;
 mod iofns;
 mod lambda;
 mod scopefns;
-mod seqtransformfns;
 mod typecastingfns;
 
-use std::collections::HashMap;
+use std::collections::HashMap as RustHashMap;
 
 pub use callable::{Callable, CallableResult};
+pub use collection::creation::{HashMap, List, Set, Vector};
 pub use comparisonops::ComparisonOp;
 pub use factorops::FactorOp;
 
@@ -32,19 +32,28 @@ macro_rules! add_fn {
     };
 }
 
-pub struct CallablesTable(HashMap<String, Box<dyn Callable>>);
+pub struct CallablesTable(RustHashMap<String, Box<dyn Callable>>);
 
 impl Default for CallablesTable {
     fn default() -> CallablesTable {
-        let mut table: HashMap<String, Box<dyn Callable>> = HashMap::new();
-        add_fn!(table, collectionfns::First);
-        add_fn!(table, collectionfns::Rest);
-        add_fn!(table, collectionfns::Cons);
-        add_fn!(table, collectionfns::Conj);
-        add_fn!(table, collectionfns::Nth);
-        add_fn!(table, collectionfns::Get);
-        add_fn!(table, collectionfns::Count);
-        add_fn!(table, collectionfns::IsEmpty);
+        let mut table: RustHashMap<String, Box<dyn Callable>> = RustHashMap::new();
+        add_fn!(table, collection::access::First);
+        add_fn!(table, collection::access::Rest);
+        add_fn!(table, collection::access::Cons);
+        add_fn!(table, collection::access::Conj);
+        add_fn!(table, collection::access::Nth);
+        add_fn!(table, collection::access::Get);
+        add_fn!(table, collection::access::Count);
+        add_fn!(table, collection::access::IsEmpty);
+
+        add_fn!(table, collection::creation::List);
+        add_fn!(table, collection::creation::Vector);
+        add_fn!(table, collection::creation::Set);
+        add_fn!(table, collection::creation::HashMap);
+
+        add_fn!(table, collection::transducers::Map);
+        add_fn!(table, collection::transducers::Filter);
+        add_fn!(table, collection::transducers::Reduce);
 
         add_fn!(table, comparisonops::ComparisonOp::Eq);
         add_fn!(table, comparisonops::ComparisonOp::Ne);
@@ -76,10 +85,6 @@ impl Default for CallablesTable {
         add_fn!(table, scopefns::Let);
         add_fn!(table, scopefns::Loop);
         add_fn!(table, scopefns::Recur);
-
-        add_fn!(table, seqtransformfns::Map);
-        add_fn!(table, seqtransformfns::Filter);
-        add_fn!(table, seqtransformfns::Reduce);
 
         add_fn!(table, typecastingfns::NumberCast);
         add_fn!(table, typecastingfns::StringCast);

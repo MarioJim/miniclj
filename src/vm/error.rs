@@ -5,7 +5,7 @@ pub type RuntimeResult = Result<(), RuntimeError>;
 pub enum RuntimeError {
     WrongDataType(&'static str, &'static str, &'static str),
     NotACallable(&'static str),
-    WrongArity(usize, usize),
+    WrongArity(&'static str, usize, usize),
     IndexOutOfBounds(&'static str),
     DivisionByZero,
     CompilerError(String),
@@ -23,10 +23,10 @@ impl Display for RuntimeError {
             RuntimeError::NotACallable(value_type) => {
                 write!(f, "Couldn't execute {} as a callable", value_type)
             }
-            RuntimeError::WrongArity(expect, got) => write!(
+            RuntimeError::WrongArity(callable, expect, got) => write!(
                 f,
-                "User defined callable called with wrong number of arguments, expected {}, got {}",
-                expect, got
+                "{} called with wrong number of arguments, expected {}, got {}",
+                callable, expect, got
             ),
             RuntimeError::IndexOutOfBounds(value_type) => {
                 write!(f, "Index of out bounds while indexing {}", value_type)

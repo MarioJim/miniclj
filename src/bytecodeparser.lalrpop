@@ -84,6 +84,7 @@ List<T>: Vec<T> = {
 };
 
 Symbol: String = {
+    "%" => String::from("%"),
     ComparisonOp => String::from(<>.name()),
     FactorOp => String::from(<>.name()),
     r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>),
