@@ -7,14 +7,18 @@ description = "Clojure-like lisp compiler and interpreter written in Rust"
 repository = "https://github.com/MarioJim/miniclj"
 license = "GPL-3.0-or-later"
 
+[profile.release]
+debug = true
+
 [build-dependencies]
 lalrpop = "0.19.6"
 
 [dependencies]
-clap = "3.0.0-beta.4"
+clap = "3.0.0-beta.5"
 dyn-clone = "1.0"
 escape8259 = "0.5"
 lalrpop-util = { version = "0.19.6", features = ["lexer"] }
 num = "0.4"
 rand = "0.8"
 regex = "1"
+smol_str = "0.1"

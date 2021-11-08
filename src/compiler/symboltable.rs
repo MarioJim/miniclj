@@ -1,8 +1,10 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+use smol_str::SmolStr;
+
 use crate::memaddress::{Lifetime, MemAddress};
 
-type Table = RefCell<HashMap<String, MemAddress>>;
+type Table = RefCell<HashMap<SmolStr, MemAddress>>;
 type Counter = RefCell<usize>;
 
 #[derive(Debug)]
@@ -77,7 +79,7 @@ impl SymbolTable {
         }
     }
 
-    pub fn insert(&self, symbol: String, address: MemAddress) {
+    pub fn insert(&self, symbol: SmolStr, address: MemAddress) {
         self.get_symbols_table(address.lifetime())
             .borrow_mut()
             .insert(symbol, address);

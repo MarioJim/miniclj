@@ -1,4 +1,4 @@
-use std::{cell::RefCell, cmp::max};
+use std::cell::RefCell;
 
 use crate::vm::{RuntimeError, RuntimeResult, Value};
 
@@ -42,8 +42,10 @@ impl Scope {
     }
 
     fn inner_store(&self, table: &ValuesTable, index: usize, value: Value) {
-        let table_len = self.vars.borrow().len();
-        table.borrow_mut().resize(max(table_len, index + 1), None);
+        let table_len = table.borrow().len();
+        if table_len < index + 1 {
+            table.borrow_mut().resize(index + 4, None);
+        }
         let _ = table.borrow_mut().get_mut(index).unwrap().insert(value);
     }
 }

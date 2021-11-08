@@ -13,12 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Rust 2021
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-
       - name: Checkout repo
         uses: actions/checkout@v2
 

@@ -1,3 +1,5 @@
+use smol_str::SmolStr;
+
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
@@ -40,7 +42,7 @@ impl Callable for Lambda {
                         ))
                     }
                 })
-                .collect::<Result<Vec<String>, CompilationError>>()
+                .collect::<Result<Vec<SmolStr>, CompilationError>>()
         } else {
             Err(CompilationError::WrongArgument(
                 self.name(),

@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use num::Rational64;
+use smol_str::SmolStr;
 
 use crate::{
     callables::{Callable, ComparisonOp, FactorOp},
@@ -53,11 +54,11 @@ List<T>: Vec<T> = {
     }
 };
 
-Symbol: String = {
-    "%" => String::from("%"),
-    ComparisonOp => String::from(<>.name()),
-    FactorOp => String::from(<>.name()),
-    r"[A-Za-z][A-Za-z0-9!?'_-]*" => String::from(<>),
+Symbol: SmolStr = {
+    "%" => SmolStr::from("%"),
+    ComparisonOp => SmolStr::from(<>.name()),
+    FactorOp => SmolStr::from(<>.name()),
+    r"[A-Za-z][A-Za-z0-9!?'_-]*" => SmolStr::from(<>),
 };
 
 ComparisonOp: ComparisonOp = {

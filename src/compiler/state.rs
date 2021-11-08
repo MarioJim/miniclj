@@ -1,5 +1,7 @@
 use std::{collections::HashMap as RustHashMap, io::Write, rc::Rc};
 
+use smol_str::SmolStr;
+
 use crate::{
     callables::{Callable, CallablesTable, HashMap, List, Set, Vector},
     compiler::{CompilationError, CompilationResult, Literal, SExpr, SymbolTable},
@@ -55,7 +57,7 @@ impl CompilerState {
                 let lambda_const = Constant::new_lambda(lambda_start_ptr, 1);
                 let lambda_addr = self.insert_constant(lambda_const);
 
-                self.compile_lambda(vec!["%".to_string()], SExpr::Expr(exprs))?;
+                self.compile_lambda(vec![SmolStr::from("%")], SExpr::Expr(exprs))?;
                 self.fill_jump(jump_lambda_instr_ptr, self.instruction_ptr());
                 Ok(lambda_addr)
             }
@@ -77,7 +79,7 @@ impl CompilerState {
 
     pub fn compile_lambda(
         &mut self,
-        arg_names: Vec<String>,
+        arg_names: Vec<SmolStr>,
         body: SExpr,
     ) -> Result<(), CompilationError> {
         self.symbol_table = Rc::new(SymbolTable::new(Some(self.symbol_table.clone())));
@@ -101,7 +103,7 @@ impl CompilerState {
         self.symbol_table.new_address(lifetime)
     }
 
-    pub fn insert_symbol(&self, symbol: String, address: MemAddress) {
+    pub fn insert_symbol(&self, symbol: SmolStr, address: MemAddress) {
         self.symbol_table.insert(symbol, address)
     }
 

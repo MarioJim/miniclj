@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use smol_str::SmolStr;
+
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
@@ -106,7 +108,7 @@ impl Callable for Defn {
                         ))
                     }
                 })
-                .collect::<Result<Vec<String>, CompilationError>>()
+                .collect::<Result<Vec<SmolStr>, CompilationError>>()
         } else {
             Err(CompilationError::WrongArgument(
                 self.name(),
@@ -149,7 +151,7 @@ display_for_callable!(Defn);
 fn as_bindings_vector(
     fn_name: &'static str,
     expr: SExpr,
-) -> Result<Vec<(String, SExpr)>, CompilationError> {
+) -> Result<Vec<(SmolStr, SExpr)>, CompilationError> {
     let bindings_vector = match expr {
         SExpr::Vector(vector) if vector.len() % 2 == 0 => Ok(vector),
         other => Err(CompilationError::WrongArgument(
@@ -307,7 +309,7 @@ impl Callable for Recur {
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let (jump_ptr, symbol_addrs) = state
             .pop_loop_jump()
-            .ok_or_else(|| CompilationError::CallableNotDefined(String::from(self.name())))?;
+            .ok_or_else(|| CompilationError::CallableNotDefined(SmolStr::from(self.name())))?;
 
         if args.len() != symbol_addrs.len() {
             return Err(CompilationError::WrongRecurCall(

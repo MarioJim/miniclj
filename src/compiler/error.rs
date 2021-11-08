@@ -1,14 +1,16 @@
 use std::fmt::{self, Display};
 
+use smol_str::SmolStr;
+
 use crate::memaddress::MemAddress;
 
 pub type CompilationResult = Result<MemAddress, CompilationError>;
 
 #[derive(Debug)]
 pub enum CompilationError {
-    CallableNotDefined(String),
+    CallableNotDefined(SmolStr),
     EmptyArgs(&'static str),
-    SymbolNotDefined(String),
+    SymbolNotDefined(SmolStr),
     WrongArgument(&'static str, &'static str, &'static str),
     WrongArity(&'static str, &'static str),
     WrongRecurCall(usize, usize),

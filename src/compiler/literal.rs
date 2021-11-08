@@ -1,10 +1,11 @@
 use std::fmt::{self, Display, Formatter};
 
 use num::Rational64;
+use smol_str::SmolStr;
 
 #[derive(Debug, Clone)]
 pub enum Literal {
-    Symbol(String),
+    Symbol(SmolStr),
     String(String),
     Number(Rational64),
     Nil,
@@ -36,12 +37,11 @@ impl Eq for Literal {}
 
 impl Display for Literal {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let string = match self {
-            Literal::Symbol(s) => s.to_string(),
-            Literal::String(s) => format!("\"{}\"", s),
-            Literal::Number(n) => n.to_string(),
-            Literal::Nil => String::from("nil"),
-        };
-        write!(f, "{}", string)
+        match self {
+            Literal::Symbol(s) => write!(f, "{}", s),
+            Literal::String(s) => write!(f, "{}", s),
+            Literal::Number(n) => write!(f, "{}", n),
+            Literal::Nil => write!(f, "nil"),
+        }
     }
 }
