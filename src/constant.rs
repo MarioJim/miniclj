@@ -70,7 +70,7 @@ impl Hash for Constant {
 }
 
 impl PartialEq for Constant {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Constant) -> bool {
         match (self, other) {
             (Constant::Callable(c1), Constant::Callable(c2)) => c1.name() == c2.name(),
             (Constant::Lambda(ptr1, _), Constant::Lambda(ptr2, _)) => ptr1 == ptr2,

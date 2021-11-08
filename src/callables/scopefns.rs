@@ -1,8 +1,11 @@
+use std::collections::HashSet;
+
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
+    memaddress::Lifetime,
     vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
@@ -36,7 +39,11 @@ impl Callable for Def {
         }?;
 
         let value_addr = state.compile(value_arg)?;
-        state.insert_root_symbol(symbol, value_addr);
+        let global_val_addr = state.new_address(Lifetime::GlobalVar);
+        let mov_instruction = Instruction::new_assignment(value_addr, global_val_addr);
+        state.add_instruction(mov_instruction);
+
+        state.insert_symbol(symbol, global_val_addr);
         Ok(value_addr)
     }
 
@@ -113,7 +120,11 @@ impl Callable for Defn {
         let lambda_start_ptr = state.instruction_ptr();
         let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
         let lambda_addr = state.insert_constant(lambda_const);
-        state.insert_root_symbol(symbol, lambda_addr);
+
+        let global_val_addr = state.new_address(Lifetime::GlobalVar);
+        let mov_instruction = Instruction::new_assignment(lambda_addr, global_val_addr);
+        state.add_instruction(mov_instruction);
+        state.insert_symbol(symbol, global_val_addr);
 
         state.compile_lambda(arg_names, body_arg)?;
         state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
@@ -135,6 +146,39 @@ impl Callable for Defn {
 
 display_for_callable!(Defn);
 
+fn as_bindings_vector(
+    fn_name: &'static str,
+    expr: SExpr,
+) -> Result<Vec<(String, SExpr)>, CompilationError> {
+    let bindings_vector = match expr {
+        SExpr::Vector(vector) if vector.len() % 2 == 0 => Ok(vector),
+        other => Err(CompilationError::WrongArgument(
+            fn_name,
+            "a vector of symbol-value pairs",
+            other.type_str(),
+        )),
+    }?;
+
+    let mut bindings_iter = bindings_vector.into_iter();
+    let mut result = Vec::new();
+
+    while let Some(key) = bindings_iter.next() {
+        let symbol = match key {
+            SExpr::Literal(Literal::Symbol(symbol)) => Ok(symbol),
+            _ => Err(CompilationError::WrongArgument(
+                fn_name,
+                "a vector of symbol-value pairs",
+                "a vector with something other than symbols in odd positions",
+            )),
+        }?;
+
+        let val = bindings_iter.next().unwrap();
+        result.push((symbol, val));
+    }
+
+    Ok(result)
+}
+
 #[derive(Debug, Clone)]
 pub struct Let;
 
@@ -143,7 +187,7 @@ impl Callable for Let {
         "let"
     }
 
-    fn compile(&self, _state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         if args.len() != 2 {
             return Err(CompilationError::WrongArity(
                 self.name(),
@@ -153,18 +197,27 @@ impl Callable for Let {
 
         let mut args_iter = args.into_iter();
         let bindings_vector_arg = args_iter.next().unwrap();
-        let _bindings_vector = match bindings_vector_arg {
-            SExpr::Vector(vector) if vector.len() % 2 == 0 => Ok(vector),
-            other => Err(CompilationError::WrongArgument(
-                self.name(),
-                "a vector of symbol-value pairs",
-                other.type_str(),
-            )),
-        }?;
+        let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
 
-        let _body_arg = args_iter.next().unwrap();
+        let mut symbols = HashSet::new();
+        for (symbol, val) in bindings {
+            let symbol_addr = state.new_address(Lifetime::LocalVar);
+            let value_addr = state.compile(val)?;
 
-        todo!()
+            let mov_instruction = Instruction::new_assignment(value_addr, symbol_addr);
+            state.add_instruction(mov_instruction);
+            state.insert_symbol(symbol.clone(), symbol_addr);
+            symbols.insert(symbol);
+        }
+
+        let body_arg = args_iter.next().unwrap();
+        let result_addr = state.compile(body_arg)?;
+
+        for symbol in symbols {
+            state.remove_symbol(&symbol);
+        }
+
+        Ok(result_addr)
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
@@ -189,8 +242,44 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn compile(&self, _: &mut CompilerState, _: Vec<SExpr>) -> CompilationResult {
-        todo!()
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
+        if args.len() != 2 {
+            return Err(CompilationError::WrongArity(
+                self.name(),
+                "<bindings vector> <body>",
+            ));
+        }
+
+        let mut args_iter = args.into_iter();
+        let bindings_vector_arg = args_iter.next().unwrap();
+        let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
+
+        let mut symbols = HashSet::new();
+        let mut binding_addrs = Vec::new();
+        for (symbol, val) in bindings {
+            let symbol_addr = state.new_address(Lifetime::LocalVar);
+            let value_addr = state.compile(val)?;
+
+            let mov_instruction = Instruction::new_assignment(value_addr, symbol_addr);
+            state.add_instruction(mov_instruction);
+            state.insert_symbol(symbol.clone(), symbol_addr);
+            symbols.insert(symbol);
+            binding_addrs.push(symbol_addr);
+        }
+
+        let instruction_ptr = state.instruction_ptr();
+        state.push_loop_jump(instruction_ptr, binding_addrs);
+
+        let body_arg = args_iter.next().unwrap();
+        let result_addr = state.compile(body_arg)?;
+
+        state.pop_loop_jump();
+
+        for symbol in symbols {
+            state.remove_symbol(&symbol);
+        }
+
+        Ok(result_addr)
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
@@ -215,8 +304,32 @@ impl Callable for Recur {
         "recur"
     }
 
-    fn compile(&self, _: &mut CompilerState, _: Vec<SExpr>) -> CompilationResult {
-        todo!()
+    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
+        let (jump_ptr, symbol_addrs) = state
+            .pop_loop_jump()
+            .ok_or_else(|| CompilationError::CallableNotDefined(String::from(self.name())))?;
+
+        if args.len() != symbol_addrs.len() {
+            return Err(CompilationError::WrongRecurCall(
+                symbol_addrs.len(),
+                args.len(),
+            ));
+        }
+
+        for (arg, symbol_addr) in args.into_iter().zip(symbol_addrs.iter()) {
+            let arg_addr = state.compile(arg)?;
+
+            let mov_instruction = Instruction::new_assignment(arg_addr, *symbol_addr);
+            state.add_instruction(mov_instruction);
+        }
+
+        let goto_instruction = Instruction::new_jump(None);
+        let goto_instruction_ptr = state.add_instruction(goto_instruction);
+        state.fill_jump(goto_instruction_ptr, jump_ptr);
+
+        state.push_loop_jump(jump_ptr, symbol_addrs);
+
+        Ok(state.new_address(Lifetime::Temporal))
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {

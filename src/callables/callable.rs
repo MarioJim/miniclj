@@ -5,7 +5,7 @@ use dyn_clone::DynClone;
 use crate::{
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
-    memaddress::MemAddress,
+    memaddress::{Lifetime, MemAddress},
     vm::{RuntimeResult, VMState, Value},
 };
 
@@ -20,7 +20,7 @@ pub trait Callable: Display + Debug + DynClone {
             .map(|expr| state.compile(expr))
             .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
 
-        let res_addr = state.new_tmp_address();
+        let res_addr = state.new_address(Lifetime::Temporal);
         let instruction = Instruction::new_call(callable_addr, arg_addrs, res_addr);
         state.add_instruction(instruction);
 

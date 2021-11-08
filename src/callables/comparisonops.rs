@@ -19,7 +19,7 @@ pub enum ComparisonOp {
 impl Callable for ComparisonOp {
     fn name(&self) -> &'static str {
         match self {
-            ComparisonOp::Eq => "==",
+            ComparisonOp::Eq => "=",
             ComparisonOp::Ne => "!=",
             ComparisonOp::Gt => ">",
             ComparisonOp::Lt => "<",

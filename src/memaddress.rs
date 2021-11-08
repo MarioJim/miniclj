@@ -10,6 +10,10 @@ pub struct MemAddress {
 }
 
 impl MemAddress {
+    pub fn new(lifetime: Lifetime, idx: usize) -> MemAddress {
+        MemAddress { lifetime, idx }
+    }
+
     pub fn new_const(idx: usize) -> MemAddress {
         MemAddress {
             lifetime: Lifetime::Constant,

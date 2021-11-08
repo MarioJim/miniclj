@@ -5,7 +5,7 @@ use crate::{
     compiler::{CompilationError, CompilationResult, Literal, SExpr, SymbolTable},
     constant::Constant,
     instruction::{Instruction, InstructionPtr},
-    memaddress::MemAddress,
+    memaddress::{Lifetime, MemAddress},
 };
 
 #[derive(Debug, Default)]
@@ -13,6 +13,7 @@ pub struct CompilerState {
     constants: RustHashMap<Constant, MemAddress>,
     instructions: Vec<Instruction>,
     symbol_table: Rc<SymbolTable>,
+    loop_jumps_stack: Vec<(InstructionPtr, Vec<MemAddress>)>,
     callables_table: CallablesTable,
 }
 
@@ -41,7 +42,7 @@ impl CompilerState {
                     .map(|expr| self.compile(expr))
                     .collect::<Result<Vec<MemAddress>, CompilationError>>()?;
 
-                let res_addr = self.new_tmp_address();
+                let res_addr = self.new_address(Lifetime::Temporal);
                 let instruction = Instruction::new_call(callable_addr, arg_addrs, res_addr);
                 self.add_instruction(instruction);
 
@@ -85,7 +86,7 @@ impl CompilerState {
             self.symbol_table.insert(arg_name, addr);
         }
         let res_addr = self.compile(body)?;
-        self.symbol_table = self.symbol_table.get_top_scope().unwrap();
+        self.symbol_table = self.symbol_table.top_scope().unwrap();
 
         let ret_instr = Instruction::new_return(res_addr);
         self.add_instruction(ret_instr);
@@ -96,12 +97,16 @@ impl CompilerState {
         self.symbol_table.get(symbol).is_some()
     }
 
-    pub fn insert_local_symbol(&self, symbol: String, value: MemAddress) {
-        self.symbol_table.insert(symbol, value);
+    pub fn new_address(&self, lifetime: Lifetime) -> MemAddress {
+        self.symbol_table.new_address(lifetime)
     }
 
-    pub fn insert_root_symbol(&self, symbol: String, value: MemAddress) {
-        self.symbol_table.insert_in_root(symbol, value);
+    pub fn insert_symbol(&self, symbol: String, address: MemAddress) {
+        self.symbol_table.insert(symbol, address)
+    }
+
+    pub fn remove_symbol(&self, symbol: &str) {
+        self.symbol_table.remove_local(symbol)
     }
 
     pub fn insert_constant(&mut self, constant: Constant) -> MemAddress {
@@ -141,12 +146,16 @@ impl CompilerState {
         }
     }
 
-    pub fn get_callable_addr(&mut self, callable: Box<dyn Callable>) -> MemAddress {
-        self.insert_constant(callable.into())
+    pub fn push_loop_jump(&mut self, instruction_ptr: InstructionPtr, addresses: Vec<MemAddress>) {
+        self.loop_jumps_stack.push((instruction_ptr, addresses))
     }
 
-    pub fn new_tmp_address(&self) -> MemAddress {
-        self.symbol_table.get_new_temp_addr()
+    pub fn pop_loop_jump(&mut self) -> Option<(InstructionPtr, Vec<MemAddress>)> {
+        self.loop_jumps_stack.pop()
+    }
+
+    pub fn get_callable_addr(&mut self, callable: Box<dyn Callable>) -> MemAddress {
+        self.insert_constant(callable.into())
     }
 
     pub fn write_to<T: Write>(&self, writer: &mut T) -> std::io::Result<()> {

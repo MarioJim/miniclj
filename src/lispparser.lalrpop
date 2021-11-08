@@ -61,7 +61,7 @@ Symbol: String = {
 };
 
 ComparisonOp: ComparisonOp = {
-    "==" => ComparisonOp::Eq,
+    "=" => ComparisonOp::Eq,
     "!=" => ComparisonOp::Ne,
     ">" => ComparisonOp::Gt,
     "<" => ComparisonOp::Lt,

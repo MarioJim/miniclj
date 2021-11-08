@@ -11,6 +11,7 @@ pub enum CompilationError {
     SymbolNotDefined(String),
     WrongArgument(&'static str, &'static str, &'static str),
     WrongArity(&'static str, &'static str),
+    WrongRecurCall(usize, usize),
 }
 
 impl Display for CompilationError {
@@ -40,6 +41,11 @@ impl Display for CompilationError {
                 f,
                 "Callable {0} called with wrong number of arguments, should be called as ({0} {1})",
                 callable, args
+            ),
+            CompilationError::WrongRecurCall(expected, got) => write!(
+                f,
+                "recur call expected {} arguments, got {} arguments",
+                expected, got
             ),
         }
     }

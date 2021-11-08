@@ -4,6 +4,7 @@ use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
     instruction::Instruction,
+    memaddress::Lifetime,
     vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
@@ -69,7 +70,7 @@ impl Callable for If {
         let jump_on_false_ins = Instruction::new_jump(Some((false, cond_addr)));
         let jump_on_false_ins_ptr = state.add_instruction(jump_on_false_ins);
 
-        let return_addr = state.new_tmp_address();
+        let return_addr = state.new_address(Lifetime::Temporal);
 
         let true_addr = state.compile(true_arg)?;
         let assign_true_to_return_addr_ins = Instruction::new_assignment(true_addr, return_addr);
