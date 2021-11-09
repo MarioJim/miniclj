@@ -32,3 +32,26 @@ Todavía tengo algunas dudas sobre cómo será la estructura de los datos en la 
 ## Avance 4
 
 Durante esta semana no avancé tanto como me hubiera gustado, pero definí cómo voy a hacer referencias a la memoria durante la ejecución, y estoy empezando a escribir las partes del compilador que imprimen los cuádruplos. Estoy pensando en hacer el compilador sin tipos, y checar eso en la máquina virtual
+
+## Avance 5
+
+Durante la semana i y la semana pasada avancé hasta casi terminar el proyecto: ya compila y ejecuta funciones, condicionales y ciclos. Por ahora tengo un par de ideas "extras", aunque debería empezar con la documentación:
+
+- Añadir funciones como:
+  - spit/slurp (recibe el nombre de un archivo y lo escribe/lee como string)
+  - inc/dec (incrementan o decrementan un número por uno)
+  - mod (módulo de una división entre dos números)
+  - rand/rand-int (devuelven un número decimal o entero aleatorio)
+  - range (recibe uno, dos o tres números, como la función de Python regresa una lista de números)
+  - repeat (repite un valor n veces)
+  - sort/sort-by (ordenan una lista por su valor o por el valor regresado por una función)
+  - pow (número elevado a otro número)
+  - apply (recibe una función y una lista, llama a la función con los elementos de la lista como argumentos)
+  - split (para strings, parte una string por un patrón)
+  - min/max (encuentra el mínimo y máximo entre dos números)
+  - drop/take (tira o toma los primeros n elementos de una lista)
+  - drop-while/take-while (tira o toma los elementos de una lista hasta que la condición se vuelva falsa)
+  - into (castea una collección a otro tipo de collección)
+  - -> y ->> (reciben una lista de funciones parciales y las encadenan usando el resultado de la anterior como el primer o último argumento de la siguiente llamada)
+- Compilar el proyecto en wasm y hacer una página web "playground" en la que de un lado se pueda escribir el código, y del otro poder ver el árbol de sintaxis, o el bytecode del compilador, o directamente el output de ejecutar el código
+- Implementar más tests para las funciones del compilador (sólo +,-,\*,/,=,!=,<,>,<=,>= tienen tests unitarios)
