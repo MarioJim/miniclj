@@ -82,13 +82,13 @@ impl CompilerState {
         arg_names: Vec<SmolStr>,
         body: SExpr,
     ) -> Result<(), CompilationError> {
-        self.symbol_table = Rc::new(SymbolTable::new(Some(self.symbol_table.clone())));
+        self.symbol_table = Rc::new(SymbolTable::new_local(self.symbol_table.clone()));
         for (arg_idx, arg_name) in arg_names.into_iter().enumerate() {
             let addr = MemAddress::new_local_var(arg_idx);
             self.symbol_table.insert(arg_name, addr);
         }
         let res_addr = self.compile(body)?;
-        self.symbol_table = self.symbol_table.top_scope().unwrap();
+        self.symbol_table = self.symbol_table.parent_table().unwrap();
 
         let ret_instr = Instruction::new_return(res_addr);
         self.add_instruction(ret_instr);
@@ -104,27 +104,26 @@ impl CompilerState {
     }
 
     pub fn insert_symbol(&self, symbol: SmolStr, address: MemAddress) {
-        self.symbol_table.insert(symbol, address)
+        self.symbol_table.insert(symbol, address);
     }
 
     pub fn remove_symbol(&self, symbol: &str) {
-        self.symbol_table.remove_local(symbol)
+        self.symbol_table.remove_local(symbol);
     }
 
     pub fn insert_constant(&mut self, constant: Constant) -> MemAddress {
-        match self.constants.get(&constant) {
-            Some(addr) => *addr,
-            None => {
-                let next_idx = self
-                    .constants
-                    .iter()
-                    .map(|(_, a)| a.idx() + 1)
-                    .max()
-                    .unwrap_or(0);
-                let addr = MemAddress::new_const(next_idx);
-                self.constants.insert(constant, addr);
-                addr
-            }
+        if let Some(addr) = self.constants.get(&constant) {
+            *addr
+        } else {
+            let next_idx = self
+                .constants
+                .iter()
+                .map(|(_, a)| a.idx() + 1)
+                .max()
+                .unwrap_or(0);
+            let addr = MemAddress::new_const(next_idx);
+            self.constants.insert(constant, addr);
+            addr
         }
     }
 
@@ -141,15 +140,15 @@ impl CompilerState {
     pub fn fill_jump(&mut self, instruction_ptr: InstructionPtr, goto: InstructionPtr) {
         let instr = self.instructions.get_mut(instruction_ptr).unwrap();
         match instr {
-            Instruction::Jump(ptr) => *ptr = goto,
-            Instruction::JumpOnTrue(_, ptr) => *ptr = goto,
-            Instruction::JumpOnFalse(_, ptr) => *ptr = goto,
+            Instruction::Jump(ptr)
+            | Instruction::JumpOnTrue(_, ptr)
+            | Instruction::JumpOnFalse(_, ptr) => *ptr = goto,
             _ => panic!("Trying to fill a jump where a different instruction was found"),
-        }
+        };
     }
 
     pub fn push_loop_jump(&mut self, instruction_ptr: InstructionPtr, addresses: Vec<MemAddress>) {
-        self.loop_jumps_stack.push((instruction_ptr, addresses))
+        self.loop_jumps_stack.push((instruction_ptr, addresses));
     }
 
     pub fn pop_loop_jump(&mut self) -> Option<(InstructionPtr, Vec<MemAddress>)> {

@@ -77,15 +77,15 @@ pub fn read_file_from_opts(opts: &ArgMatches) -> Result<String, String> {
 }
 
 pub fn output_file_from_opts(opts: &ArgMatches) -> Result<File, String> {
-    let path = match opts.value_of("output") {
-        Some(filename) => PathBuf::from_str(filename).unwrap(),
-        None => {
+    let path = opts.value_of("output").map_or_else(
+        || {
             let filename = opts.value_of("FILE").unwrap();
             let mut path = PathBuf::from_str(filename).unwrap();
             path.set_extension("mclj");
             path
-        }
-    };
+        },
+        |filename| PathBuf::from_str(filename).unwrap(),
+    );
 
     File::create(path).map_err(|e| format!("Couldn't open file: {}", e))
 }

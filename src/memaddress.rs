@@ -1,6 +1,6 @@
 use std::{
     fmt::{self, Display, Formatter},
-    hash::Hash,
+    hash::{Hash, Hasher},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -81,8 +81,8 @@ impl PartialEq for MemAddress {
 impl Eq for MemAddress {}
 
 impl Hash for MemAddress {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        usize::from(self).hash(state)
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        usize::from(self).hash(state);
     }
 }
 

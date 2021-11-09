@@ -34,18 +34,18 @@ impl Scope {
     }
 
     pub fn store_var(&self, index: usize, value: Value) {
-        self.inner_store(&self.vars, index, value)
+        inner_store(&self.vars, index, value);
     }
 
     pub fn store_temp(&self, index: usize, value: Value) {
-        self.inner_store(&self.temps, index, value)
+        inner_store(&self.temps, index, value);
     }
+}
 
-    fn inner_store(&self, table: &ValuesTable, index: usize, value: Value) {
-        let table_len = table.borrow().len();
-        if table_len < index + 1 {
-            table.borrow_mut().resize(index + 4, None);
-        }
-        let _ = table.borrow_mut().get_mut(index).unwrap().insert(value);
+fn inner_store(table: &ValuesTable, index: usize, value: Value) {
+    let table_len = table.borrow().len();
+    if table_len < index + 1 {
+        table.borrow_mut().resize(index + 4, None);
     }
+    let _ = table.borrow_mut().get_mut(index).unwrap().insert(value);
 }

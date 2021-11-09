@@ -1,19 +1,24 @@
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap, HashSet, VecDeque},
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
     fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
 
 use num::Rational64;
 
-use crate::{callables::Callable, constant::Constant, instruction::InstructionPtr};
+use crate::{
+    callables::Callable,
+    constant::Constant,
+    instruction::InstructionPtr,
+    vm::{List, RuntimeError, RuntimeResult},
+};
 
 #[derive(Debug, Clone)]
 pub enum Value {
     Callable(Box<dyn Callable>),
     Lambda(InstructionPtr, usize),
 
-    List(VecDeque<Value>),
+    List(List),
     Vector(Vec<Value>),
     Set(HashSet<Value>),
     Map(HashMap<Value, Value>),
@@ -59,6 +64,18 @@ impl Value {
         }
         Err(self.type_str())
     }
+
+    pub fn into_map_entry(self) -> RuntimeResult<(Value, Value)> {
+        match self {
+            Value::Vector(v) if v.len() == 2 => {
+                let mut v_iter = v.into_iter();
+                let key = v_iter.next().unwrap();
+                let val = v_iter.next().unwrap();
+                Ok((key, val))
+            }
+            _ => Err(RuntimeError::InvalidMapEntry),
+        }
+    }
 }
 
 impl From<Constant> for Value {
@@ -89,37 +106,12 @@ impl From<bool> for Value {
     }
 }
 
-impl TryFrom<Value> for VecDeque<Value> {
-    type Error = &'static str;
-
-    fn try_from(value: Value) -> Result<VecDeque<Value>, Self::Error> {
-        match value {
-            Value::List(l) => Ok(l),
-            Value::Vector(v) => Ok(v.into_iter().collect()),
-            Value::Set(s) => Ok(s.into_iter().collect()),
-            Value::Map(m) => Ok(m
-                .into_iter()
-                .map(|(k, v)| Value::Vector(vec![k, v]))
-                .collect()),
-            Value::String(s) => Ok(s.chars().map(|c| Value::String(c.to_string())).collect()),
-            _ => Err(value.type_str()),
-        }
-    }
-}
-
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Value::Callable(c) => write!(f, "{}", c.name()),
             Value::Lambda(ptr, _) => write!(f, "fn@{}", ptr),
-            Value::List(l) => {
-                let string = l
-                    .iter()
-                    .map(|v| format!("{}", v))
-                    .collect::<Vec<String>>()
-                    .join(" ");
-                write!(f, "({})", string)
-            }
+            Value::List(l) => write!(f, "{}", l),
             Value::Vector(v) => {
                 let string = v
                     .iter()
@@ -134,14 +126,14 @@ impl Display for Value {
                     .map(|v| format!("{}", v))
                     .collect::<Vec<String>>()
                     .join(" ");
-                write!(f, "[{}]", string)
+                write!(f, "#{{{}}}", string)
             }
             Value::Map(m) => {
                 let string = m
                     .iter()
-                    .map(|(k, v)| format!("[{}, {}]", k, v))
+                    .map(|(k, v)| format!("{} {}", k, v))
                     .collect::<Vec<String>>()
-                    .join(" ");
+                    .join(", ");
                 write!(f, "{{{}}}", string)
             }
             Value::String(s) => write!(f, "\"{}\"", s),

@@ -9,13 +9,13 @@ type Counter = RefCell<usize>;
 
 #[derive(Debug)]
 pub enum SymbolTable {
-    RootTable {
+    Global {
         symbols: Table,
         temp_counter: Counter,
         var_counter: Counter,
     },
-    LocalTable {
-        top_scope: Rc<SymbolTable>,
+    Local {
+        parent_table: Rc<SymbolTable>,
         symbols: Table,
         temp_counter: Counter,
         var_counter: Counter,
@@ -24,7 +24,7 @@ pub enum SymbolTable {
 
 impl Default for SymbolTable {
     fn default() -> SymbolTable {
-        SymbolTable::RootTable {
+        SymbolTable::Global {
             symbols: RefCell::new(HashMap::new()),
             temp_counter: RefCell::new(0),
             var_counter: RefCell::new(0),
@@ -33,28 +33,27 @@ impl Default for SymbolTable {
 }
 
 impl SymbolTable {
-    pub fn new(parent_table: Option<Rc<SymbolTable>>) -> SymbolTable {
-        match parent_table {
-            Some(top_scope) => SymbolTable::LocalTable {
-                top_scope,
-                symbols: RefCell::new(HashMap::new()),
-                temp_counter: RefCell::new(0),
-                var_counter: RefCell::new(0),
-            },
-            None => SymbolTable::default(),
+    pub fn new_local(parent_table: Rc<SymbolTable>) -> SymbolTable {
+        SymbolTable::Local {
+            parent_table,
+            symbols: RefCell::new(HashMap::new()),
+            temp_counter: RefCell::new(0),
+            var_counter: RefCell::new(0),
         }
     }
 
     pub fn get(&self, symbol: &str) -> Option<MemAddress> {
         match self {
-            SymbolTable::RootTable { symbols, .. } => symbols.borrow().get(symbol).cloned(),
-            SymbolTable::LocalTable {
-                symbols, top_scope, ..
+            SymbolTable::Global { symbols, .. } => symbols.borrow().get(symbol).copied(),
+            SymbolTable::Local {
+                symbols,
+                parent_table,
+                ..
             } => symbols
                 .borrow()
                 .get(symbol)
-                .cloned()
-                .or_else(|| top_scope.get(symbol)),
+                .copied()
+                .or_else(|| parent_table.get(symbol)),
         }
     }
 
@@ -67,14 +66,15 @@ impl SymbolTable {
 
     fn get_counter(&self, lifetime: Lifetime) -> &Counter {
         match (self, lifetime) {
-            (SymbolTable::RootTable { var_counter, .. }, Lifetime::GlobalVar) => var_counter,
-            (SymbolTable::RootTable { var_counter, .. }, Lifetime::LocalVar) => var_counter,
-            (SymbolTable::RootTable { temp_counter, .. }, Lifetime::Temporal) => temp_counter,
-            (SymbolTable::LocalTable { top_scope, .. }, Lifetime::GlobalVar) => {
-                top_scope.get_counter(lifetime)
+            (SymbolTable::Global { var_counter, .. }, Lifetime::GlobalVar | Lifetime::LocalVar)
+            | (SymbolTable::Local { var_counter, .. }, Lifetime::LocalVar) => var_counter,
+            (
+                SymbolTable::Global { temp_counter, .. } | SymbolTable::Local { temp_counter, .. },
+                Lifetime::Temporal,
+            ) => temp_counter,
+            (SymbolTable::Local { parent_table, .. }, Lifetime::GlobalVar) => {
+                parent_table.get_counter(lifetime)
             }
-            (SymbolTable::LocalTable { var_counter, .. }, Lifetime::LocalVar) => var_counter,
-            (SymbolTable::LocalTable { temp_counter, .. }, Lifetime::Temporal) => temp_counter,
             (_, Lifetime::Constant) => panic!("The symbol table doesn't store constants"),
         }
     }
@@ -87,10 +87,10 @@ impl SymbolTable {
 
     fn get_symbols_table(&self, lifetime: Lifetime) -> &Table {
         match (self, lifetime) {
-            (SymbolTable::RootTable { symbols, .. }, Lifetime::GlobalVar) => symbols,
-            (SymbolTable::RootTable { symbols, .. }, Lifetime::LocalVar) => symbols,
-            (SymbolTable::LocalTable { top_scope, .. }, Lifetime::GlobalVar) => top_scope.get_symbols_table(lifetime),
-            (SymbolTable::LocalTable { symbols, .. }, Lifetime::LocalVar) => symbols,
+            (SymbolTable::Global { symbols, .. }, Lifetime::GlobalVar)
+            | (SymbolTable::Global { symbols, .. }, Lifetime::LocalVar)
+            | (SymbolTable::Local { symbols, .. }, Lifetime::LocalVar) => symbols,
+            (SymbolTable::Local { parent_table, .. }, Lifetime::GlobalVar) => parent_table.get_symbols_table(lifetime),
             _ => panic!("Can't insert addresses into the symbol table with lifetimes other than global or local"),
         }
     }
@@ -104,10 +104,10 @@ impl SymbolTable {
         symbols.borrow_mut().remove(symbol);
     }
 
-    pub fn top_scope(&self) -> Option<Rc<SymbolTable>> {
+    pub fn parent_table(&self) -> Option<Rc<SymbolTable>> {
         match self {
-            SymbolTable::LocalTable { top_scope, .. } => Some(top_scope.clone()),
-            SymbolTable::RootTable { .. } => None,
+            SymbolTable::Local { parent_table, .. } => Some(parent_table.clone()),
+            SymbolTable::Global { .. } => None,
         }
     }
 }

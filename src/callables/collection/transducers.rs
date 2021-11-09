@@ -1,9 +1,7 @@
-use std::collections::VecDeque;
-
 use crate::{
     callables::{conditionals::IsTrue, Callable},
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
+    vm::{List, RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -38,7 +36,7 @@ impl Callable for Map {
                 if arity == args_iter.len() {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity(
+                    Err(RuntimeError::WrongArityN(
                         "User defined callable",
                         arity,
                         args_iter.len(),
@@ -54,19 +52,24 @@ impl Callable for Map {
 
         let mut lists = Vec::new();
         for arg in args_iter {
-            lists.push(VecDeque::try_from(arg).map_err(|type_str| {
+            lists.push(List::try_from(arg).map_err(|type_str| {
                 RuntimeError::WrongDataType(self.name(), "a collection", type_str)
             })?);
         }
-        let mut result = VecDeque::new();
+        let mut result = List::EmptyList;
         loop {
             let mut args_for_callable = Vec::new();
-            for list in lists.iter_mut() {
-                match list.pop_front() {
-                    Some(val) => args_for_callable.push(val),
-                    None => return Ok(Value::List(result)),
+            let mut next_lists = Vec::new();
+            for list in lists {
+                match list {
+                    List::Cons(val, next_list) => {
+                        args_for_callable.push(*val);
+                        next_lists.push(*next_list);
+                    }
+                    List::EmptyList => return Ok(Value::List(result)),
                 }
             }
+            lists = next_lists;
             let current_result = match &fn_value {
                 Value::Callable(callable) => callable.execute(state, args_for_callable),
                 Value::Lambda(ins_ptr, arity) => {
@@ -74,7 +77,7 @@ impl Callable for Map {
                 }
                 _ => unreachable!(),
             }?;
-            result.push_back(current_result);
+            result = List::Cons(Box::new(current_result), Box::new(result));
         }
     }
 }
@@ -115,7 +118,7 @@ impl Callable for Filter {
                 if arity == 1 {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity("User defined callable", arity, 1))
+                    Err(RuntimeError::WrongArityN("User defined callable", arity, 1))
                 }
             }
             _ => Err(RuntimeError::WrongDataType(
@@ -125,13 +128,13 @@ impl Callable for Filter {
             )),
         }?;
 
-        let coll = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+        let mut list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
 
-        let mut result = VecDeque::new();
-        for val in coll {
-            let args_for_callable = vec![val.clone()];
+        let mut result = List::EmptyList;
+        while let List::Cons(next, rest) = list {
+            let args_for_callable = vec![*next.clone()];
             let current_result = match &fn_value {
                 Value::Callable(callable) => callable.execute(state, args_for_callable),
                 Value::Lambda(ins_ptr, arity) => {
@@ -140,8 +143,9 @@ impl Callable for Filter {
                 _ => unreachable!(),
             }?;
             if IsTrue.inner_execute(&current_result) {
-                result.push_back(val);
+                result = List::Cons(next, Box::new(result));
             }
+            list = *rest;
         }
         Ok(Value::List(result))
     }
@@ -183,7 +187,7 @@ impl Callable for Reduce {
                 if arity == 0 || arity == 2 {
                     Ok(maybe_fn)
                 } else {
-                    Err(RuntimeError::WrongArity(
+                    Err(RuntimeError::WrongArityN(
                         "User defined callable",
                         arity,
                         args_iter.len(),
@@ -197,61 +201,45 @@ impl Callable for Reduce {
             )),
         }?;
 
-        let mut coll = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+        let coll = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
 
-        let mut reduce_result = match coll.len() {
-            0 => match fn_value {
-                Value::Callable(callable) => return callable.execute(state, Vec::new()),
-                Value::Lambda(ins_ptr, arity) => {
-                    return if arity == 0 {
-                        state.execute_lambda(ins_ptr, arity, Vec::new())
-                    } else {
-                        Err(RuntimeError::WrongArity(
-                            "User defined callable",
-                            arity,
-                            args_iter.len(),
-                        ))
-                    }
-                }
+        match coll {
+            List::EmptyList => match fn_value {
+                Value::Callable(callable) => callable.execute(state, Vec::new()),
+                Value::Lambda(ins_ptr, arity) => state.execute_lambda(ins_ptr, arity, Vec::new()),
                 _ => unreachable!(),
             },
-            1 => return Ok(coll.pop_front().unwrap()),
-            _ => {
-                let first_val = coll.pop_front().unwrap();
-                let second_val = coll.pop_front().unwrap();
-                let args_for_callable = vec![first_val, second_val];
-                match &fn_value {
-                    Value::Callable(callable) => callable.execute(state, args_for_callable),
-                    Value::Lambda(ins_ptr, arity) => {
-                        if *arity == 2 {
+            List::Cons(first, rest) => match *rest {
+                List::EmptyList => Ok(*first),
+                List::Cons(second, rest) => {
+                    let args_for_callable = vec![*first, *second];
+                    let mut reduce_result = match &fn_value {
+                        Value::Callable(callable) => callable.execute(state, args_for_callable),
+                        Value::Lambda(ins_ptr, arity) => {
                             state.execute_lambda(*ins_ptr, *arity, args_for_callable)
-                        } else {
-                            Err(RuntimeError::WrongArity(
-                                "User defined callable",
-                                *arity,
-                                args_iter.len(),
-                            ))
                         }
+                        _ => unreachable!(),
+                    }?;
+
+                    let mut list = *rest;
+                    while let List::Cons(next, rest) = list {
+                        let args_for_callable = vec![reduce_result, *next];
+                        reduce_result = match &fn_value {
+                            Value::Callable(callable) => callable.execute(state, args_for_callable),
+                            Value::Lambda(ins_ptr, arity) => {
+                                state.execute_lambda(*ins_ptr, *arity, args_for_callable)
+                            }
+                            _ => unreachable!(),
+                        }?;
+                        list = *rest;
                     }
-                    _ => unreachable!(),
-                }?
-            }
-        };
 
-        for val in coll {
-            let args_for_callable = vec![reduce_result, val];
-            reduce_result = match &fn_value {
-                Value::Callable(callable) => callable.execute(state, args_for_callable),
-                Value::Lambda(ins_ptr, arity) => {
-                    state.execute_lambda(*ins_ptr, *arity, args_for_callable)
+                    Ok(reduce_result)
                 }
-                _ => unreachable!(),
-            }?;
+            },
         }
-
-        Ok(reduce_result)
     }
 }
 

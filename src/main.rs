@@ -19,7 +19,7 @@ fn main() -> Result<(), String> {
         ("check", opts) => {
             let input = read_file_from_opts(opts)?;
             if let Err(err) = lispparser::SExprsParser::new().parse(&input) {
-                println!("{:#?}", err)
+                println!("{:#?}", err);
             }
         }
         ("ast", opts) => {
@@ -57,7 +57,7 @@ fn main() -> Result<(), String> {
 
             vm::VMState::new(constants, instructions)
                 .execute()
-                .map_err(|err| format!("Runtime error: {}", err))?
+                .map_err(|err| format!("Runtime error: {}", err))?;
         }
         ("run", opts) => {
             let input = read_file_from_opts(opts)?;
@@ -80,7 +80,7 @@ fn main() -> Result<(), String> {
 
             vm::VMState::new(constants, instructions)
                 .execute()
-                .map_err(|err| format!("Runtime error: {}", err))?
+                .map_err(|err| format!("Runtime error: {}", err))?;
         }
         (_, _) => unreachable!(),
     }

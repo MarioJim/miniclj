@@ -30,9 +30,7 @@ impl Callable for FactorOp {
         num_args: usize,
     ) -> CompilationResult {
         match (self, num_args) {
-            (FactorOp::Sub, 0) | (FactorOp::Div, 0) => {
-                Err(CompilationError::EmptyArgs(self.name()))
-            }
+            (FactorOp::Sub | FactorOp::Div, 0) => Err(CompilationError::EmptyArgs(self.name())),
             _ => Ok(state.get_callable_addr(Box::new(*self))),
         }
     }
@@ -57,7 +55,11 @@ impl Callable for FactorOp {
         match self {
             FactorOp::Add => Ok(Value::Number(nums.fold(zero, |a, b| a + b))),
             FactorOp::Sub => match nums.len() {
-                0 => unreachable!(),
+                0 => Err(RuntimeError::WrongArityS(
+                    self.name(),
+                    "at least one number",
+                    0,
+                )),
                 1 => Ok(Value::Number(-nums.next().unwrap())),
                 _ => {
                     let positive = nums.next().unwrap();
@@ -67,7 +69,11 @@ impl Callable for FactorOp {
             },
             FactorOp::Mul => Ok(Value::Number(nums.fold(one, |a, b| a * b))),
             FactorOp::Div => match nums.len() {
-                0 => unreachable!(),
+                0 => Err(RuntimeError::WrongArityS(
+                    self.name(),
+                    "at least one number",
+                    0,
+                )),
                 1 => Ok(Value::Number(nums.next().unwrap().recip())),
                 _ => {
                     let numerator = nums.next().unwrap();
@@ -84,3 +90,77 @@ impl Callable for FactorOp {
 }
 
 display_for_callable!(FactorOp);
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+
+    fn v(n: i64) -> Value {
+        Value::from(n)
+    }
+
+    #[test]
+    fn test_add() {
+        let vm = VMState::new(HashMap::new(), Vec::new());
+        assert_eq!(FactorOp::Add.execute(&vm, vec![]).unwrap(), v(0));
+        assert_eq!(FactorOp::Add.execute(&vm, vec![v(2)]).unwrap(), v(2));
+        assert_eq!(
+            FactorOp::Add
+                .execute(&vm, vec![v(2), v(5), v(6), v(-3)])
+                .unwrap(),
+            v(10)
+        );
+    }
+
+    #[test]
+    fn test_sub() {
+        let vm = VMState::new(HashMap::new(), Vec::new());
+        assert!(matches!(
+            FactorOp::Sub.execute(&vm, vec![]),
+            Err(RuntimeError::WrongArityS(..))
+        ));
+        assert_eq!(FactorOp::Sub.execute(&vm, vec![v(2)]).unwrap(), v(-2));
+        assert_eq!(
+            FactorOp::Sub
+                .execute(&vm, vec![v(2), v(5), v(6), v(-3)])
+                .unwrap(),
+            v(-6)
+        );
+    }
+
+    #[test]
+    fn test_mul() {
+        let vm = VMState::new(HashMap::new(), Vec::new());
+        assert_eq!(FactorOp::Mul.execute(&vm, vec![]).unwrap(), v(1));
+        assert_eq!(FactorOp::Mul.execute(&vm, vec![v(2)]).unwrap(), v(2));
+        assert_eq!(
+            FactorOp::Mul
+                .execute(&vm, vec![v(2), v(5), v(6), v(-3)])
+                .unwrap(),
+            v(-180)
+        );
+    }
+
+    #[test]
+    fn test_div() {
+        let vm = VMState::new(HashMap::new(), Vec::new());
+        let f = |num, den| Value::Number(Rational64::new(num, den));
+        assert!(matches!(
+            FactorOp::Div.execute(&vm, vec![]),
+            Err(RuntimeError::WrongArityS(..))
+        ));
+        assert_eq!(FactorOp::Div.execute(&vm, vec![v(2)]).unwrap(), f(1, 2));
+        assert_eq!(
+            FactorOp::Div
+                .execute(&vm, vec![v(2), v(5), v(6), v(-3)])
+                .unwrap(),
+            f(-2, 90)
+        );
+        assert!(matches!(
+            FactorOp::Div.execute(&vm, vec![v(2), v(3), v(0)]),
+            Err(RuntimeError::DivisionByZero)
+        ));
+    }
+}

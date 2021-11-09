@@ -113,9 +113,9 @@ impl Callable for And {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, state: &VMState, args: Vec<crate::vm::Value>) -> RuntimeResult<Value> {
-        for arg in args.into_iter() {
-            if IsTrue.execute(state, vec![arg])? == Value::from(false) {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        for arg in args {
+            if !IsTrue.inner_execute(&arg) {
                 return Ok(Value::from(false));
             }
         }
@@ -137,9 +137,9 @@ impl Callable for Or {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, state: &VMState, args: Vec<crate::vm::Value>) -> RuntimeResult<Value> {
-        for arg in args.into_iter() {
-            if IsTrue.execute(state, vec![arg])? == Value::from(true) {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        for arg in args {
+            if IsTrue.inner_execute(&arg) {
                 return Ok(Value::from(true));
             }
         }

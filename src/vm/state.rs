@@ -44,7 +44,7 @@ impl VMState {
         args: Vec<Value>,
     ) -> RuntimeResult<Value> {
         if args.len() != arity {
-            return Err(RuntimeError::WrongArity(
+            return Err(RuntimeError::WrongArityN(
                 "User defined callable",
                 arity,
                 args.len(),

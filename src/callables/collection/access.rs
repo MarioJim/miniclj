@@ -1,11 +1,9 @@
-use std::collections::VecDeque;
-
 use num::{Signed, ToPrimitive};
 
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
+    vm::{List, RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -30,11 +28,14 @@ impl Callable for First {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_coll = args.into_iter().next().unwrap();
-        let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+        let coll_as_list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
 
-        let first = coll_as_list.pop_front().unwrap_or(Value::Nil);
+        let first = match coll_as_list {
+            List::Cons(first, _) => *first,
+            List::EmptyList => Value::Nil,
+        };
         Ok(first)
     }
 }
@@ -63,12 +64,15 @@ impl Callable for Rest {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_coll = args.into_iter().next().unwrap();
-        let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+        let coll_as_list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
-        coll_as_list.pop_front();
 
-        Ok(Value::List(coll_as_list))
+        let rest = match coll_as_list {
+            List::Cons(_, rest) => *rest,
+            List::EmptyList => List::EmptyList,
+        };
+        Ok(Value::List(rest))
     }
 }
 
@@ -102,12 +106,12 @@ impl Callable for Cons {
         let value = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
 
-        let mut coll_as_list = VecDeque::try_from(maybe_coll).map_err(|type_str| {
+        let coll_as_list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
-        coll_as_list.push_front(value);
 
-        Ok(Value::List(coll_as_list))
+        let list = List::Cons(Box::new(value), Box::new(coll_as_list));
+        Ok(Value::List(list))
     }
 }
 
@@ -126,44 +130,46 @@ impl Callable for Conj {
         state: &mut CompilerState,
         num_args: usize,
     ) -> CompilationResult {
-        if num_args == 2 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
-        } else {
+        if num_args == 0 {
             Err(CompilationError::WrongArity(
                 self.name(),
-                "<collection> <value>",
+                "<collection> <...values>",
             ))
+        } else {
+            Ok(state.get_callable_addr(Box::new(self.clone())))
         }
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
-        let value = args_iter.next().unwrap();
 
         match maybe_coll {
             Value::List(mut list) => {
-                list.push_front(value);
+                for value in args_iter {
+                    list = List::Cons(Box::new(value), Box::new(list));
+                }
                 Ok(Value::List(list))
             }
             Value::Vector(mut vector) => {
-                vector.push(value);
+                for value in args_iter {
+                    vector.push(value);
+                }
                 Ok(Value::Vector(vector))
             }
             Value::Set(mut set) => {
-                set.insert(value);
+                for value in args_iter {
+                    set.insert(value);
+                }
                 Ok(Value::Set(set))
             }
-            Value::Map(mut map) => match value {
-                Value::Vector(v) if v.len() == 2 => {
-                    let mut v_iter = v.into_iter();
-                    let key = v_iter.next().unwrap();
-                    let val = v_iter.next().unwrap();
+            Value::Map(mut map) => {
+                for value in args_iter {
+                    let (key, val) = value.into_map_entry()?;
                     map.insert(key, val);
-                    Ok(Value::Map(map))
                 }
-                _ => Err(RuntimeError::InvalidMapEntry),
-            },
+                Ok(Value::Map(map))
+            }
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a collection",
@@ -208,8 +214,7 @@ impl Callable for Nth {
             (Value::List(l), Value::Number(n)) => {
                 if n.is_integer() && n.is_positive() {
                     let idx = n.to_usize().unwrap();
-                    l.into_iter()
-                        .nth(idx)
+                    l.nth(idx)
                         .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type))
                 } else {
                     Err(RuntimeError::IndexOutOfBounds(maybe_coll_type))
@@ -300,8 +305,7 @@ impl Callable for Get {
                         let idx = n.to_usize().unwrap();
                         Ok(s.chars()
                             .nth(idx)
-                            .map(|c| Value::String(String::from(c)))
-                            .unwrap_or(Value::Nil))
+                            .map_or(Value::Nil, |c| Value::String(String::from(c))))
                     } else {
                         Ok(Value::Nil)
                     }

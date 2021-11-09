@@ -10,7 +10,8 @@ pub enum RuntimeError {
     IndexOutOfBounds(&'static str),
     InvalidMapEntry,
     NotACallable(&'static str),
-    WrongArity(&'static str, usize, usize),
+    WrongArityN(&'static str, usize, usize),
+    WrongArityS(&'static str, &'static str, usize),
     WrongDataType(&'static str, &'static str, &'static str),
     Error(String),
 }
@@ -33,7 +34,12 @@ impl Display for RuntimeError {
             RuntimeError::NotACallable(value_type) => {
                 write!(f, "Couldn't execute {} as a callable", value_type)
             }
-            RuntimeError::WrongArity(callable, expect, got) => write!(
+            RuntimeError::WrongArityN(callable, expect, got) => write!(
+                f,
+                "{} called with wrong number of arguments, expected {}, got {}",
+                callable, expect, got
+            ),
+            RuntimeError::WrongArityS(callable, expect, got) => write!(
                 f,
                 "{} called with wrong number of arguments, expected {}, got {}",
                 callable, expect, got
