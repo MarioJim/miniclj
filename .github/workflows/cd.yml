@@ -28,9 +28,10 @@ jobs:
           yarn install
           yarn build
 
-      - name: Deploy the playground with gh-pages
+      - name: Deploy the playground using gh-pages
         run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          cd playground && yarn deploy -- --no-history --user "github-actions-bot <support+actions@github.com>"
+          cd playground
+          yarn deploy -- --no-history --user "github-actions-bot <support+actions@github.com>"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
