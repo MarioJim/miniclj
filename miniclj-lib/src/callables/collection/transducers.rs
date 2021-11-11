@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::{
     callables::{conditionals::IsTrue, Callable},
     compiler::{CompilationError, CompilationResult, CompilerState},
@@ -32,17 +34,7 @@ impl Callable for Map {
         let maybe_fn = args_iter.next().unwrap();
         let fn_value = match maybe_fn {
             Value::Callable(..) => Ok(maybe_fn),
-            Value::Lambda(_, arity) => {
-                if arity == args_iter.len() {
-                    Ok(maybe_fn)
-                } else {
-                    Err(RuntimeError::WrongArityN(
-                        "User defined callable",
-                        arity,
-                        args_iter.len(),
-                    ))
-                }
-            }
+            Value::Lambda(..) => Ok(maybe_fn),
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a function",
@@ -50,13 +42,14 @@ impl Callable for Map {
             )),
         }?;
 
-        let mut lists = Vec::new();
-        for arg in args_iter {
-            lists.push(List::try_from(arg).map_err(|type_str| {
-                RuntimeError::WrongDataType(self.name(), "a collection", type_str)
-            })?);
-        }
-        let mut result = List::EmptyList;
+        let mut lists = args_iter
+            .map(|arg| {
+                List::try_from(arg).map_err(|type_str| {
+                    RuntimeError::WrongDataType(self.name(), "a collection", type_str)
+                })
+            })
+            .collect::<RuntimeResult<Vec<List>>>()?;
+        let mut result_vec = VecDeque::new();
         loop {
             let mut args_for_callable = Vec::new();
             let mut next_lists = Vec::new();
@@ -66,7 +59,7 @@ impl Callable for Map {
                         args_for_callable.push(*val);
                         next_lists.push(*next_list);
                     }
-                    List::EmptyList => return Ok(Value::List(result)),
+                    List::EmptyList => return Ok(Value::List(result_vec.into_iter().collect())),
                 }
             }
             lists = next_lists;
@@ -77,7 +70,7 @@ impl Callable for Map {
                 }
                 _ => unreachable!(),
             }?;
-            result = List::Cons(Box::new(current_result), Box::new(result));
+            result_vec.push_front(current_result);
         }
     }
 }
@@ -132,7 +125,7 @@ impl Callable for Filter {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
         })?;
 
-        let mut result = List::EmptyList;
+        let mut result_vec = VecDeque::new();
         while let List::Cons(next, rest) = list {
             let args_for_callable = vec![*next.clone()];
             let current_result = match &fn_value {
@@ -143,11 +136,11 @@ impl Callable for Filter {
                 _ => unreachable!(),
             }?;
             if IsTrue.inner_execute(&current_result) {
-                result = List::Cons(next, Box::new(result));
+                result_vec.push_front(*next);
             }
             list = *rest;
         }
-        Ok(Value::List(result))
+        Ok(Value::List(result_vec.into_iter().collect()))
     }
 }
 

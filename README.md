@@ -3,6 +3,7 @@
 Clojure-like lisp compiler and VM written in Rust
 
 ![Continuous Integration](https://github.com/MarioJim/miniclj/workflows/Continuous%20Integration/badge.svg)
+![Continuous Deployment](https://github.com/MarioJim/miniclj/workflows/Continuous%20Deployment/badge.svg)
 ![Lines of code](https://tokei.rs/b1/github/MarioJim/miniclj?category=code)
 
 ## Avance 1

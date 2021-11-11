@@ -117,21 +117,22 @@ impl Callable for Defn {
             ))
         }?;
 
+        // + 2 because first there is the mov to global addr and then the jump lambda
+        let lambda_start_ptr = state.instruction_ptr() + 2;
+        let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
+        let lambda_const_addr = state.insert_constant(lambda_const);
+
+        let lambda_global_addr = state.new_address(Lifetime::GlobalVar);
+        let mov_instruction = Instruction::new_assignment(lambda_const_addr, lambda_global_addr);
+        state.add_instruction(mov_instruction);
+        state.insert_symbol(symbol, lambda_global_addr);
+
         let jump_lambda_instr = Instruction::new_jump(None);
         let jump_lambda_instr_ptr = state.add_instruction(jump_lambda_instr);
-        let lambda_start_ptr = state.instruction_ptr();
-        let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
-        let lambda_addr = state.insert_constant(lambda_const);
-
-        let global_val_addr = state.new_address(Lifetime::GlobalVar);
-        let mov_instruction = Instruction::new_assignment(lambda_addr, global_val_addr);
-        state.add_instruction(mov_instruction);
-        state.insert_symbol(symbol, global_val_addr);
-
         state.compile_lambda(arg_names, body_arg)?;
         state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
 
-        Ok(lambda_addr)
+        Ok(lambda_global_addr)
     }
 
     fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {

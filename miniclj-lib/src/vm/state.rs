@@ -159,7 +159,7 @@ impl VMState {
         let index = address.idx();
         match address.lifetime() {
             Lifetime::Constant => Err(RuntimeError::CompilerError(
-                "Memory address not found in constants table".to_string(),
+                "Can't write to a constant memory address".to_string(),
             )),
             Lifetime::GlobalVar => {
                 self.global_scope.store_var(index, value);

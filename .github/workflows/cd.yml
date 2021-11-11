@@ -1,0 +1,36 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build miniclj-wasm
+        run: |
+          cd miniclj-wasm
+          wasm-pack build
+
+      - name: Install dependencies and build the playground
+        run: |
+          cd playground
+          yarn install
+          yarn build
+
+      - name: Deploy the playground with gh-pages
+        run: |
+          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          cd playground && yarn deploy -- --no-history --user "github-actions-bot <support+actions@github.com>"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

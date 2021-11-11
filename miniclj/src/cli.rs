@@ -16,7 +16,7 @@ pub fn args() -> App<'static> {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(
             App::new("check")
-                .about("Checks if a source code file can be correctly parsed")
+                .about("Check if a source code file can be correctly parsed")
                 .arg(
                     Arg::new("FILE")
                         .about("File to check")
@@ -26,7 +26,7 @@ pub fn args() -> App<'static> {
         )
         .subcommand(
             App::new("ast")
-                .about("Prints the abstract syntax tree from a source code file")
+                .about("Print the abstract syntax tree from a source code file")
                 .arg(
                     Arg::new("FILE")
                         .about("File to read")
@@ -36,7 +36,7 @@ pub fn args() -> App<'static> {
         )
         .subcommand(
             App::new("build")
-                .about("Compiles a source code file into a bytecode file")
+                .about("Compile a source code file into a bytecode file")
                 .arg(
                     Arg::new("FILE")
                         .about("File to compile")
@@ -52,7 +52,7 @@ pub fn args() -> App<'static> {
                 )
         )
         .subcommand(
-            App::new("exec").about("Executes a bytecode file").arg(
+            App::new("exec").about("Execute a bytecode file").arg(
                 Arg::new("FILE")
                     .about("File to execute")
                     .required(true)
@@ -61,7 +61,7 @@ pub fn args() -> App<'static> {
         )
         .subcommand(
             App::new("run")
-                .about("Compiles and executes a source code file")
+                .about("Compile and execute a source code file")
                 .arg(
                     Arg::new("FILE")
                         .about("File to run")

@@ -38,7 +38,10 @@ impl List {
 
     fn inner_display(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            List::Cons(first, rest) => write!(f, " {}{}", first, rest),
+            List::Cons(first, rest) => {
+                write!(f, " {}", first)?;
+                rest.inner_display(f)
+            }
             List::EmptyList => write!(f, ""),
         }
     }
