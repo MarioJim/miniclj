@@ -95,8 +95,8 @@ impl CompilerState {
         Ok(())
     }
 
-    pub fn symbol_exists(&self, symbol: &str) -> bool {
-        self.symbol_table.get(symbol).is_some()
+    pub fn get_symbol(&self, symbol: &str) -> Option<MemAddress> {
+        self.symbol_table.get(symbol)
     }
 
     pub fn new_address(&self, lifetime: Lifetime) -> MemAddress {

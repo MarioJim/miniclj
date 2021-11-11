@@ -201,9 +201,13 @@ impl Callable for Let {
         let mut args_iter = args.into_iter();
         let bindings_vector_arg = args_iter.next().unwrap();
         let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
+        let mut overriden_bindings = Vec::new();
 
         let mut symbols = HashSet::new();
         for (symbol, val) in bindings {
+            if let Some(overriden_addr) = state.get_symbol(&symbol) {
+                overriden_bindings.push((symbol.clone(), overriden_addr));
+            }
             let symbol_addr = state.new_address(Lifetime::LocalVar);
             let value_addr = state.compile(val)?;
 
@@ -218,6 +222,9 @@ impl Callable for Let {
 
         for symbol in symbols {
             state.remove_symbol(&symbol);
+        }
+        for (ov_symbol, ov_address) in overriden_bindings {
+            state.insert_symbol(ov_symbol, ov_address);
         }
 
         Ok(result_addr)
