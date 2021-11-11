@@ -4,7 +4,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use num::Rational64;
+use num::{Rational64, Zero};
 
 use crate::{
     callables::Callable,
@@ -63,6 +63,14 @@ impl Value {
             }
         }
         Err(self.type_str())
+    }
+
+    pub fn is_truthy(&self) -> bool {
+        match self {
+            Value::Number(n) => !n.is_zero(),
+            Value::Nil => false,
+            _ => true,
+        }
     }
 
     pub fn into_map_entry(self) -> RuntimeResult<(Value, Value)> {

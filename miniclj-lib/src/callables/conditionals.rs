@@ -1,5 +1,3 @@
-use num::Zero;
-
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
@@ -10,16 +8,6 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct IsTrue;
-
-impl IsTrue {
-    pub fn inner_execute(&self, val: &Value) -> bool {
-        match val {
-            Value::Number(n) => !n.is_zero(),
-            Value::Nil => false,
-            _ => true,
-        }
-    }
-}
 
 impl Callable for IsTrue {
     fn name(&self) -> &'static str {
@@ -40,7 +28,7 @@ impl Callable for IsTrue {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let val = args.get(0).unwrap();
-        Ok(Value::from(IsTrue.inner_execute(val)))
+        Ok(Value::from(val.is_truthy()))
     }
 }
 
@@ -115,7 +103,7 @@ impl Callable for And {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         for arg in args {
-            if !IsTrue.inner_execute(&arg) {
+            if !arg.is_truthy() {
                 return Ok(Value::from(false));
             }
         }
@@ -139,7 +127,7 @@ impl Callable for Or {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         for arg in args {
-            if IsTrue.inner_execute(&arg) {
+            if arg.is_truthy() {
                 return Ok(Value::from(true));
             }
         }

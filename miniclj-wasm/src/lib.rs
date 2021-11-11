@@ -52,8 +52,8 @@ pub fn compile(code: &str) -> JsValue {
 
 /// Executes miniclj code
 /// - read instructions are executed as window.prompt calls
-/// - print and println instructions append a new `p` node
-///   to an `#output` node in the document's body
+/// - print and println instructions append its output to
+///   `window.minicljoutput`
 #[wasm_bindgen]
 pub fn run(code: &str) -> JsValue {
     set_panic_hook();

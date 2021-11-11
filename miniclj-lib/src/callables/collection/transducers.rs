@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::{
-    callables::{conditionals::IsTrue, Callable},
+    callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
     vm::{List, RuntimeError, RuntimeResult, VMState, Value},
 };
@@ -33,8 +33,7 @@ impl Callable for Map {
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let fn_value = match maybe_fn {
-            Value::Callable(..) => Ok(maybe_fn),
-            Value::Lambda(..) => Ok(maybe_fn),
+            Value::Callable(..) | Value::Lambda(..) => Ok(maybe_fn),
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a function",
@@ -106,14 +105,7 @@ impl Callable for Filter {
         let maybe_coll = args_iter.next().unwrap();
 
         let fn_value = match maybe_fn {
-            Value::Callable(..) => Ok(maybe_fn),
-            Value::Lambda(_, arity) => {
-                if arity == 1 {
-                    Ok(maybe_fn)
-                } else {
-                    Err(RuntimeError::WrongArityN("User defined callable", arity, 1))
-                }
-            }
+            Value::Callable(..) | Value::Lambda(..) => Ok(maybe_fn),
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a function",
@@ -135,7 +127,7 @@ impl Callable for Filter {
                 }
                 _ => unreachable!(),
             }?;
-            if IsTrue.inner_execute(&current_result) {
+            if current_result.is_truthy() {
                 result_vec.push_front(*next);
             }
             list = *rest;
@@ -175,18 +167,7 @@ impl Callable for Reduce {
         let maybe_coll = args_iter.next().unwrap();
 
         let fn_value = match maybe_fn {
-            Value::Callable(..) => Ok(maybe_fn),
-            Value::Lambda(_, arity) => {
-                if arity == 0 || arity == 2 {
-                    Ok(maybe_fn)
-                } else {
-                    Err(RuntimeError::WrongArityN(
-                        "User defined callable",
-                        arity,
-                        args_iter.len(),
-                    ))
-                }
-            }
+            Value::Callable(..) | Value::Lambda(..) => Ok(maybe_fn),
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a function",

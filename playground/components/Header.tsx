@@ -29,6 +29,9 @@ const Header = (): JSX.Element => {
     >
       <Heading size="lg">miniclj</Heading>
       <HStack spacing="4">
+        <Button variant="ghost" onClick={toggleColorMode}>
+          {colorMode === 'dark' ? <CgMoon /> : <CgSun />}
+        </Button>
         <Link href="https://github.com/MarioJim/miniclj" passHref>
           <Box
             display="flex"
@@ -39,9 +42,6 @@ const Header = (): JSX.Element => {
             <CgExternal />
           </Box>
         </Link>
-        <Button variant="ghost" onClick={toggleColorMode}>
-          {colorMode === 'dark' ? <CgMoon /> : <CgSun />}
-        </Button>
       </HStack>
     </Flex>
   );

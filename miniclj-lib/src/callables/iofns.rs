@@ -28,20 +28,28 @@ fn inner_print<T: Write>(writer: &mut T, args: Vec<Value>) -> std::io::Result<()
 }
 
 #[cfg(target_arch = "wasm32")]
-fn append_string_to_output_div(string: &str) {
-    let window = web_sys::window().expect("not running in a browser environment");
-    let document = window.document().expect("window should have a document");
+#[derive(serde::Serialize)]
+struct MinicljOutputWindow {
+    pub minicljoutput: String,
+}
 
-    let output_div = document
-        .get_element_by_id("output")
-        .expect("'output' element not found in document");
-    let new_print_row = document
-        .create_element("p")
-        .expect("couldn't create a p node");
-    new_print_row.set_text_content(Some(string));
-    output_div
-        .append_child(&new_print_row)
-        .expect("couldn't append the printed result to the output");
+#[cfg(target_arch = "wasm32")]
+fn append_string_to_output_div(new_output: &str) {
+    use js_sys::{JsString, Object};
+    use wasm_bindgen::prelude::*;
+
+    let window = web_sys::window().expect("not running in a browser environment");
+
+    let prev_output_obj = window
+        .get("minicljoutput")
+        .unwrap_or_else(|| JsString::from(String::new()).into());
+    let prev_output_jsstr = prev_output_obj.to_string();
+    let prev_output_string = String::from(prev_output_jsstr);
+    let minicljoutput = prev_output_string + new_output;
+    let output = MinicljOutputWindow { minicljoutput };
+
+    let output_obj = Object::from(JsValue::from_serde(&output).unwrap());
+    Object::assign(&window, &output_obj);
 }
 
 #[derive(Debug, Clone)]

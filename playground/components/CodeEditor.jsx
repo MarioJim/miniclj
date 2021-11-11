@@ -17,8 +17,8 @@ const CodeEditor = ({ code, setCode }) => {
       language="clojure"
       placeholder="Write your code here"
       onChange={(e) => setCode(e.target.value)}
-      padding={15}
       height="100%"
+      autoFocus
       style={{
         backgroundColor,
         flex: 1,

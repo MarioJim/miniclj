@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::{
-    callables::IsTrue,
     constant::Constant,
     instruction::{Instruction, InstructionPtr},
     memaddress::{Lifetime, MemAddress},
@@ -112,7 +111,16 @@ impl VMState {
                     Ok(())
                 }
                 Instruction::JumpOnTrue(addr, new_instr_ptr) => {
-                    if IsTrue.inner_execute(&self.get(current_scope, addr)?) {
+                    let condition =
+                        self.get(current_scope, addr)?
+                            .as_bool()
+                            .map_err(|type_str| {
+                                RuntimeError::CompilerError(format!(
+                                    "Jump on true instruction expected a 0/1 number, got {}",
+                                    type_str
+                                ))
+                            })?;
+                    if condition {
                         instruction_ptr = *new_instr_ptr;
                     } else {
                         instruction_ptr += 1;
@@ -120,7 +128,16 @@ impl VMState {
                     Ok(())
                 }
                 Instruction::JumpOnFalse(addr, new_instr_ptr) => {
-                    if IsTrue.inner_execute(&self.get(current_scope, addr)?) {
+                    let condition =
+                        self.get(current_scope, addr)?
+                            .as_bool()
+                            .map_err(|type_str| {
+                                RuntimeError::CompilerError(format!(
+                                    "Jump on true instruction expected a 0/1 number, got {}",
+                                    type_str
+                                ))
+                            })?;
+                    if condition {
                         instruction_ptr += 1;
                     } else {
                         instruction_ptr = *new_instr_ptr;

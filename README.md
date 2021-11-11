@@ -1,10 +1,12 @@
 # miniclj
 
-Clojure-like lisp compiler and VM written in Rust
-
 ![Continuous Integration](https://github.com/MarioJim/miniclj/workflows/Continuous%20Integration/badge.svg)
 ![Continuous Deployment](https://github.com/MarioJim/miniclj/workflows/Continuous%20Deployment/badge.svg)
 ![Lines of code](https://tokei.rs/b1/github/MarioJim/miniclj?category=code)
+
+Clojure-like lisp compiler and VM written in Rust
+
+Try it out in the playground: [mariojim.github.io/miniclj](https://mariojim.github.io/miniclj/).
 
 ## Avance 1
 

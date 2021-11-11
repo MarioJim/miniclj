@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Divider,
   Grid,
   GridItem,
-  HStack,
-  StackDivider,
   useColorModeValue,
 } from '@chakra-ui/react';
 import Head from 'next/head';
@@ -25,7 +23,7 @@ const initialCode = `(defn factorial [n]
 
 const Home: NextPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const [code, setCode] = React.useState(initialCode);
+  const [code, setCode] = useState(initialCode);
 
   return (
     <div style={{ maxHeight: '100vh' }}>

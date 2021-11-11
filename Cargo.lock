@@ -348,6 +348,7 @@ dependencies = [
  "num",
  "rand",
  "regex",
+ "serde",
  "smol_str",
  "wasm-bindgen",
  "web-sys",
