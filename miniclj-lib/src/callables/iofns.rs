@@ -76,15 +76,14 @@ impl Callable for Print {
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         inner_print(&mut std::io::stdout(), args)
             .map(|()| Value::Nil)
-            .map_err(|err| RuntimeError::Error(format!("Error trying to print to stdout: {}", err)))
+            .map_err(|err| RuntimeError::IOError("print to stdout", err))
     }
 
     #[cfg(target_arch = "wasm32")]
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut buf = Vec::new();
-        inner_print(&mut buf, args).map_err(|err| {
-            RuntimeError::Error(format!("Error trying to print in a web context: {}", err))
-        })?;
+        inner_print(&mut buf, args)
+            .map_err(|err| RuntimeError::IOError("print in a web context", err))?;
         append_string_to_output_div(std::str::from_utf8(&buf).unwrap());
 
         Ok(Value::Nil)
@@ -109,9 +108,7 @@ impl Callable for Println {
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let result = inner_print(&mut std::io::stdout(), args)
             .map(|()| Value::Nil)
-            .map_err(|err| {
-                RuntimeError::Error(format!("Error trying to print to stdout: {}", err))
-            });
+            .map_err(|err| RuntimeError::IOError("print to stdout", err));
         println!();
         result
     }
@@ -119,12 +116,10 @@ impl Callable for Println {
     #[cfg(target_arch = "wasm32")]
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let mut buf = Vec::new();
-        inner_print(&mut buf, args).map_err(|err| {
-            RuntimeError::Error(format!("Error trying to print in a web context: {}", err))
-        })?;
-        buf.write(b"\n").map_err(|err| {
-            RuntimeError::Error(format!("Error trying to print in a web context: {}", err))
-        })?;
+        inner_print(&mut buf, args)
+            .map_err(|err| RuntimeError::IOError("print in a web context", err))?;
+        buf.write(b"\n")
+            .map_err(|err| RuntimeError::IOError("print in a web context", err))?;
         append_string_to_output_div(std::str::from_utf8(&buf).unwrap());
 
         Ok(Value::Nil)
@@ -158,22 +153,23 @@ impl Callable for Read {
         let mut buffer = String::new();
         std::io::stdin()
             .read_line(&mut buffer)
-            .map_err(|e| RuntimeError::Error(e.to_string()))?;
-        Ok(Value::String(String::from(buffer.trim_end())))
+            .map_err(|e| RuntimeError::IOError("read from stdin", e))?;
+        Ok(Value::String(String::from(buffer.trim())))
     }
 
     #[cfg(target_arch = "wasm32")]
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
+        use std::io::{Error, ErrorKind};
+
         let window = web_sys::window().expect("not running in a browser environment");
         let input = window
             .prompt_with_message("Input:")
-            .map_err(|e| match js_sys::JSON::stringify(&e) {
-                Ok(error_str) => RuntimeError::Error(error_str.into()),
-                Err(_) => RuntimeError::Error("Unknown input error".to_string()),
+            .map_err(|_| {
+                RuntimeError::IOError("read in a web context", Error::from(ErrorKind::Unsupported))
             })?
             .unwrap_or_else(|| String::new());
 
-        Ok(Value::String(String::from(input.trim_end())))
+        Ok(Value::String(String::from(input.trim())))
     }
 }
 

@@ -58,3 +58,9 @@ Durante la semana i y la semana pasada avancé hasta casi terminar el proyecto: 
   - -> y ->> (reciben una lista de funciones parciales y las encadenan usando el resultado de la anterior como el primer o último argumento de la siguiente llamada)
 - Compilar el proyecto en wasm y hacer una página web "playground" en la que de un lado se pueda escribir el código, y del otro poder ver el árbol de sintaxis, o el bytecode del compilador, o directamente el output de ejecutar el código
 - Implementar más tests para las funciones del compilador (sólo +,-,\*,/,=,!=,<,>,<=,>= tienen tests unitarios)
+
+## Avance 6
+
+Al final me decidí por compilar el proyecto a wasm y realizar una página web como "playground" (https://mariojim.github.io/miniclj/) basándome en la página de "playground" de swc (https://play.swc.rs/). Para esto tuve que separ la parte del compilador, máquina virtual y código compartido de la interfaz de línea de comandos, y crear una nueva interfaz para el contexto del navegador.
+
+Esta semana también empecé con la documentación del proyecto. Por ahora la estoy haciendo en LaTeX y en inglés.

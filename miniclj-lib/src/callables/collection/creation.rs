@@ -89,7 +89,11 @@ impl Callable for HashMap {
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         if args.len() % 2 == 1 {
-            return Err(RuntimeError::Error(format!("{} called with wrong number of arguments, expected a pair number of values, got {}", self.name(), args.len())));
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a pair number of values",
+                args.len(),
+            ));
         }
 
         let mut hashmap = RustHashMap::new();

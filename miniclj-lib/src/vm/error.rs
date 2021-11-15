@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::fmt::{self, Display, Formatter};
 
 pub type RuntimeResult<T> = Result<T, RuntimeError>;
 
@@ -9,15 +9,15 @@ pub enum RuntimeError {
     DivisionByZero,
     IndexOutOfBounds(&'static str),
     InvalidMapEntry,
+    IOError(&'static str, std::io::Error),
     NotACallable(&'static str),
     WrongArityN(&'static str, usize, usize),
     WrongArityS(&'static str, &'static str, usize),
     WrongDataType(&'static str, &'static str, &'static str),
-    Error(String),
 }
 
 impl Display for RuntimeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             RuntimeError::CompilerError(err) => write!(f, "Compiler error: {}", err),
             RuntimeError::CouldntParse(string, expected) => {
@@ -31,6 +31,9 @@ impl Display for RuntimeError {
                 f,
                 "Only vectors with two elements (key-value pair) can be added to a map"
             ),
+            RuntimeError::IOError(context, error) => {
+                write!(f, "Error trying to {}: {}", context, error)
+            }
             RuntimeError::NotACallable(value_type) => {
                 write!(f, "Couldn't execute {} as a callable", value_type)
             }
@@ -49,7 +52,6 @@ impl Display for RuntimeError {
                 "Callable {} called with wrong argument, expected {}, got {}",
                 callable, expect, got
             ),
-            RuntimeError::Error(err) => write!(f, "{}", err),
         }
     }
 }
