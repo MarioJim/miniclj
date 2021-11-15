@@ -27,7 +27,7 @@ jobs:
           cd playground
           yarn install
           yarn build
-          touch ./playground/out/.nojekyll
+          touch ./out/.nojekyll
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
