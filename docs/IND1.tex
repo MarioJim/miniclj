@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{sectsty}
 \usepackage{titlesec}
+\usepackage{url}
 \usepackage{hyperref}
 
 \usepackage{minted}
@@ -57,10 +58,10 @@
 
 \chapter{About the project}
 \section{Project scope}
-\texttt{TODO}
+TODO
 
 \section{Requirements}
-\texttt{TODO}
+TODO
 
 \section{Development process}
 The development of the language can be tracked from its GitHub repository here: \\\url{https://github.com/MarioJim/miniclj}. The list of commits since the last time this document was generated can also be found in appendix \ref{apdx:commits}.
@@ -69,7 +70,7 @@ The development of the language can be tracked from its GitHub repository here: 
 During the development I've also kept a weekly log in Spanish of my progress. It can be found in the README.md file in the root directory, or in appendix \ref{apdx:weeklylogs}.
 
 \subsection{Final thoughts}
-\texttt{TODO}
+TODO
 
 
 \chapter{About the language}
@@ -129,7 +130,7 @@ The compiler is written in Rust, and it has a couple of dependencies:
 \end{itemize}
 
 \section{Lexer and Parser}
-The grammar and tokens of the language are described in the file\\\texttt{miniclj-lib/src/lispparser.lalrpop}, included in appendix \ref{apdx:grammar}. It describes the following rules:
+The grammar and tokens of the language are described in the file \path{miniclj-lib/src/lispparser.lalrpop}, included in appendix \ref{apdx:grammar}. It describes the following rules:
 \begin{itemize}
   \item \texttt{SExprs}: A list of \texttt{SExpr}
   \item \texttt{SExpr}: This rule encompasses the types of expressions \texttt{miniclj} accepts:
@@ -168,31 +169,122 @@ The grammar and tokens of the language are described in the file\\\texttt{minicl
   \item \texttt{StringLiteral}: This last rule describes a string between double quotes
 \end{itemize}
 
-\section{Bytecode representation}
-\texttt{TODO}
+\section{Compiler state}
+The compiler state is enclosed inside the \texttt{CompilerState} struct, inside file \path{miniclj-lib/src/compiler/state.rs} or in the appendix \ref{apdx:compstate}.
 
-\section{Memory representation}
-\texttt{TODO}
+This structure is composed of 5 data structures:
+\begin{itemize}
+  \item \texttt{constants}: This hashmap stores the relationships between the constants and their memory addresses. I decided to use a map instead of a vector so that repeated constants occupy the same address. This map is accessed by the following methods of the \texttt{CompilerState} struct:
+  \begin{itemize}
+    \item \texttt{insert\_constant}: Receives a constant and returns a memory address. This method has two branches: when the constant was already added to the constants map, this metod just returns a copy of the address assigned to the constant. In case the constant wasn't found in the constants table, the compiler finds the next address available by iterating through the map and inserts the constant with that address.
+  \end{itemize}
+  \item \texttt{instructions}: This vector stores the list of instructions that will be later executed by the VM. It is accessed by the following methods:
+  \begin{itemize}
+    \item \texttt{add\_instruction}: Receives an instruction, appends it to the vector, and returns the index of the new instruction
+    \item \texttt{instruction\_ptr}: Returns the length of the instructions vector, used as the index of the following instruction to be inserted
+    \item \texttt{fill\_jump}: Receives two instruction pointers: the first one is the index of the jump instruction to be modified, and the second one the instruction that it should point to. If the first instruction pointer doesn't refer to a jump instruction, the compiler crashes.
+  \end{itemize}
+  \item \texttt{symbol\_table}: This custom structure, described in file \texttt{miniclj-lib/src/compiler/\\symboltable.rs} and implemented as a linked list, has three fields:
+  \begin{itemize}
+    \item \texttt{symbols}: A hashmap of identifiers (declared inside the current scope) to memory addresses
+    \item \texttt{temp\_counter}: A counter of how many temporal variables have been created in the current scope
+    \item \texttt{var\_counter}: A counter of how many local variables have been assigned in the current scope
+  \end{itemize}
+  This data structure is accessed by the following methods:
+  \begin{itemize}
+    \item \texttt{get\_symbol}: Receives a reference to a string and returns either the memory address that points to the value of the identifier or no memory address in case that the symbol couldn't be found in the scope
+    \item \texttt{new\_address}: Receives a \texttt{Lifetime} variant to determine if the new address should be a temporal, local or global address, and returns a new memory address
+    \item \texttt{insert\_symbol}: Receives a string and an address, and inserts them into the corresponding symbol table (either the current symbol table if the address is local, or the global symbol table if the address has a global lifetime)
+    \item \texttt{remove\_symbol}: Receives a reference to a string and removes the symbol from the scope
+  \end{itemize}
+  \item \texttt{loop\_jumps\_stack}: This structure, although represented as a vector, is used as a stack of pairs of instruction pointers and vectors of memory addresses. This stack is useful for loop/recur cycles, where the compiler has to check where was the last \texttt{loop} instruction declared, so that when a \texttt{recur} instruction is found:
+  \begin{enumerate}
+    \item The compiler can check that it has the same number of arguments
+    \item It can copy the value from each argument to the memory address of the \texttt{loop}'s declaration
+    \item It can emit the goto instruction to the \texttt{loop} instruction
+  \end{enumerate}
+  This process is documented in file \path{miniclj-lib/src/callables/scopefns.rs}, and\\\texttt{CompilerState} exposes the following methods to modify the \texttt{loop\_jumps\_stack}:
+  \begin{itemize}
+    \item \texttt{push\_loop\_jump}: Receives an instruction pointer and a vector of memory addresses, and appends the pair to the stack
+    \item \texttt{pop\_loop\_jump}: Returns a pair of instruction pointer and vector of memory addresses, or nothing if the stack is empty
+  \end{itemize}
+  \item \texttt{callables\_table}: This custom structure, implemented as a map between strings and structs that implement the \texttt{Callable} trait. It is declared in file \path{miniclj-lib/src/callables/mod.rs}, and it is used to manage the compilation for callables, that consists of:
+  \begin{itemize}
+    \item For most callables, compile the arguments, add the callable to the constants table and emit an \texttt{Call} instruction for the callable's address, the resulting address of each argument and the temporal address where the result of the call will be stored.
+    \item For the other callables, each one may have a different, custom compilation process, like the ones that modify the scope (\texttt{def}, \texttt{defn}, \texttt{let}), the ones used as cycles (\texttt{loop}, \texttt{recur}) and others (like \texttt{fn})
+  \end{itemize}
+\end{itemize}
+
+This structure also exposes a couple of methods that are use throughout the compilation process:
+\begin{itemize}
+  \item \texttt{compile}: This is the main method of the compiler: it receives an \texttt{SExpr}, it modifies its state depending on the variant of s-expression that it received, and returns either the resulting memory address of the expression, or a compiler error.
+  \item \texttt{compile\_lambda}: This method recieves a list of argument names (of the function that will be compiled) and an \texttt{SExpr} that contains the body of the function
+  \item \texttt{write\_to}: This method is used to serialize the compiler state into its string representation, first writing the constants table to the file, and then writing all the instructions in order. More information about this representation can be found in section \ref{comp:bytecode}
+  \item \texttt{into\_parts}: Finally, this method is used when the compiler state, instead of being printed to a file, is decomposed to create the state of a VM. It returns the constants and the instructions of the compiler
+\end{itemize}
+
+\section{Bytecode representation}
+\label{comp:bytecode}
+A bytecode file produced by the \texttt{miniclj} compiler, with the extension \texttt{.mclj}, is composed of two parts separated by a line with three asterisks: a list of constant and memory address pairs and a list of instructions. The pairs from the first part are only separated by a space.
+
+\subsection{Constants}
+The constants, defined in file \path{miniclj-lib/src/constant.rs}, have 5 different variants:
+\begin{itemize}
+  \item \texttt{Callable}: Stores a reference to a builtin callable
+  \item \texttt{Lambda}: Has two fields: the instruction pointer that the VM must jump to to execute the lambda, and the number of arguments that the lambda accepts
+  \item \texttt{String}: Stores a string literal inside
+  \item \texttt{Number}: Stores a \texttt{Rational64} struct inside (\texttt{num}'s implementation of fraction between two signed integers of 64 bits)
+  \item \texttt{Nil}: The nil value
+\end{itemize}
+
+They are serialized (and deserialized) pretty easily:
+\begin{itemize}
+  \item \texttt{Callable}: Only the callable name is stored
+  \item \texttt{Lambda}: Both numbers are inserted after the string "fn", separated by the at sign (@)
+  \item \texttt{String}: The string literal is printed between double quotes
+  \item \texttt{Number}: The denominator is printed, then a slash (/) and finally the numerator
+  \item \texttt{Nil}: The string "nil" is printed (without quotes)
+\end{itemize}
+
+\subsection{Memory addresses}
+Memory addresses are composed of two fields:
+\begin{itemize}
+  \item A \texttt{lifetime} field, of type \texttt{Lifetime}, which specifies the scope of the address. It can be either constant, global, local or temporal.
+  \item The index of the address (represented by an unsigned integer)
+\end{itemize}
+
+They are serialized as unsigned 32 bit integers, where the first 4 bytes are reserved for the lifetime (constant being $1 * (2 << 28)$, global $2 * (2 << 28)$, and so on), and the other 28 bits are reserved for the index of the variable. The string representation of these addresses is just the number printed as is.
+
+\subsection{Instructions}
+The enum \texttt{Instruction} represents the type of instructions that the VM can execute. It has 6 variants and it is declared on the file \path{miniclj-lib/src/instruction.rs}. Here's a short description of each type:
+\begin{itemize}
+  \item \texttt{Call}: Has 3 fields: the memory address of the callable, the list of memory addresses of the arguments, and the memory address where the result should be stored. This instruction is serialized starting with the string "call", then the address of the callable, the arguments and the result, separated by spaces
+  \item \texttt{Return}: This instruction represents the return instruction from a lambda function, and it stores only the memory address of the value that the function will return. It is serialized as the keyword "ret", a space, and then the address
+  \item \texttt{Assignment}: This instruction is used to copy a value from an address to another one. It stores the source and destination addresses, and is serialized starting with the keyword "mov", a space, the source address, another space, and the destination address
+  \item \texttt{Jump}: This instruction represents an inconditional jump, and it stores only the instruction pointer to which the virtual machine should jump to. It is serialized using the word "jmp", a space, and the instruction pointer
+  \item \texttt{JumpOnTrue}: This instruction is used when a jump should only be executed if a value is true. It stores the memory address of the value it should check and the instruction pointer it should jump to, and it is serialized with the keyword "jmpT", a space, the address, another space, and the instruction pointer
+  \item \texttt{JumpOnFalse}: This instruction is almost the same as the last one, but only executing the jump if the value referenced by the memory address is false, and with being serialized with the keyword "jmpF"
+\end{itemize}
 
 
 \chapter{About the virtual machine}
-\texttt{TODO}
+TODO
 
 \section{Tools and libraries}
-\texttt{TODO}
+TODO
 
 \section{Memory representation}
-\texttt{TODO}
+TODO
 
 
 \chapter{Code example}
-\texttt{TODO}
+TODO
 
 \section{Bytecode generated}
-\texttt{TODO}
+TODO
 
 \section{Terminal output}
-\texttt{TODO}
+TODO
 
 
 \chapter{Project structure}
@@ -226,7 +318,6 @@ This crate compiles to a binary WebAssembly file, and exposes the functionality 
 \section{\texttt{playground}}
 This folder stores a simple, one page Next.js project where the \texttt{miniclj-wasm} is imported and executed for the code written in left side panel, and the output or the error for every function is displayed on the right side panel. The playground is built using GitHub Actions for each commit to the repo, following the continuous delivery pipeline described in the file \texttt{.github/workflows/cd.yml}
 
-% \inputminted{ANTLR}{/home/mario/git/MarioJim/ITC-Tec/Sem7/Compiladores/Tarea3_parte2/java_antlr4/src/main/antlr4/LittleDuck.g4}
 
 \appendix
 
@@ -241,5 +332,9 @@ This folder stores a simple, one page Next.js project where the \texttt{miniclj-
 \chapter{Language grammar}
 \label{apdx:grammar}
 \inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/lispparser.lalrpop}
+
+\chapter{CompilerState struct}
+\label{apdx:compstate}
+\inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/state.rs}
 
 \end{document}
