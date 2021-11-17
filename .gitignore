@@ -11,3 +11,7 @@ target/
 
 # Files for testing
 test_cljs
+
+# Intermediate files in /docs
+docs/*.txt
+docs/*.md

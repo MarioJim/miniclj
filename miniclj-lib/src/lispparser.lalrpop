@@ -12,7 +12,6 @@ grammar;
 
 // Compiler-specific parsers
 pub SExprs = List<SExpr>;
-Literals = List<Literal>;
 
 SExpr: SExpr = {
     "(" <SExprs> ")" => SExpr::Expr(<>),
