@@ -1,0 +1,245 @@
+\documentclass[11pt]{scrreprt}
+\usepackage[utf8]{inputenc}
+
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\addtokomafont{chapter}{\LARGE}
+\renewcommand*{\chapterformat}{\thechapter\hspace{0.4cm}}
+\RedeclareSectionCommand[style=section]{chapter}
+
+\usepackage{graphicx}
+\usepackage{sectsty}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\usepackage{minted}
+\usemintedstyle{borland}
+\setminted{linenos=true,fontsize=\small}
+
+% Margins
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace{4\baselineskip}
+    Instituto Tecnológico y de Estudios Superiores de Monterrey\par
+    Campus Monterrey\par
+    \vspace{2\baselineskip}
+    {\large
+    TC-3048 Compiler design}\par
+    \vspace{6\baselineskip}
+    {\huge
+    miniclj\par}
+    {\LARGE
+    Final documentation\par}
+    \vspace{4\baselineskip}
+    {\Large
+    Mario Emilio Jiménez Vizcaíno\\ A01173359\par}
+    \vfill
+    Elda Guadalupe Quiroga\par
+    Héctor Gibrán Ceballos\par
+    \vspace{4\baselineskip}
+    November 24th, 2021
+\end{titlepage}
+
+\pagebreak
+
+\tableofcontents
+
+\chapter{About the project}
+\section{Project scope}
+\texttt{TODO}
+
+\section{Requirements}
+\texttt{TODO}
+
+\section{Development process}
+The development of the language can be tracked from its GitHub repository here: \\\url{https://github.com/MarioJim/miniclj}. The list of commits since the last time this document was generated can also be found in appendix \ref{apdx:commits}.
+
+\subsection{Weekly logs}
+During the development I've also kept a weekly log in Spanish of my progress. It can be found in the README.md file in the root directory, or in appendix \ref{apdx:weeklylogs}.
+
+\subsection{Final thoughts}
+\texttt{TODO}
+
+
+\chapter{About the language}
+\section{Language name}
+I chose the name \texttt{miniclj} because this project aims to be a Clojure clone, with a subset of the language's functionality. The syntax and expressions are similar to Clojure's, but some special commands and data structures aren't available, such as support for macros (\texttt{defmacro}), symbols (also known as identifiers, they replaced during compilation) and concurrency primitives (\texttt{atom}, \texttt{swap!}, \texttt{promise}, \texttt{deliver}).
+
+\section{Language features}
+\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are a couple more collections (vectors, sets and maps) and support for strings as vectors of characters.
+
+\section{Errors}
+The errors for each compilation and execution stage are the following:
+
+\subsection{Parser errors}
+This errors are the ones implemented by \texttt{lalrpop}, the parser generator library the language uses, and they are variants of the \href{https://github.com/lalrpop/lalrpop/blob/fc9986c725d908a60b11d8480711afa33f7f3564/lalrpop-util/src/lib.rs#L15}{enum \texttt{ParseError}, found in the file src/lib.rs from the lalrpop-util crate}.
+\begin{itemize}
+  \item \texttt{InvalidToken}: Returned when the parser encounters a token that isn't part of the language's grammar
+  \item \texttt{UnrecognizedEOF}: Returned by the parser when it encounters an EOF it did not expect
+  \item \texttt{UnrecognizedToken}: Returned when the parser encounters a token it didn't expect in that position
+  \item \texttt{ExtraToken}: Returned when the parser encounters an additional, repeated token
+  \item \texttt{User}: Returned by the parser when a custom validation doesn't pass. This type of error is can only be returned while parsing bytecode from its string representation during execution, when a builtin function isn't recognized or when a memory address couldn't be parsed correctly.
+\end{itemize}
+
+\subsection{Compiler errors}
+This errors are implemented as variants of the \href{https://github.com/MarioJim/miniclj/blob/263ce60c5847511cdae9b27d79e5db1ae18759a2/miniclj-lib/src/compiler/error.rs#L10}{\texttt{CompilationError} enum, file \texttt{src/compiler/error.rs} in the \texttt{miniclj-lib} crate}.
+\begin{itemize}
+  \item \texttt{CallableNotDefined}: Returned when the compiler encounters a symbol that was supposed to be used as a callable, but isn't defined in the current scope (wasn't a user-defined function nor a builtin callable)
+  \item \texttt{EmptyArgs}: Returned when a expression tried to call a callable with no arguments, and the callalbe expects at least one
+  \item \texttt{SymbolNotDefined}: Returned by the compiler when a symbol wasn't defined in the current scope (or any other parent scope)
+  \item \texttt{WrongArgument}: Returned by the compiler when a function receives an argument that it didn't expect. Although most functions don't check the type of its arguments during compilation, some functions with a custom compilation process (such as \texttt{fn}, \texttt{defn} and \texttt{let}) use their arguments during compilation
+  \item \texttt{WrongArity}: Returned when the user tried to call a callable with the wrong number of arguments
+  \item \texttt{WrongRecurCall}: Returned when the user tried to call the \texttt{recur} function with a different number of arguments than it's corresponding \texttt{loop} call
+\end{itemize}
+
+\subsection{Runtime errors}
+This errors are implemented as variants of the \href{https://github.com/MarioJim/miniclj/blob/263ce60c5847511cdae9b27d79e5db1ae18759a2/miniclj-lib/src/vm/error.rs#L6}{\texttt{RuntimeError} enum, file \texttt{src/vm/error.rs} in the \texttt{miniclj-lib} crate}.
+\begin{itemize}
+  \item \texttt{CompilerError}: This variant of \texttt{RuntimeError} encloses any error that was caused by a compiler malfunction and should be encountered by the user if the compiler has a bug or if the bytecode was modified
+  \item \texttt{CouldntParse}: This variant is returned when a value that was passed to a parsing function (like \texttt{num} and \texttt{chr}) couldn't be correctly processed
+  \item \texttt{DivisionByZero}: Returned when the user tries to divide a number by zero
+  \item \texttt{IndexOutOfBounds}: Returned when the user tries to get a value from an indexed collection using the callable \texttt{nth} and the collection is shorter than the index
+  \item \texttt{InvalidMapEntry}: Returned when, inside a function, a value is implicitly casted to a map entry, but the value isn't a vector with two elements
+  \item \texttt{IOError}: Returned when a input/output function returned an error instead of correctly printing/reading strings
+  \item \texttt{NotACallable}: Returned when a value was tried be executed as a callable, but it wasn't a builtin function nor a user-defined callable
+  \item \texttt{WrongArity}: This error has two variants (\texttt{WrongArityN} and \texttt{WrongArityS}), but both represent the same error: the user tried to call a callable with the wrong number of arguments
+  \item \texttt{WrongDataType}: Returned when a callable receives a value with an incorrect datatype, that the callable didn't expect
+\end{itemize}
+
+
+\chapter{About the compiler}
+
+\section{Tools and libraries}
+The compiler is written in Rust, and it has a couple of dependencies:
+\begin{itemize}
+  \item \texttt{lalrpop}: used as a lexer and parser for the language
+  \item \texttt{num}: used for its implementation of a fraction of 64 bit integers, \texttt{Rational64}
+  \item \texttt{smol\_str}: this package is used to keep small strings (less than 22 bytes) in the stack instead of allocating them in the heap
+\end{itemize}
+
+\section{Lexer and Parser}
+The grammar and tokens of the language are described in the file\\\texttt{miniclj-lib/src/lispparser.lalrpop}, included in appendix \ref{apdx:grammar}. It describes the following rules:
+\begin{itemize}
+  \item \texttt{SExprs}: A list of \texttt{SExpr}
+  \item \texttt{SExpr}: This rule encompasses the types of expressions \texttt{miniclj} accepts:
+  \begin{itemize}
+    \item simple expressions (calls to a function with arguments)
+    \item short lambdas (lambda functions where the argument is a \%)
+    \item lists (implemented as linked lists)
+    \item vectors (backed by an array)
+    \item maps (backed by a hashmap)
+    \item sets (backed by a hashset)
+    \item simple literals (described the next rule)
+  \end{itemize}
+  Every expression but the last one accepts a list of s-expressions (rule \texttt{SExpr}) between its opening and closing sign.
+  \item \texttt{Literal}: This rule has 4 different variants, and each one describes a different type of literal:
+  \begin{itemize}
+    \item \texttt{"nil"}, the nil value in \texttt{miniclj}
+    \item \texttt{Symbol}
+    \item \texttt{StringLiteral}
+    \item \texttt{NumberLiteral}
+  \end{itemize}
+  \item \texttt{NumberLiteral}: This rule parses a number from a string, and is exposed to the language so that it can be used by calling the builtin function \texttt{num}. It has two variants:
+  \begin{itemize}
+    \item \texttt{r"[-]?[0-9]+.[0-9]+"}: this regular expression describes a decimal number, that is then parsed into a fraction
+    \item \texttt{r"[-]?[0-9]+"}: this regular expression accepts integers, and is also parsed into a fraction with a denominator of 1
+  \end{itemize}
+  \item \texttt{List<T>}: This is a macro from \texttt{lalrpop}, and it is used to parse a list of parsers of type \texttt{T} separated by whitespace
+  \item \texttt{Symbol}: This rule describes the different type of symbols \texttt{miniclj} accepts, and it has 4 variants:
+  \begin{itemize}
+    \item \texttt{"\%"}: The argument for a short lambda
+    \item \texttt{ComparisonOp}
+    \item \texttt{FactorOp}
+    \item \texttt{r"[A-Za-z][A-Za-z0-9!?'\_-]*"}: this regular expression accepts most of the characters that can compose a symbol in Clojure, but I chose to discard some of them to simplify my language and reduce the parser conflicts. More information about symbols in Clojure can be found at \url{https://clojure.org/reference/reader#_symbols}
+  \end{itemize}
+  \item \texttt{ComparisonOp}: This rule includes the symbols used to compare values in \texttt{miniclj}. They are \texttt{=} (equals), \texttt{!=} (not equals), \texttt{>} (greater), \texttt{<} (less), \texttt{>=} (greater or equal) and \texttt{<=} (less or equal)
+  \item \texttt{FactorOp}: This rule includes the basic math operations: \texttt{+} (addition), \texttt{-} (subtraction), \texttt{*} (multiplication) and \texttt{/} (division)
+  \item \texttt{StringLiteral}: This last rule describes a string between double quotes
+\end{itemize}
+
+\section{Bytecode representation}
+\texttt{TODO}
+
+\section{Memory representation}
+\texttt{TODO}
+
+
+\chapter{About the virtual machine}
+\texttt{TODO}
+
+\section{Tools and libraries}
+\texttt{TODO}
+
+\section{Memory representation}
+\texttt{TODO}
+
+
+\chapter{Code example}
+\texttt{TODO}
+
+\section{Bytecode generated}
+\texttt{TODO}
+
+\section{Terminal output}
+\texttt{TODO}
+
+
+\chapter{Project structure}
+The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
+
+\section{\texttt{miniclj-lib}}
+This crate stores the main logic for the compiler, virtual machine and the shared code between them. This crate's unit tests are run for every new commit pushed to the main branch of the repo in a GitHub Actions worker, following the continuous integration pipeline described in the file \texttt{.github/workflows/ci.yml}.
+
+\section{\texttt{miniclj}}
+This crate stores only a couple of files; it exposes the compiler and vm functionality through a Command Line Interface. This crate compiles to an executable that can be called using the following subcommands for a different function each:
+\begin{itemize}
+  \item \texttt{check}: Check if a source code file can be correctly parsed 
+  \item \texttt{ast}: Print the abstract syntax tree from a source code file
+  \item \texttt{build}: Compile a source code file into a bytecode file
+  \item \texttt{exec}: Execute a bytecode file
+  \item \texttt{run}: Compile and execute a source code file
+\end{itemize}
+
+\section{\texttt{miniclj-wasm}}
+This crate compiles to a binary WebAssembly file, and exposes the functionality of the compiler and vm through JavaScript bindings so that they can be ran in a browser context. It exposes three functions, where each one accepts a string as the input code, and outputs either an structure with the output of the function or an error:
+\begin{itemize}
+  \item \texttt{ast}: This function prints the abstract syntax tree parsed from the code
+  \item \texttt{compile}: This function compiles the code and outputs the corresponding bytecode
+  \item \texttt{run}: This function compiles and executes the code, but with the following adaptations for the browser context:
+  \begin{itemize}
+    \item \texttt{read} calls are executed as \texttt{window.prompt} calls, where the browser displays an alert with a text input, which is then redirected to the program 
+    \item \texttt{print} and \texttt{println} instructions append its output to the global variable \\\texttt{window.minicljoutput}
+  \end{itemize}
+\end{itemize}
+
+\section{\texttt{playground}}
+This folder stores a simple, one page Next.js project where the \texttt{miniclj-wasm} is imported and executed for the code written in left side panel, and the output or the error for every function is displayed on the right side panel. The playground is built using GitHub Actions for each commit to the repo, following the continuous delivery pipeline described in the file \texttt{.github/workflows/cd.yml}
+
+% \inputminted{ANTLR}{/home/mario/git/MarioJim/ITC-Tec/Sem7/Compiladores/Tarea3_parte2/java_antlr4/src/main/antlr4/LittleDuck.g4}
+
+\appendix
+
+\chapter{Commit log}
+\label{apdx:commits}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/docs/commits.txt}
+
+\chapter{Weekly logs in Spanish}
+\label{apdx:weeklylogs}
+\inputminted[breaklines=true]{md}{/home/mario/git/MarioJim/miniclj/docs/logs.md}
+
+\chapter{Language grammar}
+\label{apdx:grammar}
+\inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/lispparser.lalrpop}
+
+\end{document}
