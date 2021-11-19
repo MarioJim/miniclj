@@ -170,7 +170,7 @@ The grammar and tokens of the language are described in the file \path{miniclj-l
 \end{itemize}
 
 \section{Compiler state}
-The compiler state is enclosed inside the \texttt{CompilerState} struct, inside file \path{miniclj-lib/src/compiler/state.rs} or in the appendix \ref{apdx:compstate}.
+The compiler state is enclosed inside the \texttt{CompilerState} struct, inside file \path{miniclj-lib/src/compiler/state.rs}.
 
 This structure is composed of 5 data structures:
 \begin{itemize}
@@ -268,24 +268,128 @@ The enum \texttt{Instruction} represents the type of instructions that the VM ca
 
 
 \chapter{About the virtual machine}
-TODO
 
 \section{Tools and libraries}
-TODO
+The virtual machine, also implemented in Rust, uses the same dependencies as the compiler through the \texttt{num} callable that parses a number from a string, plus the module \texttt{escape8259}, that exports a function used to escape some characters (like \texttt{$\backslash$n} to a newline character) when calling \texttt{print} or \texttt{println}.
+
+\section{Execution}
+The execution state is stored in the \texttt{VMState} structure, declared in file \path{miniclj-lib/src/vm/state.rs}. This structure is composed of 3 fields:
+\begin{itemize}
+  \item \texttt{constants}: A map of memory addresses to constants, read and constructed from the first part of the bytecode representation
+  \item \texttt{instructions}: A vector of instructions, read from the second part of the bytecode file
+  \item \texttt{global\_scope}: This field is implemented as a custom structure named \texttt{Scope} (declared in file \path{miniclj-lib/src/vm/scope.rs}), and it is composed of two vectors of values: one for declared variables and one for temporal values. This structure is used for global and local variables declared in the root scope, and a new \texttt{Scope} is created when executing user defined functions with local variables
+\end{itemize}
+
+The main function of the structure \texttt{VMState} is \texttt{execute}, which calls a private method named \texttt{inner\_execute}, implemented as a big match expression (like a switch statement) over the instructions that the virtual machine accepts.
+
+Another important method is \texttt{execute\_lambda} which, as the name implies, executes a lambda function defined by the user. It starts by checking the arity of the function, then creates a new \texttt{Scope}, inserts the local parameters at the start of the scope and also calls \texttt{inner\_execute}.
 
 \section{Memory representation}
-TODO
+As described earlier, values are stored inside two vectors in structure \texttt{Scope}. This structure has 4 methods: two \texttt{get} methods for temporal values and variables, which accept an index and return either the value of the vector at that index, or a \texttt{RuntimeError::CompilerError} when the value wasn't found; and two \texttt{store} methods, also for temporal values and variables, which receive an index and a \texttt{Value}, which is then stored in the corresponding vector.
+
+The \texttt{get} methods from \texttt{Scope} are called by a \texttt{get} method in \texttt{VMState}, which receives a reference to the current scope and a memory address, and then routes the request depending on the lifetime of the memory address:
+\begin{itemize}
+  \item In case that it has a \texttt{Constant} lifetime, this method checks the \texttt{constants} field in \texttt{VMState}
+  \item If the address has a \texttt{GlobalVar} lifetime, it checks the \texttt{global\_scope} field also in \texttt{VMState}
+  \item If the address has either a \texttt{LocalVar} or \texttt{Temporal} lifetime, the request is routed to the current scope passed to the function
+\end{itemize}
+
+The same process happens with the \texttt{store} function in \texttt{Scope}: \texttt{VMState} has a method called \texttt{store} which routes its requests depending on the lifetime of the address, with an exception for \texttt{Constant} addresses, which aren't supposed to be modified during runtime.
 
 
-\chapter{Code example}
-TODO
+\chapter{Code examples}
 
-\section{Bytecode generated}
-TODO
+\section{Cyclic factorial function}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/cyclic_factorial.clj}
 
-\section{Terminal output}
-TODO
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_factorial.mclj}
 
+\subsection{Output}
+\begin{minted}{text}
+The factorial of 15 is 1307674368000
+Finished in 26ms
+\end{minted}
+
+
+\section{Recursive factorial function}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/recursive_factorial.clj}
+
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_factorial.mclj}
+
+\subsection{Output}
+\begin{minted}{text}
+The factorial of 15 is 1307674368000
+Finished in 32ms
+\end{minted}
+
+
+\section{Cyclic Fibonacci function}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.clj}
+
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.mclj}
+
+\subsection{Output}
+\begin{minted}{text}
+The Fibonacci number 15 is 610
+Finished in 27ms
+\end{minted}
+
+
+\section{Recursive Fibonacci function}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/recursive_fibonacci.clj}
+
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_fibonacci.mclj}
+
+\subsection{Output}
+\begin{minted}{text}
+The Fibonacci number 15 is 610
+Finished in 143ms
+\end{minted}
+
+
+\section{Find an element in a list}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.clj}
+
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.mclj}
+
+\subsection{Output}
+\begin{minted}{text}
+List: '(2 6 8 4 3 5)
+Found element 3 in position 4
+Finished in 26ms
+\end{minted}
+
+\section{Sorting a list}
+\subsection{minclj code}
+% \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.clj}
+
+\subsection{Bytecode}
+% \inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.mclj}
+
+\subsection{Output}
+% \begin{minted}{text}
+% \end{minted}
+
+\section{Matrix multiplication}
+\subsection{minclj code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.clj}
+
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.mclj}
+
+\subsection{Output}
+% \begin{minted}{text}
+% \end{minted}
 
 \chapter{Project structure}
 The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
@@ -333,8 +437,5 @@ This folder stores a simple, one page Next.js project where the \texttt{miniclj-
 \label{apdx:grammar}
 \inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/lispparser.lalrpop}
 
-\chapter{CompilerState struct}
-\label{apdx:compstate}
-\inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/state.rs}
 
 \end{document}
