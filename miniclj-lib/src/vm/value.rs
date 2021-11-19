@@ -1,6 +1,6 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
-    fmt::{self, Display, Formatter},
+    fmt::{self, Debug, Display, Formatter},
     hash::{Hash, Hasher},
 };
 
@@ -13,7 +13,7 @@ use crate::{
     vm::{List, RuntimeError, RuntimeResult},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum Value {
     Callable(Box<dyn Callable>),
     Lambda(InstructionPtr, usize),
@@ -118,12 +118,12 @@ impl From<bool> for Value {
     }
 }
 
-impl Display for Value {
+impl Debug for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Value::Callable(c) => write!(f, "{}", c.name()),
+            Value::Callable(c) => write!(f, "fn_{}", c.name()),
             Value::Lambda(ptr, _) => write!(f, "fn@{}", ptr),
-            Value::List(l) => write!(f, "{}", l),
+            Value::List(l) => write!(f, "'{}", l),
             Value::Vector(v) => {
                 let string = v
                     .iter()
@@ -151,6 +151,28 @@ impl Display for Value {
             Value::String(s) => write!(f, "\"{}\"", s),
             Value::Number(n) => write!(f, "{}", n),
             Value::Nil => write!(f, "nil"),
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Callable(c) => write!(f, "{}", c.name()),
+            Value::Lambda(..) => write!(f, "{:?}", self),
+            Value::List(l) => write!(f, "{}", l),
+            Value::Vector(..) => write!(f, "{:?}", self),
+            Value::Set(..) => write!(f, "{:?}", self),
+            Value::Map(..) => write!(f, "{:?}", self),
+            Value::String(s) => write!(f, "{}", s),
+            Value::Number(n) => {
+                if n.denom() == &1 {
+                    write!(f, "{}", n.numer())
+                } else {
+                    write!(f, "{}/{}", n.numer(), n.denom())
+                }
+            }
+            Value::Nil => write!(f, ""),
         }
     }
 }

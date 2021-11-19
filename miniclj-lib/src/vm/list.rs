@@ -51,11 +51,11 @@ impl Display for List {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             List::Cons(first, rest) => {
-                write!(f, "'({}", first)?;
+                write!(f, "({}", first)?;
                 rest.inner_display(f)?;
                 write!(f, ")")
             }
-            List::EmptyList => write!(f, "'()"),
+            List::EmptyList => write!(f, "()"),
         }
     }
 }

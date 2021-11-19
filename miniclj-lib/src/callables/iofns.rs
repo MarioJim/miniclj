@@ -19,7 +19,13 @@ fn inner_print<T: Write>(writer: &mut T, args: Vec<Value>) -> std::io::Result<()
     }
     for v in args_iter {
         if let Value::String(s) = v {
-            writer.write_fmt(format_args!(" {}", unescape(&s).unwrap()))?;
+            match unescape(&s) {
+                Ok(a) => writer.write_fmt(format_args!(" {}", a))?,
+                Err(e) => {
+                    println!("{:?}", e);
+                    writer.write_all(b"")?;
+                }
+            }
         } else {
             writer.write_fmt(format_args!(" {}", v))?;
         }

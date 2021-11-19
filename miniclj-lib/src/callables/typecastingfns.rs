@@ -69,6 +69,7 @@ impl Callable for StringCast {
                 }
             })
             .collect::<String>();
+        println!("from str {}", formatted_args);
         Ok(Value::String(formatted_args))
     }
 }
