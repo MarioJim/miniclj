@@ -263,10 +263,14 @@ impl Callable for Loop {
         let mut args_iter = args.into_iter();
         let bindings_vector_arg = args_iter.next().unwrap();
         let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
+        let mut overriden_bindings = Vec::new();
 
         let mut symbols = HashSet::new();
         let mut binding_addrs = Vec::new();
         for (symbol, val) in bindings {
+            if let Some(overriden_addr) = state.get_symbol(&symbol) {
+                overriden_bindings.push((symbol.clone(), overriden_addr));
+            }
             let symbol_addr = state.new_address(Lifetime::LocalVar);
             let value_addr = state.compile(val)?;
 
@@ -287,6 +291,9 @@ impl Callable for Loop {
 
         for symbol in symbols {
             state.remove_symbol(&symbol);
+        }
+        for (ov_symbol, ov_address) in overriden_bindings {
+            state.insert_symbol(ov_symbol, ov_address);
         }
 
         Ok(result_addr)
@@ -326,11 +333,13 @@ impl Callable for Recur {
             ));
         }
 
+        let mut mov_instructions = Vec::new();
         for (arg, symbol_addr) in args.into_iter().zip(symbol_addrs.iter()) {
             let arg_addr = state.compile(arg)?;
-
-            let mov_instruction = Instruction::new_assignment(arg_addr, *symbol_addr);
-            state.add_instruction(mov_instruction);
+            mov_instructions.push(Instruction::new_assignment(arg_addr, *symbol_addr));
+        }
+        for instruction in mov_instructions {
+            state.add_instruction(instruction);
         }
 
         let goto_instruction = Instruction::new_jump(None);

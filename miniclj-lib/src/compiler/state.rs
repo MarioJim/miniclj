@@ -82,7 +82,10 @@ impl CompilerState {
         arg_names: Vec<SmolStr>,
         body: SExpr,
     ) -> Result<(), CompilationError> {
-        self.symbol_table = Rc::new(SymbolTable::new_local(self.symbol_table.clone()));
+        self.symbol_table = Rc::new(SymbolTable::new_local(
+            self.symbol_table.clone(),
+            arg_names.len(),
+        ));
         for (arg_idx, arg_name) in arg_names.into_iter().enumerate() {
             let addr = MemAddress::new_local_var(arg_idx);
             self.symbol_table.insert(arg_name, addr);

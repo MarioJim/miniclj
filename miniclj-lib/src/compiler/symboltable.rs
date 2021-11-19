@@ -33,12 +33,12 @@ impl Default for SymbolTable {
 }
 
 impl SymbolTable {
-    pub fn new_local(parent_table: Rc<SymbolTable>) -> SymbolTable {
+    pub fn new_local(parent_table: Rc<SymbolTable>, starting_var_count: usize) -> SymbolTable {
         SymbolTable::Local {
             parent_table,
             symbols: RefCell::new(HashMap::new()),
             temp_counter: RefCell::new(0),
-            var_counter: RefCell::new(0),
+            var_counter: RefCell::new(starting_var_count),
         }
     }
 
