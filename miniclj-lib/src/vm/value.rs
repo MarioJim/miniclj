@@ -42,7 +42,7 @@ impl Value {
         }
     }
 
-    pub fn as_int(&self) -> Result<i64, &'static str> {
+    pub fn as_i64(&self) -> Result<i64, &'static str> {
         if let Value::Number(n) = self {
             if n.is_integer() {
                 Ok(n.to_integer())
@@ -52,6 +52,10 @@ impl Value {
         } else {
             Err(self.type_str())
         }
+    }
+
+    pub fn as_usize(&self) -> Result<usize, &'static str> {
+        self.as_i64()?.try_into().map_err(|_| "a negative number")
     }
 
     pub fn as_bool(&self) -> Result<bool, &'static str> {

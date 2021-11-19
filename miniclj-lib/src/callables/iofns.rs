@@ -149,7 +149,15 @@ impl Callable for Read {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if !args.is_empty() {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "no arguments",
+                args.len(),
+            ));
+        }
+
         let mut buffer = String::new();
         std::io::stdin()
             .read_line(&mut buffer)
@@ -158,8 +166,16 @@ impl Callable for Read {
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         use std::io::{Error, ErrorKind};
+
+        if !args.is_empty() {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "no arguments",
+                args.len(),
+            ));
+        }
 
         let window = web_sys::window().expect("not running in a browser environment");
         let input = window

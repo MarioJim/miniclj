@@ -96,6 +96,14 @@ impl Callable for Ord {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a string",
+                args.len(),
+            ));
+        }
+
         let maybe_string = args.into_iter().next().unwrap();
         if let Value::String(s) = maybe_string {
             match s.chars().next() {
@@ -139,6 +147,14 @@ impl Callable for Chr {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a number",
+                args.len(),
+            ));
+        }
+
         let maybe_num = args.into_iter().next().unwrap();
         if let Value::Number(n) = maybe_num {
             if !n.is_integer() || n.is_negative() {

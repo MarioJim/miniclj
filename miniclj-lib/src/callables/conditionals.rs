@@ -27,6 +27,14 @@ impl Callable for IsTrue {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "one value",
+                args.len(),
+            ));
+        }
+
         let val = args.get(0).unwrap();
         Ok(Value::from(val.is_truthy()))
     }

@@ -51,6 +51,8 @@ impl Default for CallablesTable {
         add_fn!(table, collection::creation::Set);
         add_fn!(table, collection::creation::HashMap);
 
+        add_fn!(table, collection::generation::Range);
+
         add_fn!(table, collection::transducers::Map);
         add_fn!(table, collection::transducers::Filter);
         add_fn!(table, collection::transducers::Reduce);

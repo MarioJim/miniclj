@@ -1,5 +1,3 @@
-use num::{Signed, ToPrimitive};
-
 use crate::{
     callables::Callable,
     compiler::{CompilationError, CompilationResult, CompilerState},
@@ -27,6 +25,14 @@ impl Callable for First {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection",
+                args.len(),
+            ));
+        }
+
         let maybe_coll = args.into_iter().next().unwrap();
         let coll_as_list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -63,6 +69,14 @@ impl Callable for Rest {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection",
+                args.len(),
+            ));
+        }
+
         let maybe_coll = args.into_iter().next().unwrap();
         let coll_as_list = List::try_from(maybe_coll).map_err(|type_str| {
             RuntimeError::WrongDataType(self.name(), "a collection", type_str)
@@ -102,6 +116,14 @@ impl Callable for Cons {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a value and a collection",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let value = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -141,6 +163,14 @@ impl Callable for Conj {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.is_empty() {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection and any number of values",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
 
@@ -205,45 +235,34 @@ impl Callable for Nth {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection and an index",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let maybe_coll_type = maybe_coll.type_str();
-        let key = args_iter.next().unwrap();
+        let index = args_iter.next().unwrap().as_usize().map_err(|type_str| {
+            RuntimeError::WrongDataType(self.name(), "a positive number", type_str)
+        })?;
 
-        match (maybe_coll, key) {
-            (Value::List(l), Value::Number(n)) => {
-                if n.is_integer() && n.is_positive() {
-                    let idx = n.to_usize().unwrap();
-                    l.nth(idx)
-                        .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                } else {
-                    Err(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                }
-            }
-            (Value::Vector(v), Value::Number(n)) => {
-                if n.is_integer() && n.is_positive() {
-                    let idx = n.to_usize().unwrap();
-                    v.into_iter()
-                        .nth(idx)
-                        .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                } else {
-                    Err(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                }
-            }
-            (Value::String(s), Value::Number(n)) => {
-                if n.is_integer() && n.is_positive() {
-                    let idx = n.to_usize().unwrap();
-                    s.chars()
-                        .nth(idx)
-                        .map(|c| Value::String(String::from(c)))
-                        .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                } else {
-                    Err(RuntimeError::IndexOutOfBounds(maybe_coll_type))
-                }
-            }
-            (Value::List(_) | Value::Vector(_) | Value::String(_), key) => Err(
-                RuntimeError::WrongDataType(self.name(), "a number", key.type_str()),
-            ),
+        match maybe_coll {
+            Value::List(l) => l
+                .nth(index)
+                .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type)),
+            Value::Vector(v) => v
+                .into_iter()
+                .nth(index)
+                .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type)),
+            Value::String(s) => s
+                .chars()
+                .nth(index)
+                .ok_or(RuntimeError::IndexOutOfBounds(maybe_coll_type))
+                .map(|c| Value::String(String::from(c))),
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
                 "a collection",
@@ -279,6 +298,14 @@ impl Callable for Get {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection and a key",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_coll = args_iter.next().unwrap();
         let key = args_iter.next().unwrap();
@@ -286,32 +313,20 @@ impl Callable for Get {
         match maybe_coll {
             Value::List(_) => Ok(Value::Nil),
             Value::Vector(v) => {
-                if let Value::Number(n) = key {
-                    if n.is_integer() && n.is_positive() {
-                        let idx = n.to_usize().unwrap();
-                        Ok(v.into_iter().nth(idx).unwrap_or(Value::Nil))
-                    } else {
-                        Ok(Value::Nil)
-                    }
-                } else {
-                    Ok(Value::Nil)
-                }
+                let index = key.as_usize().map_err(|type_str| {
+                    RuntimeError::WrongDataType(self.name(), "a positive number", type_str)
+                })?;
+                Ok(v.into_iter().nth(index).unwrap_or(Value::Nil))
             }
             Value::Set(s) => Ok(s.get(&key).cloned().unwrap_or(Value::Nil)),
             Value::Map(m) => Ok(m.get(&key).cloned().unwrap_or(Value::Nil)),
             Value::String(s) => {
-                if let Value::Number(n) = key {
-                    if n.is_integer() && n.is_positive() {
-                        let idx = n.to_usize().unwrap();
-                        Ok(s.chars()
-                            .nth(idx)
-                            .map_or(Value::Nil, |c| Value::String(String::from(c))))
-                    } else {
-                        Ok(Value::Nil)
-                    }
-                } else {
-                    Ok(Value::Nil)
-                }
+                let index = key.as_usize().map_err(|type_str| {
+                    RuntimeError::WrongDataType(self.name(), "a positive number", type_str)
+                })?;
+                Ok(s.chars()
+                    .nth(index)
+                    .map_or(Value::Nil, |c| Value::String(String::from(c))))
             }
             _ => Err(RuntimeError::WrongDataType(
                 self.name(),
@@ -345,6 +360,14 @@ impl Callable for Count {
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection",
+                args.len(),
+            ));
+        }
+
         let maybe_coll = args.into_iter().next().unwrap();
         match maybe_coll {
             Value::List(l) => Ok(l.len()),
@@ -385,11 +408,31 @@ impl Callable for IsEmpty {
         }
     }
 
-    fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
-        Count
-            .execute(state, args)
-            .map(|count| Value::from(count.as_int().unwrap() == 0))
-            .map_err(|_| RuntimeError::WrongDataType(self.name(), "a collection", "another value"))
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 1 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a collection",
+                args.len(),
+            ));
+        }
+
+        let maybe_coll = args.into_iter().next().unwrap();
+        match maybe_coll {
+            Value::List(List::EmptyList) => Ok(true),
+            Value::List(List::Cons(..)) => Ok(false),
+            Value::Vector(v) => Ok(v.is_empty()),
+            Value::Set(s) => Ok(s.is_empty()),
+            Value::Map(m) => Ok(m.is_empty()),
+            Value::String(s) => Ok(s.is_empty()),
+            Value::Nil => Ok(true),
+            _ => Err(RuntimeError::WrongDataType(
+                self.name(),
+                "a collection",
+                maybe_coll.type_str(),
+            )),
+        }
+        .map(Value::from)
     }
 }
 

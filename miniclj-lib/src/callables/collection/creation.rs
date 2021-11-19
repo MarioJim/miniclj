@@ -18,9 +18,8 @@ impl Callable for List {
         Ok(state.get_callable_addr(Box::new(self.clone())))
     }
 
-    fn execute(&self, _: &VMState, mut args: Vec<Value>) -> RuntimeResult<Value> {
-        args.reverse();
-        Ok(Value::List(args.into_iter().collect()))
+    fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        Ok(Value::List(args.into_iter().rev().collect()))
     }
 }
 

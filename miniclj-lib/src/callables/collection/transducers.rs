@@ -30,6 +30,14 @@ impl Callable for Map {
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() < 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a function and at least one collection",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let fn_value = match maybe_fn {
@@ -100,6 +108,14 @@ impl Callable for Filter {
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a function and one collection",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
@@ -162,6 +178,14 @@ impl Callable for Reduce {
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
+        if args.len() != 2 {
+            return Err(RuntimeError::WrongArityS(
+                self.name(),
+                "a function and one collection",
+                args.len(),
+            ));
+        }
+
         let mut args_iter = args.into_iter();
         let maybe_fn = args_iter.next().unwrap();
         let maybe_coll = args_iter.next().unwrap();
