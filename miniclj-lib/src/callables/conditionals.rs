@@ -1,9 +1,8 @@
 use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState, SExpr},
+    callables::prelude::*,
+    compiler::{CompilationResult, SExpr},
     instruction::Instruction,
     memaddress::Lifetime,
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -14,16 +13,16 @@ impl Callable for IsTrue {
         "true?"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args == 1 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(self.name(), "<value>"))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -50,13 +49,18 @@ impl Callable for If {
         "if"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 3 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 3 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<condition> <true expression> <false expression>",
-            ));
+            ))
         }
+    }
+
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let cond_arg = args_iter.next().unwrap();
         let true_arg = args_iter.next().unwrap();
@@ -83,10 +87,6 @@ impl Callable for If {
         Ok(return_addr)
     }
 
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
-    }
-
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
@@ -105,8 +105,12 @@ impl Callable for And {
         "and"
     }
 
-    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
-        Ok(state.get_callable_addr(Box::new(self.clone())))
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        Ok(())
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -129,8 +133,12 @@ impl Callable for Or {
         "or"
     }
 
-    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
-        Ok(state.get_callable_addr(Box::new(self.clone())))
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        Ok(())
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {

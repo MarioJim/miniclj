@@ -1,8 +1,4 @@
-use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
-};
+use crate::callables::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Range;
@@ -12,19 +8,19 @@ impl Callable for Range {
         "range"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if (1..=3).contains(&num_args) {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(
                 self.name(),
                 "<stop num>) or (range <start> <stop>) or (range <start> <stop> <step>",
             ))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {

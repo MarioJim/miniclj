@@ -69,6 +69,11 @@ impl CompilerState {
                 if let Literal::Symbol(symbol) = literal {
                     self.symbol_table
                         .get(&symbol)
+                        .or_else(|| {
+                            self.callables_table
+                                .get(&symbol)
+                                .and_then(|callable| callable.get_as_address(self))
+                        })
                         .ok_or(CompilationError::SymbolNotDefined(symbol))
                 } else {
                     Ok(self.insert_constant(literal.into()))

@@ -1,10 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{List, RuntimeError, RuntimeResult, VMState, Value},
-};
+use crate::{callables::prelude::*, vm::List};
 
 #[derive(Debug, Clone)]
 pub struct Map;
@@ -14,19 +10,19 @@ impl Callable for Map {
         "map"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args >= 2 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <...collections>",
             ))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -92,19 +88,19 @@ impl Callable for Filter {
         "filter"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args == 2 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <collection>",
             ))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -162,19 +158,19 @@ impl Callable for Reduce {
         "reduce"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args == 2 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(
                 self.name(),
                 "<function> <collection>",
             ))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {

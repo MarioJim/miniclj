@@ -1,11 +1,10 @@
 use smol_str::SmolStr;
 
 use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
+    callables::prelude::*,
+    compiler::{CompilationResult, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -16,14 +15,18 @@ impl Callable for Lambda {
         "fn"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 2 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<args vector> <body>",
-            ));
+            ))
         }
+    }
 
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let args_vec_arg = args_iter.next().unwrap();
         let body_arg = args_iter.next().unwrap();
@@ -60,10 +63,6 @@ impl Callable for Lambda {
         state.compile_lambda(arg_names, body_arg)?;
         state.fill_jump(jump_lambda_instr_ptr, state.instruction_ptr());
         Ok(lambda_addr)
-    }
-
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
     }
 
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {

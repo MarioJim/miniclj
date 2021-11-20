@@ -1,10 +1,6 @@
 use std::collections::HashMap as RustHashMap;
 
-use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
-};
+use crate::callables::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct List;
@@ -14,8 +10,12 @@ impl Callable for List {
         "list"
     }
 
-    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
-        Ok(state.get_callable_addr(Box::new(self.clone())))
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        Ok(())
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -33,8 +33,12 @@ impl Callable for Vector {
         "vector"
     }
 
-    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
-        Ok(state.get_callable_addr(Box::new(self.clone())))
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        Ok(())
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -52,8 +56,12 @@ impl Callable for Set {
         "set"
     }
 
-    fn find_callable_by_arity(&self, state: &mut CompilerState, _: usize) -> CompilationResult {
-        Ok(state.get_callable_addr(Box::new(self.clone())))
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        Ok(())
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
@@ -71,19 +79,19 @@ impl Callable for HashMap {
         "hash-map"
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args % 2 == 0 {
-            Ok(state.get_callable_addr(Box::new(self.clone())))
+            Ok(())
         } else {
             Err(CompilationError::WrongArity(
                 self.name(),
                 "<...pairs of values>",
             ))
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(self.clone())))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {

@@ -1,10 +1,6 @@
 use num::Rational64;
 
-use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState},
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
-};
+use crate::callables::prelude::*;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ComparisonOp {
@@ -28,16 +24,16 @@ impl Callable for ComparisonOp {
         }
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult {
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
         if num_args == 0 {
             Err(CompilationError::EmptyArgs(self.name()))
         } else {
-            Ok(state.get_callable_addr(Box::new(*self)))
+            Ok(())
         }
+    }
+
+    fn get_as_address(&self, state: &mut CompilerState) -> Option<MemAddress> {
+        Some(state.get_callable_addr(Box::new(*self)))
     }
 
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {

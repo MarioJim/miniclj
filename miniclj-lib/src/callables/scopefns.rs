@@ -3,12 +3,11 @@ use std::collections::HashSet;
 use smol_str::SmolStr;
 
 use crate::{
-    callables::Callable,
-    compiler::{CompilationError, CompilationResult, CompilerState, Literal, SExpr},
+    callables::prelude::*,
+    compiler::{CompilationResult, Literal, SExpr},
     constant::Constant,
     instruction::Instruction,
     memaddress::Lifetime,
-    vm::{RuntimeError, RuntimeResult, VMState, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -19,13 +18,18 @@ impl Callable for Def {
         "def"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 2 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<symbol> <value>",
-            ));
+            ))
         }
+    }
+
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let symbol_arg = args_iter.next().unwrap();
         let value_arg = args_iter.next().unwrap();
@@ -49,10 +53,6 @@ impl Callable for Def {
         Ok(value_addr)
     }
 
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
-    }
-
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
@@ -71,14 +71,18 @@ impl Callable for Defn {
         "defn"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 3 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 3 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<symbol> <args vector> <body>",
-            ));
+            ))
         }
+    }
 
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let symbol_arg = args_iter.next().unwrap();
         let args_vec_arg = args_iter.next().unwrap();
@@ -135,10 +139,6 @@ impl Callable for Defn {
         Ok(lambda_global_addr)
     }
 
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
-    }
-
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
@@ -190,14 +190,18 @@ impl Callable for Let {
         "let"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 2 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<bindings vector> <body>",
-            ));
+            ))
         }
+    }
 
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let bindings_vector_arg = args_iter.next().unwrap();
         let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
@@ -230,10 +234,6 @@ impl Callable for Let {
         Ok(result_addr)
     }
 
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
-    }
-
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
@@ -252,14 +252,18 @@ impl Callable for Loop {
         "loop"
     }
 
-    fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        if args.len() != 2 {
-            return Err(CompilationError::WrongArity(
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError> {
+        if num_args == 2 {
+            Ok(())
+        } else {
+            Err(CompilationError::WrongArity(
                 self.name(),
                 "<bindings vector> <body>",
-            ));
+            ))
         }
+    }
 
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
         let mut args_iter = args.into_iter();
         let bindings_vector_arg = args_iter.next().unwrap();
         let bindings = as_bindings_vector(self.name(), bindings_vector_arg)?;
@@ -299,10 +303,6 @@ impl Callable for Loop {
         Ok(result_addr)
     }
 
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
-    }
-
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {
         Err(RuntimeError::CompilerError(format!(
             "Compiler shouldn't output \"{}\" calls",
@@ -319,6 +319,10 @@ pub struct Recur;
 impl Callable for Recur {
     fn name(&self) -> &'static str {
         "recur"
+    }
+
+    fn check_arity(&self, _: usize) -> Result<(), CompilationError> {
+        unreachable!()
     }
 
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
@@ -349,10 +353,6 @@ impl Callable for Recur {
         state.push_loop_jump(jump_ptr, symbol_addrs);
 
         Ok(state.new_address(Lifetime::Temporal))
-    }
-
-    fn find_callable_by_arity(&self, _: &mut CompilerState, _: usize) -> CompilationResult {
-        unimplemented!()
     }
 
     fn execute(&self, _: &VMState, _: Vec<Value>) -> RuntimeResult<Value> {

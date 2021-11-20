@@ -108,3 +108,12 @@ impl std::fmt::Debug for CallablesTable {
         write!(f, "CallablesTable({} functions included)", self.0.len())
     }
 }
+
+pub mod prelude {
+    pub use super::Callable;
+    pub use crate::{
+        compiler::{CompilationError, CompilerState},
+        memaddress::MemAddress,
+        vm::{RuntimeError, RuntimeResult, VMState, Value},
+    };
+}

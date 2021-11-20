@@ -13,7 +13,16 @@ pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
 
     fn compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
-        let callable_addr = self.find_callable_by_arity(state, args.len())?;
+        self.check_arity(args.len())?;
+        self.inner_compile(state, args)
+    }
+
+    fn check_arity(&self, num_args: usize) -> Result<(), CompilationError>;
+
+    fn inner_compile(&self, state: &mut CompilerState, args: Vec<SExpr>) -> CompilationResult {
+        let callable_addr = self
+            .get_as_address(state)
+            .expect("Callable didn't override either get_as_address or inner_compile");
 
         let arg_addrs = args
             .into_iter()
@@ -27,11 +36,9 @@ pub trait Callable: Display + Debug + DynClone {
         Ok(res_addr)
     }
 
-    fn find_callable_by_arity(
-        &self,
-        state: &mut CompilerState,
-        num_args: usize,
-    ) -> CompilationResult;
+    fn get_as_address(&self, _state: &mut CompilerState) -> Option<MemAddress> {
+        None
+    }
 
     fn execute(&self, state: &VMState, args: Vec<Value>) -> RuntimeResult<Value>;
 }
