@@ -12,6 +12,7 @@ mod callable;
 mod collection;
 mod comparisonops;
 mod conditionals;
+mod cycles;
 mod factorops;
 mod groupingfns;
 mod iofns;
@@ -71,6 +72,9 @@ impl Default for CallablesTable {
         add_fn!(table, conditionals::And);
         add_fn!(table, conditionals::Or);
 
+        add_fn!(table, cycles::Loop);
+        add_fn!(table, cycles::Recur);
+
         add_fn!(table, factorops::FactorOp::Add);
         add_fn!(table, factorops::FactorOp::Sub);
         add_fn!(table, factorops::FactorOp::Mul);
@@ -87,8 +91,6 @@ impl Default for CallablesTable {
         add_fn!(table, scopefns::Def);
         add_fn!(table, scopefns::Defn);
         add_fn!(table, scopefns::Let);
-        add_fn!(table, scopefns::Loop);
-        add_fn!(table, scopefns::Recur);
 
         add_fn!(table, typecastingfns::NumberCast);
         add_fn!(table, typecastingfns::StringCast);
