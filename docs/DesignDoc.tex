@@ -326,6 +326,17 @@ The project is structured in 4 different folders; 3 Rust crates part of the root
 \section{\texttt{miniclj-lib}}
 This crate stores the main logic for the compiler, virtual machine and the shared code between them. This crate's unit tests are run for every new commit pushed to the main branch of the repo in a GitHub Actions worker, following the continuous integration pipeline described in the file \texttt{.github/workflows/ci.yml}.
 
+This crate is divided in 7 modules:
+\begin{itemize}
+  \item \texttt{callables}: Stores the callables available in the language and exposes them using the \texttt{CallablesTable} struct
+  \item \texttt{compiler}: Stores the mechanisms and structures used specifically during the compilation process
+  \item \texttt{constant}: Stores the implementation of the \texttt{Constant} enum
+  \item \texttt{instruction}: Stores the implementation of the \texttt{Instruction} enum
+  \item \texttt{memaddress}: Stores the implementation of the \texttt{MemAddress} struct
+  \item \texttt{parsers}: Stores the parsers generated using \texttt{lalrpop}
+  \item \texttt{vm}: Stores the mechanisms and structures used specifically during the execution
+\end{itemize}
+
 \section{\texttt{miniclj}}
 This crate stores only a couple of files; it exposes the compiler and vm functionality through a Command Line Interface. This crate compiles to an executable that can be called using the following subcommands for a different function each:
 \begin{itemize}
@@ -468,7 +479,7 @@ Finished in 18ms
 
 \chapter{Language grammar}
 \label{apdx:grammar}
-\inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/lispparser.lalrpop}
+\inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/parsers/lispparser.lalrpop}
 
 
 \end{document}
