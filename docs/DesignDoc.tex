@@ -41,7 +41,7 @@
     {\huge
     miniclj\par}
     {\LARGE
-    Final documentation\par}
+    Design document\par}
     \vspace{4\baselineskip}
     {\Large
     Mario Emilio Jiménez Vizcaíno\\ A01173359\par}
@@ -56,12 +56,16 @@
 
 \tableofcontents
 
+\pagebreak
+
 \chapter{About the project}
 \section{Project scope}
-TODO
+This project's aim is to create a compiler and virtual machine for a lisp-based language with similar semantics to Clojure. The base functions and data structures will be supported, and they must be accessible either through a Command-Line Interface or inside a web context.
 
 \section{Requirements}
-TODO
+\begin{itemize}
+  \item TODO
+\end{itemize}
 
 \section{Development process}
 The development of the language can be tracked from its GitHub repository here: \\\url{https://github.com/MarioJim/miniclj}. The list of commits since the last time this document was generated can also be found in appendix \ref{apdx:commits}.
@@ -70,7 +74,7 @@ The development of the language can be tracked from its GitHub repository here: 
 During the development I've also kept a weekly log in Spanish of my progress. It can be found in the README.md file in the root directory, or in appendix \ref{apdx:weeklylogs}.
 
 \subsection{Final thoughts}
-TODO
+I would say that this project has helped me learn more about how complex compilers are, because, even though the compiler I wrote is reasonably simple, I've had to build strong abstractions over many of the simple functions of my language, and making sure my abstractions work correctly during compilation and execution has been the hardest challenge I've encountered in this project.
 
 
 \chapter{About the language}
@@ -297,6 +301,38 @@ The \texttt{get} methods from \texttt{Scope} are called by a \texttt{get} method
 The same process happens with the \texttt{store} function in \texttt{Scope}: \texttt{VMState} has a method called \texttt{store} which routes its requests depending on the lifetime of the address, with an exception for \texttt{Constant} addresses, which aren't supposed to be modified during runtime.
 
 
+\chapter{Project structure}
+The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
+
+\section{\texttt{miniclj-lib}}
+This crate stores the main logic for the compiler, virtual machine and the shared code between them. This crate's unit tests are run for every new commit pushed to the main branch of the repo in a GitHub Actions worker, following the continuous integration pipeline described in the file \texttt{.github/workflows/ci.yml}.
+
+\section{\texttt{miniclj}}
+This crate stores only a couple of files; it exposes the compiler and vm functionality through a Command Line Interface. This crate compiles to an executable that can be called using the following subcommands for a different function each:
+\begin{itemize}
+  \item \texttt{check}: Check if a source code file can be correctly parsed
+  \item \texttt{ast}: Print the abstract syntax tree from a source code file
+  \item \texttt{build}: Compile a source code file into a bytecode file
+  \item \texttt{exec}: Execute a bytecode file
+  \item \texttt{run}: Compile and execute a source code file
+\end{itemize}
+
+\section{\texttt{miniclj-wasm}}
+This crate compiles to a binary WebAssembly file, and exposes the functionality of the compiler and vm through JavaScript bindings so that they can be ran in a browser context. It exposes three functions, where each one accepts a string as the input code, and outputs either an structure with the output of the function or an error:
+\begin{itemize}
+  \item \texttt{ast}: This function prints the abstract syntax tree parsed from the code
+  \item \texttt{compile}: This function compiles the code and outputs the corresponding bytecode
+  \item \texttt{run}: This function compiles and executes the code, but with the following adaptations for the browser context:
+  \begin{itemize}
+    \item \texttt{read} calls are executed as \texttt{window.prompt} calls, where the browser displays an alert with a text input, which is then redirected to the program
+    \item \texttt{print} and \texttt{println} instructions append its output to the global variable \\\texttt{window.minicljoutput}
+  \end{itemize}
+\end{itemize}
+
+\section{\texttt{playground}}
+This folder stores a simple, one page Next.js project where the \texttt{miniclj-wasm} is imported and executed for the code written in left side panel, and the output or the error for every function is displayed on the right side panel. The playground is built using GitHub Actions for each commit to the repo, following the continuous delivery pipeline described in the file \texttt{.github/workflows/cd.yml}
+
+
 \chapter{Code examples}
 
 \section{Cyclic factorial function}
@@ -398,37 +434,6 @@ A x B: [[36 -12] [-1 2]]
 B x A: [[8 3 7] [11 9 14] [-6 27 21]]
 Finished in 18ms
 \end{minted}
-
-\chapter{Project structure}
-The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
-
-\section{\texttt{miniclj-lib}}
-This crate stores the main logic for the compiler, virtual machine and the shared code between them. This crate's unit tests are run for every new commit pushed to the main branch of the repo in a GitHub Actions worker, following the continuous integration pipeline described in the file \texttt{.github/workflows/ci.yml}.
-
-\section{\texttt{miniclj}}
-This crate stores only a couple of files; it exposes the compiler and vm functionality through a Command Line Interface. This crate compiles to an executable that can be called using the following subcommands for a different function each:
-\begin{itemize}
-  \item \texttt{check}: Check if a source code file can be correctly parsed 
-  \item \texttt{ast}: Print the abstract syntax tree from a source code file
-  \item \texttt{build}: Compile a source code file into a bytecode file
-  \item \texttt{exec}: Execute a bytecode file
-  \item \texttt{run}: Compile and execute a source code file
-\end{itemize}
-
-\section{\texttt{miniclj-wasm}}
-This crate compiles to a binary WebAssembly file, and exposes the functionality of the compiler and vm through JavaScript bindings so that they can be ran in a browser context. It exposes three functions, where each one accepts a string as the input code, and outputs either an structure with the output of the function or an error:
-\begin{itemize}
-  \item \texttt{ast}: This function prints the abstract syntax tree parsed from the code
-  \item \texttt{compile}: This function compiles the code and outputs the corresponding bytecode
-  \item \texttt{run}: This function compiles and executes the code, but with the following adaptations for the browser context:
-  \begin{itemize}
-    \item \texttt{read} calls are executed as \texttt{window.prompt} calls, where the browser displays an alert with a text input, which is then redirected to the program 
-    \item \texttt{print} and \texttt{println} instructions append its output to the global variable \\\texttt{window.minicljoutput}
-  \end{itemize}
-\end{itemize}
-
-\section{\texttt{playground}}
-This folder stores a simple, one page Next.js project where the \texttt{miniclj-wasm} is imported and executed for the code written in left side panel, and the output or the error for every function is displayed on the right side panel. The playground is built using GitHub Actions for each commit to the repo, following the continuous delivery pipeline described in the file \texttt{.github/workflows/cd.yml}
 
 
 \appendix
