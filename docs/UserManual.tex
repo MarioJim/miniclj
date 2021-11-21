@@ -12,6 +12,8 @@
 \usepackage{graphicx}
 \usepackage{sectsty}
 \usepackage{titlesec}
+\usepackage{url}
+\usepackage{hyperref}
 
 \usepackage{xcolor}
 \definecolor{LightGray}{gray}{0.9}
@@ -39,7 +41,9 @@ User Manual\par}}
 \tableofcontents
 
 \chapter{About the language}
-This project's aim is to create a compiler and virtual machine for a lisp-based language with similar semantics to Clojure. The base functions and data structures will be supported, and they must be accessible either through a Command-Line Interface or inside a web context.
+\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are more collection types (vectors, sets and maps) and support for strings as lists of characters.
+
+An online version of the language can be found in \href{https://mariojim.github.io/miniclj/}{\texttt{miniclj}'s playground at mariojim.github.io/miniclj/}.
 
 \section{Differences and limitations compared to Clojure}
 Other than not including a broader standard library compared to Clojure, miniclj has some differences and limitations, like:
@@ -52,19 +56,83 @@ Other than not including a broader standard library compared to Clojure, miniclj
 \end{itemize}
 
 \chapter{Data types}
+\section{Symbols}
+Symbols are used to identify values declared in the current scope or in the global scope. They must start with a letter (upper case or lower case), and they can be followed by any number of letters, numbers, or symbols "!", "?", "'", "\_" and "-". Other symbols are used for \hyperref[ComparisonOp]{comparison operations (described in section \ref{ComparisonOp})}, \hyperref[FactorOp]{factor operations (described in section \ref{FactorOp})}, and for the only argument in lambda functions declared using the \hyperref[Lambdas]{shorthand form (explained in section \ref{Lambdas})}.
+\begin{minted}{clojure}
+my-var
+my_global_var
+VaLuE'19_-!?
+%
+\end{minted}
+
 \section{Numbers}
+Numbers are internally represented as fractions of signed 64 bit integers, using \href{https://docs.rs/num/0.4.0/num/rational/type.Rational64.html}{\texttt{num}'s \texttt{Rational64} structure}. Integers are parsed as they are, with a denominator of 1, and decimals are parsed with an power of 10 as a denominator.
+\begin{minted}{clojure}
+26
+18.34
+\end{minted}
 
 \section{Strings}
-
-\section{Lists}
-
-\section{Vectors}
-
-\section{Maps}
-
-\section{Sets}
+Strings are enclosed in double quotes, and they support RFC8259-compliant escaping for unicode characters ("\textbackslash u0041") and other escape codes such as the newline ("\textbackslash n"). Strings are stored using \href{https://doc.rust-lang.org/stable/std/string/struct.String.html}{Rust' \texttt{String}}, and therefore adhere to Rust string rules, such as only being constructed from valid UTF-8 characters. In some functions it can be implicitly casted to a list, where its elements are valid UTF-8 chars.
+\begin{minted}{clojure}
+"a string"
+"a string\n using escaped\n characters"
+\end{minted}
 
 \section{Nil}
+A value meaning "nothing" or "no value".
+\begin{minted}{clojure}
+nil
+\end{minted}
+
+\section{Lists}
+An ordered collection of values represented by a linked list. Insertion and deletion from the front are constant time operations, but searching and getting a value from the middle execute linear time.
+\begin{minted}{clojure}
+'()
+'(1 2 "string" 3)
+\end{minted}
+
+\section{Vectors}
+An ordered collection of values internally represented by a \href{https://doc.rust-lang.org/std/vec/struct.Vec.html}{Rust \texttt{Vec}}. Insertion and deletion from the back, and getting a value using its index execute in constant time.
+\begin{minted}{clojure}
+[]
+[1 2 3]
+\end{minted}
+
+\section{Maps}
+An unordered collection of key-value pairs stored as a \href{https://doc.rust-lang.org/std/collections/struct.HashMap.html}{Rust HashMap}. Insertion, deletion and getting a value by its key are constant time operations.
+\begin{minted}{clojure}
+{}
+{"key" 23 "another key" 87}
+\end{minted}
+
+\section{Sets}
+An unordered collection of values stored as a \href{https://doc.rust-lang.org/std/collections/struct.HashSet.html}{Rust HashSet}. Insertion, deletion and getting a value are constant time operations.
+\begin{minted}{clojure}
+#{}
+#{"string" 23 87}
+\end{minted}
+
+\section{Callables}
+\subsection{User-defined lambdas}
+\label{Lambdas}
+New functions can be declared in two different ways:
+\begin{itemize}
+    \item Using the shorthand syntax, in which the body of the function is preceded by a hash symbol (\#), and the only argument's name is a percent symbol (\%).
+    \item Using the \texttt{fn} callable, which expects two arguments: the vector of argument names and the body of the function
+\end{itemize}
+\begin{minted}{clojure}
+#(+ % 1)
+(fn [arg1 arg2]
+    expression)
+\end{minted}
+
+\subsection{Built-in functions}
+miniclj includes many different functions, described in the next chapter. Some examples of its uses are:
+\begin{minted}{clojure}
+(count collection)
+(map #(* % 5) collection)
+\end{minted}
 
 
 \chapter{Callables}
@@ -74,36 +142,272 @@ Other than not including a broader standard library compared to Clojure, miniclj
 \begin{minted}{clojure}
 (first collection)
 \end{minted}
+Returns the first item in an ordered collection. In an unordered collection, it returns a random item.
 
-Returns the first item in the collection. If the collect
+\subsubsection{\texttt{rest}}
+\begin{minted}{clojure}
+(rest collection)
+\end{minted}
+Returns a list of the items after the first.
+
+\subsubsection{\texttt{nth}}
+\begin{minted}{clojure}
+(nth collection index)
+\end{minted}
+Returns the value of the collection at the index, or throws an \texttt{IndexOutOfBounds} runtime error if the index is bigger than the length of the collection.
+
+\subsubsection{\texttt{get}}
+\begin{minted}{clojure}
+(get collection key)
+\end{minted}
+For vectors, accepts positive integers as keys and returns the value in that position. For maps, it returns the value of the key passed. For sets it returns the value if it is found. In case the key isn't found, or the first argument isn't any of those collections, it returns \texttt{nil}.
+
+\subsubsection{\texttt{count}}
+\begin{minted}{clojure}
+(count collection)
+\end{minted}
+Returns the count of items in a collection, or the number of key-value pairs in a map.
+
+\subsubsection{\texttt{empty?}}
+\begin{minted}{clojure}
+(empty? collection)
+\end{minted}
+Returns a 0 or 1 number depending on if the collection's length is 0 or greater.
 
 
 \subsection{Creation}
+\subsubsection{\texttt{list}}
+\begin{minted}{clojure}
+(list value1 value2)
+\end{minted}
+Used to construct a list. Accepts any number of arguments.
+
+\subsubsection{\texttt{vector}}
+\begin{minted}{clojure}
+(vector value1 value2)
+\end{minted}
+Used to construct a vector. Accepts any number of arguments.
+
+\subsubsection{\texttt{set}}
+\begin{minted}{clojure}
+(set value1 value2)
+\end{minted}
+Used to construct a set. Accepts any number of arguments.
+
+\subsubsection{\texttt{hash-map}}
+\begin{minted}{clojure}
+(hash-map key1 value2 key2 value2)
+\end{minted}
+Used to construct a map. Accepts a pair number of arguments, where the values in odd positions are keys and the values in even positions are used as values for their preceding keys.
+
 
 \subsection{Generation}
+\subsubsection{\texttt{range}}
+\begin{minted}{clojure}
+(range stop)
+(range start stop)
+(range start stop step)
+\end{minted}
+Returns a list of numbers from \texttt{start} (inclusive, defaults to 0), to \texttt{stop} (exclusive), in steps of size \texttt{step} (defaults to 1).
+
 
 \subsection{Modification}
+\subsubsection{\texttt{cons}}
+\begin{minted}{clojure}
+(cons value collection)
+\end{minted}
+Creates a new list with the value appended to the start.
+
+\subsubsection{\texttt{conj}}
+\begin{minted}{clojure}
+(conj collection value1 value2)
+\end{minted}
+Creates a new collection with the value added to it. In maps it expects a vector of two elements: a key and a value.
+
+\subsubsection{\texttt{del}}
+\begin{minted}{clojure}
+(del collection key1 key2)
+\end{minted}
+Creates a new unordered collection with a key removed from it. In maps it removes the key-value pair, and it sets it removes the value.
+
 
 \subsection{Transducers}
+\subsubsection{\texttt{map}}
+\begin{minted}{clojure}
+(map fun collection1 collection2)
+\end{minted}
+Returns a list of the results of applying the function \texttt{fun} to the first element of every collection, followed by the result of applying the function \texttt{fun} to the second element of every collection, and so on until any collection is exhausted. Accepts at least one collection.
+
+\subsubsection{\texttt{filter}}
+\begin{minted}{clojure}
+(filter predicate collection)
+\end{minted}
+Returns a list of the elements of the collection where the function \texttt{predicate}, applied to the element, returned a truthy value
+
+\subsubsection{\texttt{reduce}}
+\begin{minted}{clojure}
+(reduce accumulator collection)
+\end{minted}
+If \texttt{collection} is empty, it returns the result of calling the function \texttt{accumulator} with no arguments. If \texttt{collection} has one element, it returns the element. If \texttt{collection} has two or more elements, \texttt{reduce} calls \texttt{accumulator} with the first two elements, and then with that result and the next element, until there are no more elements.
 
 
 \section{Comparison operations}
+\label{ComparisonOp}
+\subsubsection{\texttt{=}, \texttt{!=}}
+\begin{minted}{clojure}
+(= value1 value2)
+(!= value1 value2)
+\end{minted}
+Checks if two or more values are or aren't equal. If the function receives only one element it returns 1 for \texttt{=} and 0 for \texttt{!=}.
+
+\subsubsection{\texttt{>}, \texttt{<}, \texttt{>=}, \texttt{<=}}
+\begin{minted}{clojure}
+(> number1 number2)
+(< number1 number2)
+(>= number1 number2)
+(<= number1 number2)
+\end{minted}
+Checks if two or more numbers are in monotonically decreasing order for \texttt{>}, monotonically increasing for \texttt{<}, monotonically non-increasing for \texttt{>=} and monotonically non-decreasing for \texttt{<=}. If the function receives one number it returns 1.
+
 
 \section{Conditionals}
+\subsubsection{\texttt{true?}}
+\begin{minted}{clojure}
+(true? value)
+\end{minted}
+Checks if a value is truthy or not. Only falsy values are \texttt{nil} and \texttt{0}.
+
+\subsubsection{\texttt{if}}
+\begin{minted}{clojure}
+(if condition true-value false-value)
+\end{minted}
+Receives three expressions as arguments. If the first argument, \texttt{condition}, evaluates to a truthy value, the second argument, \texttt{true-value} is evaluated and returned. Otherwise it evaluates and returns the third value, \texttt{false-value}.
+
+\subsubsection{\texttt{and}}
+\begin{minted}{clojure}
+(and condition1 condition2)
+\end{minted}
+Checks if every condition evaluates to a truthy value. If no conditions are passed, it returns \texttt{1}.
+
+\subsubsection{\texttt{or}}
+\begin{minted}{clojure}
+(or condition1 condition2)
+\end{minted}
+Checks if at least one condition evaluates to a truthy value. If no conditions are passed, it returns \texttt{0}.
 
 \section{Cycles}
+\subsubsection{\texttt{loop}}
+\begin{minted}{clojure}
+(loop [symbol1 value1 symbol2 value2]
+    expression)
+\end{minted}
+Receives two arguments: a vector of symbol-value pairs, saved as local variables, and an expression that can now call \texttt{recur} to be evaluated again but with another set of values associated to the initial symbols.
+
+\subsubsection{\texttt{recur}}
+\begin{minted}{clojure}
+(recur value1 value2)
+\end{minted}
+Receives as many arguments as the last enclosing \texttt{loop} call had symbols. Re-evaluates the last enclosing \texttt{loop} call with the values provided as arguments.
+
 
 \section{Factor operations}
+\label{FactorOp}
+\subsubsection{\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}}
+\begin{minted}{clojure}
+(+ number1 number2)
+(- number1 number2)
+(* number1 number2)
+(/ number1 number2)
+\end{minted}
+Executes the operation specified on the numbers passed as arguments. When passed no arguments:
+\begin{itemize}
+    \item \texttt{+} returns 0
+    \item \texttt{*} returns 1
+    \item \texttt{-} and \texttt{/} return a \texttt{WrongArity} error
+\end{itemize}
+When passed one argument:
+\begin{itemize}
+    \item \texttt{+} and \texttt{*} return the argument
+    \item \texttt{-} returns the argument multiplied by -1
+    \item \texttt{/} returns the multiplicative inverse of the argument (1 divided by the argument)
+\end{itemize}
+
 
 \section{Grouping functions}
+\subsubsection{\texttt{do}}
+\begin{minted}{clojure}
+(do
+    expression1
+    expression2)
+\end{minted}
+Evaluates the expressions and returns the result of the last one. When passed no expressions it returns \texttt{nil}.
+
 
 \section{I/O functions}
+\subsubsection{\texttt{print}, \texttt{println}}
+\begin{minted}{clojure}
+(print value1 value2)
+(println value1 value2)
+\end{minted}
+In the CLI version, these functions print to stdout the arguments separated by spaces.
+In the WASM version, these functions append their output to a variable in the global \texttt{window} object named \texttt{minicljoutput}.
+Accepts any number of arguments.
 
-\section{Lambda functions}
+\subsubsection{\texttt{read}}
+\begin{minted}{clojure}
+(read)
+\end{minted}
+In the CLI version, this function reads a line from stdin and returns a string.
+In the WASM version, this function calls \texttt{window.prompt} for the user to input a string.
+This functions accepts no arguments.
+
 
 \section{Scope functions}
+\subsubsection{\texttt{def}}
+\begin{minted}{clojure}
+(def symbol value)
+\end{minted}
+Creates a global variable, referred by the identifier \texttt{symbol}, with a value of \texttt{value}.
+
+\subsubsection{\texttt{defn}}
+\begin{minted}{clojure}
+(defn symbol [argument1 argument2]
+    expression)
+\end{minted}
+Creates a global user-defined function, referred by the identifier \texttt{symbol}. The other two arguments are a vector of argument names and an expression to be evaluated.
+
+\subsubsection{\texttt{let}}
+\begin{minted}{clojure}
+(let [symbol1 value1 symbol2 value2]
+    expression)
+\end{minted}
+Creates local variables. This callable expects two arguments: a vector of key-value pairs and an expression which can use the variables defined in the vector. 
+
 
 \section{Typecasting functions}
+\subsubsection{\texttt{num}}
+\begin{minted}{clojure}
+(num string)
+\end{minted}
+Parses a string into a number. Returns a \texttt{CouldntParse} error otherwise.
+
+\subsubsection{\texttt{str}}
+\begin{minted}{clojure}
+(str value1 value2)
+\end{minted}
+Prints the values to a string. Accepts any number of arguments.
+
+\subsubsection{\texttt{ord}}
+\begin{minted}{clojure}
+(ord string)
+\end{minted}
+Returns the numerical value of the first character in the string.
+
+\subsubsection{\texttt{chr}}
+\begin{minted}{clojure}
+(chr number)
+\end{minted}
+Returns the UTF-8 character represented by the number, or a \texttt{CouldntParse} error in case no character corresponds to that number.
 
 
 \end{document}

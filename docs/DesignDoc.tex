@@ -9,6 +9,7 @@
 \RedeclareSectionCommand[style=section]{chapter}
 
 \usepackage{graphicx}
+\usepackage[export]{adjustbox}
 \usepackage{sectsty}
 \usepackage{titlesec}
 \usepackage{url}
@@ -45,6 +46,10 @@
     \vspace{4\baselineskip}
     {\Large
     Mario Emilio Jiménez Vizcaíno\\ A01173359\par}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=100pt]{firma.png}
+    \end{figure}
     \vfill
     Elda Guadalupe Quiroga\par
     Héctor Gibrán Ceballos\par
@@ -63,18 +68,29 @@
 This project's aim is to create a compiler and virtual machine for a lisp-based language with similar semantics to Clojure. The base functions and data structures will be supported, and they must be accessible either through a Command-Line Interface or inside a web context.
 
 \section{Requirements}
-\begin{itemize}
-  \item TODO
-\end{itemize}
+\begin{enumerate}
+  \item The compiler must be able to parse and recognize s-expressions.
+  \item The compiler must include a specific syntax for creating inline data structures such as lists, vectors, maps and sets
+  \item The compiler must check for lexic, syntax and semantic errors, and display an appropiate error message in these cases
+  \item The compiler must emit bytecode similar to quadruples, translating symbols to memory addresses, and the tree-based structure of s-expressions to a list of instructions
+  \item The virtual machine must be able to execute the bytecode produced by the compiler
+  \item The virtual machine must check semantic errors that couldn't be checked during compilation, such as the arity of callables and user defined functions
+  \item Both the compiler and virtual machine must use data structures that enable them to do their job efficiently and without wasting memory
+\end{enumerate}
+
+Some test cases for these requirements can be found in \hyperref[examples]{section \ref{examples}: Code examples}.
 
 \section{Development process}
-The development of the language can be tracked from its GitHub repository here: \\\url{https://github.com/MarioJim/miniclj}. The list of commits since the last time this document was generated can also be found in appendix \ref{apdx:commits}.
+The development of the language can be tracked from its \href{https://github.com/MarioJim/miniclj}{GitHub repository: MarioJim/miniclj}. The list of commits since the last time this document was generated can also be found in appendix \ref{apdx:commits}.
 
 \subsection{Weekly logs}
 During the development I've also kept a weekly log in Spanish of my progress. It can be found in the README.md file in the root directory, or in appendix \ref{apdx:weeklylogs}.
 
 \subsection{Final thoughts}
 I would say that this project has helped me learn more about how complex compilers are, because, even though the compiler I wrote is reasonably simple, I've had to build strong abstractions over many of the simple functions of my language, and making sure my abstractions work correctly during compilation and execution has been the hardest challenge I've encountered in this project.
+\begin{figure}[H]
+  \includegraphics[width=100pt,right]{firma.png}
+\end{figure}
 
 
 \chapter{About the language}
@@ -82,7 +98,9 @@ I would say that this project has helped me learn more about how complex compile
 I chose the name \texttt{miniclj} because this project aims to be a Clojure clone, with a subset of the language's functionality. The syntax and expressions are similar to Clojure's, but some special commands and data structures aren't available, such as support for macros (\texttt{defmacro}), symbols (also known as identifiers, they replaced during compilation) and concurrency primitives (\texttt{atom}, \texttt{swap!}, \texttt{promise}, \texttt{deliver}).
 
 \section{Language features}
-\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are a couple more collections (vectors, sets and maps) and support for strings as vectors of characters.
+\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are more collection types (vectors, sets and maps) and support for strings as lists of characters.
+
+An online version of the language can be found in \href{https://mariojim.github.io/miniclj/}{\texttt{miniclj}'s playground at mariojim.github.io/miniclj/}.
 
 \section{Errors}
 The errors for each compilation and execution stage are the following:
@@ -271,6 +289,7 @@ The enum \texttt{Instruction} represents the type of instructions that the VM ca
 \end{itemize}
 
 
+\pagebreak
 \chapter{About the virtual machine}
 
 \section{Tools and libraries}
@@ -334,6 +353,7 @@ This folder stores a simple, one page Next.js project where the \texttt{miniclj-
 
 
 \chapter{Code examples}
+\label{examples}
 
 \section{Cyclic factorial function}
 \subsection{minclj code}
