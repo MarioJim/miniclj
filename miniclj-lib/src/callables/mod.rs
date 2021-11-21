@@ -8,16 +8,27 @@ macro_rules! display_for_callable {
     };
 }
 
+/// Exposes the base `Callable` trait
 mod callable;
+/// Exposes the callables related to collections
 mod collection;
+/// Exposes the callables used to compare and order values
 mod comparisonops;
+/// Exposes the callables related to checking if a value is truthy or falsy
 mod conditionals;
+/// Exposes the `loop` and `recur` callables
 mod cycles;
+/// Exposes the callables related to mathematical operations
 mod factorops;
+/// Exposes the `do` callable
 mod groupingfns;
+/// Exposes the callables related to input and output
 mod iofns;
+/// Exposes the `fn` callable
 mod lambda;
+/// Exposes callables related to adding variables to the local and global scope
 mod scopefns;
+/// Exposes callables used to cast values of some types to others
 mod typecastingfns;
 
 use std::collections::HashMap as RustHashMap;
@@ -33,6 +44,7 @@ macro_rules! add_fn {
     };
 }
 
+/// The map of symbols to callables exposed by the language
 pub struct CallablesTable(RustHashMap<String, Box<dyn Callable>>);
 
 impl Default for CallablesTable {

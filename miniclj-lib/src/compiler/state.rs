@@ -10,6 +10,7 @@ use crate::{
     memaddress::{Lifetime, MemAddress},
 };
 
+/// Structure used to process `SExpr`s into bytecode
 #[derive(Debug, Default)]
 pub struct CompilerState {
     constants: RustHashMap<Constant, MemAddress>,

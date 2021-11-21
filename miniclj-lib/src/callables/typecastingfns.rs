@@ -1,6 +1,6 @@
 use num::Signed;
 
-use crate::{callables::prelude::*, lispparser::NumberLiteralParser};
+use crate::{callables::prelude::*, parsers::NumberLiteralParser};
 
 #[derive(Debug, Clone)]
 pub struct NumberCast;
@@ -25,8 +25,7 @@ impl Callable for NumberCast {
     fn execute(&self, _: &VMState, args: Vec<Value>) -> RuntimeResult<Value> {
         let maybe_string = args.into_iter().next().unwrap();
         if let Value::String(string) = maybe_string {
-            NumberLiteralParser::new()
-                .parse(&string)
+            NumberLiteralParser::parse(&string)
                 .map(Value::Number)
                 .map_err(|_| RuntimeError::CouldntParse(format!("\"{}\"", string), "a number"))
         } else {

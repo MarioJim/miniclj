@@ -1,22 +1,26 @@
-use miniclj_lib::{BytecodeParser, CallablesTable, CompilerState, SExprsParser, VMState};
+use miniclj_lib::{BytecodeParser, CompilerState, SExprsParser, VMState};
 
+/// This module exposes the `clap` `App` used to parse arguments
+/// passed through the command-line interface, and shared
+/// functionality between multiple subcommands
 mod cli;
 
 use crate::cli::{args, output_file_from_opts, read_file_from_opts};
 
+/// The entry point for the command-line interface
 fn main() -> Result<(), String> {
     let start_time = std::time::Instant::now();
 
     match args().get_matches().subcommand().unwrap() {
         ("check", opts) => {
             let input = read_file_from_opts(opts)?;
-            if let Err(err) = SExprsParser::new().parse(&input) {
+            if let Err(err) = SExprsParser::parse(&input) {
                 println!("{}", err);
             }
         }
         ("ast", opts) => {
             let input = read_file_from_opts(opts)?;
-            match SExprsParser::new().parse(&input) {
+            match SExprsParser::parse(&input) {
                 Ok(tree) => println!("{:#?}", tree),
                 Err(err) => println!("{}", err),
             }
@@ -24,9 +28,7 @@ fn main() -> Result<(), String> {
         ("build", opts) => {
             let input = read_file_from_opts(opts)?;
             let mut output_file = output_file_from_opts(opts)?;
-            let tree = SExprsParser::new()
-                .parse(&input)
-                .map_err(|e| format!("{}", e))?;
+            let tree = SExprsParser::parse(&input).map_err(|e| format!("{}", e))?;
 
             let mut compiler_state = CompilerState::default();
             for expr in tree {
@@ -41,11 +43,8 @@ fn main() -> Result<(), String> {
         }
         ("exec", opts) => {
             let input = read_file_from_opts(opts)?;
-            let callables_table = CallablesTable::default();
-
-            let (constants, instructions) = BytecodeParser::new()
-                .parse(&callables_table, &input)
-                .map_err(|e| format!("Bytecode error: {}", e))?;
+            let (constants, instructions) =
+                BytecodeParser::parse(&input).map_err(|e| format!("Bytecode error: {}", e))?;
 
             VMState::new(constants, instructions)
                 .execute()
@@ -53,9 +52,7 @@ fn main() -> Result<(), String> {
         }
         ("run", opts) => {
             let input = read_file_from_opts(opts)?;
-            let tree = SExprsParser::new()
-                .parse(&input)
-                .map_err(|e| format!("{}", e))?;
+            let tree = SExprsParser::parse(&input).map_err(|e| format!("{}", e))?;
 
             let mut compiler_state = CompilerState::default();
             for expr in tree {

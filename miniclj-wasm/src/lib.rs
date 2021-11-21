@@ -12,7 +12,7 @@ use utils::set_panic_hook;
 pub fn ast(code: &str) -> JsValue {
     set_panic_hook();
 
-    match SExprsParser::new().parse(code) {
+    match SExprsParser::parse(code) {
         Ok(trees) => JSResult::output(
             trees
                 .into_iter()
@@ -29,7 +29,7 @@ pub fn ast(code: &str) -> JsValue {
 pub fn compile(code: &str) -> JsValue {
     set_panic_hook();
 
-    let tree = match SExprsParser::new().parse(code) {
+    let tree = match SExprsParser::parse(code) {
         Ok(tree) => tree,
         Err(err) => return JSResult::error(format!("{:#?}", err)),
     };
@@ -58,7 +58,7 @@ pub fn compile(code: &str) -> JsValue {
 pub fn run(code: &str) -> JsValue {
     set_panic_hook();
 
-    let tree = match SExprsParser::new().parse(code) {
+    let tree = match SExprsParser::parse(code) {
         Ok(tree) => tree,
         Err(err) => return JSResult::error(format!("{:#?}", err)),
     };

@@ -7,6 +7,7 @@ use crate::{
     vm::{RuntimeError, RuntimeResult, Scope, Value},
 };
 
+/// Structure used to execute the bytecode produced by the compiler
 #[derive(Debug)]
 pub struct VMState {
     constants: HashMap<MemAddress, Constant>,
