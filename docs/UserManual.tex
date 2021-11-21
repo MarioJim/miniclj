@@ -1,0 +1,109 @@
+
+\documentclass[11pt]{scrreprt}
+\usepackage[utf8]{inputenc}
+
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\addtokomafont{chapter}{\LARGE}
+\renewcommand*{\chapterformat}{\thechapter\hspace{0.4cm}}
+\RedeclareSectionCommand[style=section]{chapter}
+
+\usepackage{graphicx}
+\usepackage{sectsty}
+\usepackage{titlesec}
+
+\usepackage{xcolor}
+\definecolor{LightGray}{gray}{0.9}
+\usepackage{minted}
+\usemintedstyle{borland}
+\setminted{bgcolor=LightGray,fontsize=\small}
+
+% Margins
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+
+\begin{document}
+
+{\centering
+{\huge
+miniclj\par}
+{\LARGE
+User Manual\par}}
+
+\tableofcontents
+
+\chapter{About the language}
+This project's aim is to create a compiler and virtual machine for a lisp-based language with similar semantics to Clojure. The base functions and data structures will be supported, and they must be accessible either through a Command-Line Interface or inside a web context.
+
+\section{Differences and limitations compared to Clojure}
+Other than not including a broader standard library compared to Clojure, miniclj has some differences and limitations, like:
+\begin{itemize}
+    \item Support for symbols during runtime isn't supported because they must be linked to a memory address during compilation
+    \item Expressions and lists are evaluated eagerly, miniclj doesn't support lazy sequences
+    \item Lambda functions don't capture their enclosing environment/scope
+    \item Support for macros wasn't implemented
+    \item Code is strictly single threaded, and there is no support for using concurrency controls like atoms or promises
+\end{itemize}
+
+\chapter{Data types}
+\section{Numbers}
+
+\section{Strings}
+
+\section{Lists}
+
+\section{Vectors}
+
+\section{Maps}
+
+\section{Sets}
+
+\section{Nil}
+
+
+\chapter{Callables}
+\section{Collection functions}
+\subsection{Access}
+\subsubsection{\texttt{first}}
+\begin{minted}{clojure}
+(first collection)
+\end{minted}
+
+Returns the first item in the collection. If the collect
+
+
+\subsection{Creation}
+
+\subsection{Generation}
+
+\subsection{Modification}
+
+\subsection{Transducers}
+
+
+\section{Comparison operations}
+
+\section{Conditionals}
+
+\section{Cycles}
+
+\section{Factor operations}
+
+\section{Grouping functions}
+
+\section{I/O functions}
+
+\section{Lambda functions}
+
+\section{Scope functions}
+
+\section{Typecasting functions}
+
+
+\end{document}
