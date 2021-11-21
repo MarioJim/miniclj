@@ -64,3 +64,7 @@ Durante la semana i y la semana pasada avancé hasta casi terminar el proyecto: 
 Al final me decidí por compilar el proyecto a wasm y realizar una página web como "playground" (https://mariojim.github.io/miniclj/) basándome en la página de "playground" de swc (https://play.swc.rs/). Para esto tuve que separ la parte del compilador, máquina virtual y código compartido de la interfaz de línea de comandos, y crear una nueva interfaz para el contexto del navegador.
 
 Esta semana también empecé con la documentación del proyecto. Por ahora la estoy haciendo en LaTeX y en inglés.
+
+## Avance 7
+
+Esta semana avancé principalmente a la documentación del compilador y corregí algunos errores de éste y de la máquina virtual. También reorganicé algunas funciones para que estuvieran en módulos más pequeños.
