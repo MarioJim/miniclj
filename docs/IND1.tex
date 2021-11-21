@@ -371,14 +371,17 @@ Finished in 26ms
 
 \section{Sorting a list}
 \subsection{minclj code}
-% \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.clj}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/sort_list.clj}
 
 \subsection{Bytecode}
-% \inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.mclj}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/sort_list.mclj}
 
 \subsection{Output}
-% \begin{minted}{text}
-% \end{minted}
+\begin{minted}{text}
+List: (3 6 1 7 8 2 7)
+Sorted list: (1 2 3 6 7 7 8)
+Finished in 35ms
+\end{minted}
 
 \section{Matrix multiplication}
 \subsection{minclj code}
@@ -388,8 +391,13 @@ Finished in 26ms
 \inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.mclj}
 
 \subsection{Output}
-% \begin{minted}{text}
-% \end{minted}
+\begin{minted}{text}
+Matrix A: ((3 6 7) (5 -3 0))
+Matrix B: ((1 1) (2 1) (3 -3))
+A x B: [[36 -12] [-1 2]]
+B x A: [[8 3 7] [11 9 14] [-6 27 21]]
+Finished in 18ms
+\end{minted}
 
 \chapter{Project structure}
 The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
