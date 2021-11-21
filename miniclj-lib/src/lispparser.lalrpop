@@ -14,12 +14,12 @@ grammar;
 pub SExprs = List<SExpr>;
 
 SExpr: SExpr = {
-    "(" <SExprs> ")" => SExpr::Expr(<>),
+    "(" <SExprs?> ")" => SExpr::Expr(<>.unwrap_or_else(Vec::new)),
     "#(" <SExprs> ")" => SExpr::ShortLambda(<>),
-    "'(" <SExprs> ")" => SExpr::List(<>),
-    "[" <SExprs> "]" => SExpr::Vector(<>),
-    "{" <SExprs> "}" => SExpr::Map(<>),
-    "#{" <SExprs> "}" => SExpr::Set(<>),
+    "'(" <SExprs?> ")" => SExpr::List(<>.unwrap_or_else(Vec::new)),
+    "[" <SExprs?> "]" => SExpr::Vector(<>.unwrap_or_else(Vec::new)),
+    "{" <SExprs?> "}" => SExpr::Map(<>.unwrap_or_else(Vec::new)),
+    "#{" <SExprs?> "}" => SExpr::Set(<>.unwrap_or_else(Vec::new)),
     Literal => SExpr::Literal(<>),
 };
 

@@ -11,14 +11,14 @@ fn main() -> Result<(), String> {
         ("check", opts) => {
             let input = read_file_from_opts(opts)?;
             if let Err(err) = SExprsParser::new().parse(&input) {
-                println!("{:#?}", err);
+                println!("{}", err);
             }
         }
         ("ast", opts) => {
             let input = read_file_from_opts(opts)?;
             match SExprsParser::new().parse(&input) {
                 Ok(tree) => println!("{:#?}", tree),
-                Err(err) => println!("{:#?}", err),
+                Err(err) => println!("{}", err),
             }
         }
         ("build", opts) => {
@@ -26,7 +26,7 @@ fn main() -> Result<(), String> {
             let mut output_file = output_file_from_opts(opts)?;
             let tree = SExprsParser::new()
                 .parse(&input)
-                .map_err(|e| format!("{:#?}", e))?;
+                .map_err(|e| format!("{}", e))?;
 
             let mut compiler_state = CompilerState::default();
             for expr in tree {
@@ -55,7 +55,7 @@ fn main() -> Result<(), String> {
             let input = read_file_from_opts(opts)?;
             let tree = SExprsParser::new()
                 .parse(&input)
-                .map_err(|e| format!("{:#?}", e))?;
+                .map_err(|e| format!("{}", e))?;
 
             let mut compiler_state = CompilerState::default();
             for expr in tree {

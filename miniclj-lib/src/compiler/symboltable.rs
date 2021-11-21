@@ -53,7 +53,14 @@ impl SymbolTable {
                 .borrow()
                 .get(symbol)
                 .copied()
-                .or_else(|| parent_table.get(symbol)),
+                .or_else(|| parent_table.get_from_root(symbol)),
+        }
+    }
+
+    fn get_from_root(&self, symbol: &str) -> Option<MemAddress> {
+        match self {
+            SymbolTable::Global { symbols, .. } => symbols.borrow().get(symbol).copied(),
+            SymbolTable::Local { parent_table, .. } => parent_table.get_from_root(symbol),
         }
     }
 

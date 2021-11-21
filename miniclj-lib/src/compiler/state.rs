@@ -167,12 +167,14 @@ impl CompilerState {
         self.insert_constant(callable.into())
     }
 
-    pub fn write_to<T: Write>(&self, writer: &mut T) -> std::io::Result<()> {
-        for (constant, addr) in &self.constants {
+    pub fn write_to<T: Write>(self, writer: &mut T) -> std::io::Result<()> {
+        let mut constants = self.constants.into_iter().collect::<Vec<_>>();
+        constants.sort_unstable_by_key(|(_, address)| address.idx());
+        for (constant, addr) in constants {
             writer.write_fmt(format_args!("{} {}\n", addr, constant))?;
         }
         writer.write_all(b"***\n")?;
-        for instruction in &self.instructions {
+        for instruction in self.instructions {
             writer.write_fmt(format_args!("{}\n", instruction))?;
         }
         Ok(())

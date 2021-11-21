@@ -39,8 +39,6 @@ impl Default for CallablesTable {
         let mut table: RustHashMap<String, Box<dyn Callable>> = RustHashMap::new();
         add_fn!(table, collection::access::First);
         add_fn!(table, collection::access::Rest);
-        add_fn!(table, collection::access::Cons);
-        add_fn!(table, collection::access::Conj);
         add_fn!(table, collection::access::Nth);
         add_fn!(table, collection::access::Get);
         add_fn!(table, collection::access::Count);
@@ -52,6 +50,10 @@ impl Default for CallablesTable {
         add_fn!(table, collection::creation::HashMap);
 
         add_fn!(table, collection::generation::Range);
+
+        add_fn!(table, collection::modification::Cons);
+        add_fn!(table, collection::modification::Conj);
+        add_fn!(table, collection::modification::Del);
 
         add_fn!(table, collection::transducers::Map);
         add_fn!(table, collection::transducers::Filter);

@@ -104,7 +104,7 @@ impl TryFrom<Value> for List {
     fn try_from(value: Value) -> Result<List, Self::Error> {
         match value {
             Value::List(list) => Ok(list),
-            Value::Vector(vector) => Ok(vector.into_iter().collect()),
+            Value::Vector(vector) => Ok(vector.into_iter().rev().collect()),
             Value::Set(set) => Ok(set.into_iter().collect()),
             Value::Map(map) => Ok(map
                 .into_iter()
