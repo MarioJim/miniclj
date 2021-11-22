@@ -10,11 +10,13 @@ use crate::{
 
 lalrpop_mod!(
     #[allow(clippy::all)]
-    lispparser
+    bytecodeparser,
+    "/src/parsers/bytecodeparser.rs"
 );
 lalrpop_mod!(
     #[allow(clippy::all)]
-    bytecodeparser
+    lispparser,
+    "/src/parsers/lispparser.rs"
 );
 
 type ConstantsInstructionsTuple = (HashMap<MemAddress, Constant>, Vec<Instruction>);
