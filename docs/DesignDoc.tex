@@ -151,45 +151,103 @@ The compiler is written in Rust, and it has a couple of dependencies:
   \item \texttt{smol\_str}: this package is used to keep small strings (less than 22 bytes) in the stack instead of allocating them in the heap
 \end{itemize}
 
-\section{Lexer and Parser}
-The grammar and tokens of the language are described in the file \path{miniclj-lib/src/lispparser.lalrpop}, included in appendix \ref{apdx:grammar}. It describes the following rules:
+\section{Tokens}
+The language recognizes the following tokens, separated in string literals and regular expressions:
+
+\subsection{String literals}
 \begin{itemize}
-  \item \texttt{SExprs}: A list of \texttt{SExpr}
-  \item \texttt{SExpr}: This rule encompasses the types of expressions \texttt{miniclj} accepts:
-  \begin{itemize}
-    \item simple expressions (calls to a function with arguments)
-    \item short lambdas (lambda functions where the argument is a \%)
-    \item lists (implemented as linked lists)
-    \item vectors (backed by an array)
-    \item maps (backed by a hashmap)
-    \item sets (backed by a hashset)
-    \item simple literals (described the next rule)
-  \end{itemize}
-  Every expression but the last one accepts a list of s-expressions (rule \texttt{SExpr}) between its opening and closing sign.
-  \item \texttt{Literal}: This rule has 4 different variants, and each one describes a different type of literal:
-  \begin{itemize}
-    \item \texttt{"nil"}, the nil value in \texttt{miniclj}
-    \item \texttt{Symbol}
-    \item \texttt{StringLiteral}
-    \item \texttt{NumberLiteral}
-  \end{itemize}
-  \item \texttt{NumberLiteral}: This rule parses a number from a string, and is exposed to the language so that it can be used by calling the builtin function \texttt{num}. It has two variants:
-  \begin{itemize}
-    \item \texttt{r"[-]?[0-9]+.[0-9]+"}: this regular expression describes a decimal number, that is then parsed into a fraction
-    \item \texttt{r"[-]?[0-9]+"}: this regular expression accepts integers, and is also parsed into a fraction with a denominator of 1
-  \end{itemize}
-  \item \texttt{List<T>}: This is a macro from \texttt{lalrpop}, and it is used to parse a list of parsers of type \texttt{T} separated by whitespace
-  \item \texttt{Symbol}: This rule describes the different type of symbols \texttt{miniclj} accepts, and it has 4 variants:
-  \begin{itemize}
-    \item \texttt{"\%"}: The argument for a short lambda
-    \item \texttt{ComparisonOp}
-    \item \texttt{FactorOp}
-    \item \texttt{r"[A-Za-z][A-Za-z0-9!?'\_-]*"}: this regular expression accepts most of the characters that can compose a symbol in Clojure, but I chose to discard some of them to simplify my language and reduce the parser conflicts. More information about symbols in Clojure can be found at \url{https://clojure.org/reference/reader#_symbols}
-  \end{itemize}
-  \item \texttt{ComparisonOp}: This rule includes the symbols used to compare values in \texttt{miniclj}. They are \texttt{=} (equals), \texttt{!=} (not equals), \texttt{>} (greater), \texttt{<} (less), \texttt{>=} (greater or equal) and \texttt{<=} (less or equal)
-  \item \texttt{FactorOp}: This rule includes the basic math operations: \texttt{+} (addition), \texttt{-} (subtraction), \texttt{*} (multiplication) and \texttt{/} (division)
-  \item \texttt{StringLiteral}: This last rule describes a string between double quotes
+  \item "\texttt{(}": ParenOpen
+  \item "\texttt{\#(}": ShorthandLambdaOpen
+  \item "\texttt{'(}": ListOpen
+  \item "\texttt{)}": ParenClose
+  \item "\texttt{[}": BracketOpen
+  \item "\texttt{]}": BracketClose
+  \item "\texttt{{}": BracesOpen
+  \item "\texttt{\#\{}": SetOpen
+  \item "\texttt{}}": BracesClose
+  \item "\texttt{nil}": Nil
+  \item "\texttt{\%}": ShorthandLambdaArgument
+  \item "\texttt{=}": ComparisonOp::Eq
+  \item "\texttt{!=}": ComparisonOp::Ne
+  \item "\texttt{>}": ComparisonOp::Gt
+  \item "\texttt{<}": ComparisonOp::Lt
+  \item "\texttt{<=}": ComparisonOp::Ge
+  \item "\texttt{>=}": ComparisonOp::Le
+  \item "\texttt{+}": FactorOp::Add
+  \item "\texttt{-}": FactorOp::Sub
+  \item "\texttt{*}": FactorOp::Mul
+  \item "\texttt{/}": FactorOp::Div
 \end{itemize}
+
+\subsection{Regular expressions}
+\begin{itemize}
+  \item \texttt{r"[-]?[0-9]+"}: IntegerLiteral
+  \item \texttt{r"[-]?[0-9]+.[0-9]+"}: DecimalLiteral
+  \item \texttt{r\#""[\^{}"]*""\#}: StringLiteral
+  \item \texttt{r"[A-Za-z][A-Za-z0-9!?'\_-]*"}: UserSymbolLiteral
+\end{itemize}
+
+\section{Grammar rules}
+The grammar of the language is described in the file \path{miniclj-lib/src/parsers/lispparser.lalrpop}, included in appendix \ref{apdx:grammar}. It describes the following rules:
+\begin{itemize}
+  \item \textbf{SExprs}
+  \begin{itemize}
+    \item \textbf{SExpr} \textbf{SExprs}
+    \item \textbf{SExpr}
+  \end{itemize}
+  \item \textbf{SExpr}
+  \begin{itemize}
+    \item ParenOpen \textbf{SExprs} ParenClose
+    \item ParenOpen ParenClose
+    \item ShorthandLambdaOpen \textbf{SExprs} ParenClose
+    \item ListOpen ParenClose
+    \item ListOpen \textbf{SExprs} ParenClose
+    \item BracketOpen BracketClose
+    \item BracketOpen \textbf{SExprs} BracketClose
+    \item BracesOpen BracesClose
+    \item BracesOpen \textbf{SExprs} BracesClose
+    \item SetOpen BracesClose
+    \item SetOpen \textbf{SExprs} BracesClose
+    \item \textbf{Literal}
+  \end{itemize}
+  \item \textbf{Literal}
+  \begin{itemize}
+    \item Nil
+    \item \textbf{Symbol}
+    \item StringLiteral
+    \item \textbf{NumberLiteral}
+  \end{itemize}
+  \item \textbf{NumberLiteral}
+  \begin{itemize}
+    \item DecimalLiteral
+    \item IntegerLiteral
+  \end{itemize}
+  \item \textbf{Symbol}
+  \begin{itemize}
+    \item ShorthandLambdaArgument
+    \item \textbf{ComparisonOp}
+    \item \textbf{FactorOp}
+    \item UserSymbolLiteral
+  \end{itemize}
+  \item \textbf{ComparisonOp}
+  \begin{itemize}
+    \item ComparisonOp::Eq
+    \item ComparisonOp::Ne
+    \item ComparisonOp::Gt
+    \item ComparisonOp::Lt
+    \item ComparisonOp::Ge
+    \item ComparisonOp::Le
+  \end{itemize}
+  \item \textbf{FactorOp}
+  \begin{itemize}
+    \item FactorOp::Add
+    \item FactorOp::Sub
+    \item FactorOp::Mul
+    \item FactorOp::Div
+  \end{itemize}
+\end{itemize}
+
+During parsing, the full source code of the file is read, and then, depending on the s-expressions parsed, the bytecode is generated. There aren't any additional actions executed during parsing.
 
 \section{Compiler state}
 The compiler state is enclosed inside the \texttt{CompilerState} struct, inside file \path{miniclj-lib/src/compiler/state.rs}.
