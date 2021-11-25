@@ -8,6 +8,10 @@ Clojure-like lisp compiler and VM written in Rust
 
 Try it out in the playground: [mariojim.github.io/miniclj](https://mariojim.github.io/miniclj/).
 
+## Demostración en video
+
+[![Demostración en YouTube](https://img.youtube.com/vi/vP5sh8GvKfc/0.jpg)](https://www.youtube.com/watch?v=vP5sh8GvKfc 'Demostración del lenguaje miniclj')
+
 ## Avance 1
 
 Por el momento he implementado el 90% del lexer/parser (me falta incorporar la definición de map y mejorar la de set).
