@@ -71,4 +71,4 @@ Esta semana también empecé con la documentación del proyecto. Por ahora la es
 
 ## Avance 7
 
-Esta semana avancé principalmente a la documentación del compilador y corregí algunos errores de éste y de la máquina virtual. También reorganicé algunas funciones para que estuvieran en módulos más pequeños.
+Esta semana avancé principalmente en la documentación del compilador y corregí algunos errores de éste y de la máquina virtual. También reorganicé algunas funciones para que estuvieran en módulos más pequeños.

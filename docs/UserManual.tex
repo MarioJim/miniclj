@@ -55,7 +55,6 @@ Other than not including a broader standard library compared to Clojure, miniclj
     \item Code is strictly single threaded, and there is no support for using concurrency controls like atoms or promises
 \end{itemize}
 
-\chapter{Data types}
 \section{Symbols}
 Symbols are used to identify values declared in the current scope or in the global scope. They must start with a letter (upper case or lower case), and they can be followed by any number of letters, numbers, or symbols "!", "?", "'", "\_" and "-". Other symbols are used for \hyperref[ComparisonOp]{comparison operations (described in section \ref{ComparisonOp})}, \hyperref[FactorOp]{factor operations (described in section \ref{FactorOp})}, and for the only argument in lambda functions declared using the \hyperref[Lambdas]{shorthand form (explained in section \ref{Lambdas})}.
 \begin{minted}{clojure}
@@ -65,6 +64,8 @@ VaLuE'19_-!?
 %
 \end{minted}
 
+
+\chapter{Data types}
 \section{Numbers}
 Numbers are internally represented as fractions of signed 64 bit integers, using \href{https://docs.rs/num/0.4.0/num/rational/type.Rational64.html}{\texttt{num}'s \texttt{Rational64} structure}. Integers are parsed as they are, with a denominator of 1, and decimals are parsed with an power of 10 as a denominator.
 \begin{minted}{clojure}
@@ -90,6 +91,7 @@ An ordered collection of values represented by a linked list. Insertion and dele
 \begin{minted}{clojure}
 '()
 '(1 2 "string" 3)
+(list 1 2 "string" 3)
 \end{minted}
 
 \section{Vectors}
@@ -97,6 +99,7 @@ An ordered collection of values internally represented by a \href{https://doc.ru
 \begin{minted}{clojure}
 []
 [1 2 3]
+(vector 1 2 3)
 \end{minted}
 
 \section{Maps}
@@ -104,6 +107,7 @@ An unordered collection of key-value pairs stored as a \href{https://doc.rust-la
 \begin{minted}{clojure}
 {}
 {"key" 23 "another key" 87}
+(hash-map "key" 23 "another key" 87)
 \end{minted}
 
 \section{Sets}
@@ -111,15 +115,17 @@ An unordered collection of values stored as a \href{https://doc.rust-lang.org/st
 \begin{minted}{clojure}
 #{}
 #{"string" 23 87}
+(set "string" 23 87)
 \end{minted}
 
 \section{Callables}
 \subsection{User-defined lambdas}
 \label{Lambdas}
-New functions can be declared in two different ways:
+New functions can be declared in three different ways:
 \begin{itemize}
     \item Using the shorthand syntax, in which the body of the function is preceded by a hash symbol (\#), and the only argument's name is a percent symbol (\%).
     \item Using the \texttt{fn} callable, which expects two arguments: the vector of argument names and the body of the function
+    \item Using the \texttt{defn} callable, which expects three arguments: the name of the function and the other two arguments of \texttt{fn}. The function is then available in the global scope
 \end{itemize}
 \begin{minted}{clojure}
 #(+ % 1)

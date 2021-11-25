@@ -14,10 +14,12 @@
 \usepackage{titlesec}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage{svg}
 
 \usepackage{minted}
 \usemintedstyle{borland}
-\setminted{linenos=true,fontsize=\small}
+\definecolor{bg}{rgb}{0.85,0.85,0.85}
+\setminted{linenos=true,fontsize=\small,bgcolor=bg}
 
 % Margins
 \topmargin=-0.45in
@@ -95,10 +97,10 @@ I would say that this project has helped me learn more about how complex compile
 
 \chapter{About the language}
 \section{Language name}
-I chose the name \texttt{miniclj} because this project aims to be a Clojure clone, with a subset of the language's functionality. The syntax and expressions are similar to Clojure's, but some special commands and data structures aren't available, such as support for macros (\texttt{defmacro}), symbols (also known as identifiers, they replaced during compilation) and concurrency primitives (\texttt{atom}, \texttt{swap!}, \texttt{promise}, \texttt{deliver}).
+I chose the name \texttt{miniclj} because this project aims to be a Clojure clone, with a subset of the language's functionality. The syntax and expressions are similar to Clojure's, but some special commands and data structures aren't available, such as support for macros (\texttt{defmacro}), symbols (also known as identifiers, they are replaced during compilation) and concurrency primitives (atoms, \texttt{swap!}, promises, \texttt{deliver}).
 
 \section{Language features}
-\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are more collection types (vectors, sets and maps) and support for strings as lists of characters.
+\texttt{miniclj} offers the basic functionality of a lisp-based language, such as a language based on s-expressions and first-class support for lists and lambda functions. Other features inherited from Clojure are more collection types (vectors, sets and maps) and support for strings as lists of characters. For more information check out the User Manual.
 
 An online version of the language can be found in \href{https://mariojim.github.io/miniclj/}{\texttt{miniclj}'s playground at mariojim.github.io/miniclj/}.
 
@@ -112,33 +114,19 @@ This errors are the ones implemented by \texttt{lalrpop}, the parser generator l
   \item \texttt{UnrecognizedEOF}: Returned by the parser when it encounters an EOF it did not expect
   \item \texttt{UnrecognizedToken}: Returned when the parser encounters a token it didn't expect in that position
   \item \texttt{ExtraToken}: Returned when the parser encounters an additional, repeated token
-  \item \texttt{User}: Returned by the parser when a custom validation doesn't pass. This type of error is can only be returned while parsing bytecode from its string representation during execution, when a builtin function isn't recognized or when a memory address couldn't be parsed correctly.
+  \item \texttt{User}: Returned by the parser when a custom validation doesn't pass. This type of error is can only be returned while parsing bytecode from its string representation during execution, when a language function isn't recognized or when a memory address couldn't be parsed correctly.
 \end{itemize}
 
+\pagebreak
 \subsection{Compiler errors}
-This errors are implemented as variants of the \href{https://github.com/MarioJim/miniclj/blob/263ce60c5847511cdae9b27d79e5db1ae18759a2/miniclj-lib/src/compiler/error.rs#L10}{\texttt{CompilationError} enum, file \texttt{src/compiler/error.rs} in the \texttt{miniclj-lib} crate}.
-\begin{itemize}
-  \item \texttt{CallableNotDefined}: Returned when the compiler encounters a symbol that was supposed to be used as a callable, but isn't defined in the current scope (wasn't a user-defined function nor a builtin callable)
-  \item \texttt{EmptyArgs}: Returned when a expression tried to call a callable with no arguments, and the callalbe expects at least one
-  \item \texttt{SymbolNotDefined}: Returned by the compiler when a symbol wasn't defined in the current scope (or any other parent scope)
-  \item \texttt{WrongArgument}: Returned by the compiler when a function receives an argument that it didn't expect. Although most functions don't check the type of its arguments during compilation, some functions with a custom compilation process (such as \texttt{fn}, \texttt{defn} and \texttt{let}) use their arguments during compilation
-  \item \texttt{WrongArity}: Returned when the user tried to call a callable with the wrong number of arguments
-  \item \texttt{WrongRecurCall}: Returned when the user tried to call the \texttt{recur} function with a different number of arguments than it's corresponding \texttt{loop} call
-\end{itemize}
+This errors are implemented as variants of the \texttt{CompilationError} enum, file \path{miniclj-lib/src/compiler/error.rs}.
+
+\inputminted[firstline=9,lastline=35]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/error.rs}
 
 \subsection{Runtime errors}
-This errors are implemented as variants of the \href{https://github.com/MarioJim/miniclj/blob/263ce60c5847511cdae9b27d79e5db1ae18759a2/miniclj-lib/src/vm/error.rs#L6}{\texttt{RuntimeError} enum, file \texttt{src/vm/error.rs} in the \texttt{miniclj-lib} crate}.
-\begin{itemize}
-  \item \texttt{CompilerError}: This variant of \texttt{RuntimeError} encloses any error that was caused by a compiler malfunction and should be encountered by the user if the compiler has a bug or if the bytecode was modified
-  \item \texttt{CouldntParse}: This variant is returned when a value that was passed to a parsing function (like \texttt{num} and \texttt{chr}) couldn't be correctly processed
-  \item \texttt{DivisionByZero}: Returned when the user tries to divide a number by zero
-  \item \texttt{IndexOutOfBounds}: Returned when the user tries to get a value from an indexed collection using the callable \texttt{nth} and the collection is shorter than the index
-  \item \texttt{InvalidMapEntry}: Returned when, inside a function, a value is implicitly casted to a map entry, but the value isn't a vector with two elements
-  \item \texttt{IOError}: Returned when a input/output function returned an error instead of correctly printing/reading strings
-  \item \texttt{NotACallable}: Returned when a value was tried be executed as a callable, but it wasn't a builtin function nor a user-defined callable
-  \item \texttt{WrongArity}: This error has two variants (\texttt{WrongArityN} and \texttt{WrongArityS}), but both represent the same error: the user tried to call a callable with the wrong number of arguments
-  \item \texttt{WrongDataType}: Returned when a callable receives a value with an incorrect datatype, that the callable didn't expect
-\end{itemize}
+This errors are implemented as variants of the \texttt{RuntimeError} enum, file \path{miniclj-lib/src/vm/error.rs}.
+
+\inputminted[firstline=5,lastline=45]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/error.rs}
 
 
 \chapter{About the compiler}
@@ -184,7 +172,7 @@ The language recognizes the following tokens, separated in string literals and r
   \item \texttt{r"[-]?[0-9]+"}: IntegerLiteral
   \item \texttt{r"[-]?[0-9]+.[0-9]+"}: DecimalLiteral
   \item \texttt{r\#""[\^{}"]*""\#}: StringLiteral
-  \item \texttt{r"[A-Za-z][A-Za-z0-9!?'\_-]*"}: UserSymbolLiteral
+  \item \texttt{r"[A-Za-z][A-Za-z0-9!?'\_-]*"}: UserDefinedSymbol
 \end{itemize}
 
 \section{Grammar rules}
@@ -227,7 +215,7 @@ The grammar of the language is described in the file \path{miniclj-lib/src/parse
     \item ShorthandLambdaArgument
     \item \textbf{ComparisonOp}
     \item \textbf{FactorOp}
-    \item UserSymbolLiteral
+    \item UserDefinedSymbol
   \end{itemize}
   \item \textbf{ComparisonOp}
   \begin{itemize}
@@ -249,8 +237,17 @@ The grammar of the language is described in the file \path{miniclj-lib/src/parse
 
 During parsing, the full source code of the file is read, and then, depending on the s-expressions parsed, the bytecode is generated. There aren't any additional actions executed during parsing.
 
-\section{Compiler state}
+\section{Syntaxis diagrams}
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=650pt]{SyntaxisDiagrams.png}
+\end{figure}
+
+
+\section{\texttt{CompilerState} struct}
 The compiler state is enclosed inside the \texttt{CompilerState} struct, inside file \path{miniclj-lib/src/compiler/state.rs}.
+
+\inputminted[firstline=13,lastline=21]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/state.rs}
 
 This structure is composed of 5 data structures:
 \begin{itemize}
@@ -310,7 +307,7 @@ A bytecode file produced by the \texttt{miniclj} compiler, with the extension \t
 \subsection{Constants}
 The constants, defined in file \path{miniclj-lib/src/constant.rs}, have 5 different variants:
 \begin{itemize}
-  \item \texttt{Callable}: Stores a reference to a builtin callable
+  \item \texttt{Callable}: Stores a reference to a language callable
   \item \texttt{Lambda}: Has two fields: the instruction pointer that the VM must jump to to execute the lambda, and the number of arguments that the lambda accepts
   \item \texttt{String}: Stores a string literal inside
   \item \texttt{Number}: Stores a \texttt{Rational64} struct inside (\texttt{num}'s implementation of fraction between two signed integers of 64 bits)
@@ -347,26 +344,33 @@ The enum \texttt{Instruction} represents the type of instructions that the VM ca
 \end{itemize}
 
 
-\pagebreak
 \chapter{About the virtual machine}
 
 \section{Tools and libraries}
 The virtual machine, also implemented in Rust, uses the same dependencies as the compiler through the \texttt{num} callable that parses a number from a string, plus the module \texttt{escape8259}, that exports a function used to escape some characters (like \texttt{$\backslash$n} to a newline character) when calling \texttt{print} or \texttt{println}.
 
-\section{Execution}
-The execution state is stored in the \texttt{VMState} structure, declared in file \path{miniclj-lib/src/vm/state.rs}. This structure is composed of 3 fields:
+\section{\texttt{VMState} struct}
+The execution state is stored in the \texttt{VMState} structure, declared in file \path{miniclj-lib/src/vm/state.rs}.
+
+\inputminted[firstline=10,lastline=16]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/state.rs}
+
+This structure is composed of 3 fields:
 \begin{itemize}
   \item \texttt{constants}: A map of memory addresses to constants, read and constructed from the first part of the bytecode representation
   \item \texttt{instructions}: A vector of instructions, read from the second part of the bytecode file
-  \item \texttt{global\_scope}: This field is implemented as a custom structure named \texttt{Scope} (declared in file \path{miniclj-lib/src/vm/scope.rs}), and it is composed of two vectors of values: one for declared variables and one for temporal values. This structure is used for global and local variables declared in the root scope, and a new \texttt{Scope} is created when executing user defined functions with local variables
+  \item \texttt{global\_scope}: This field is implemented as a custom structure named \texttt{Scope} (declared in file \path{miniclj-lib/src/vm/scope.rs}, explained in detail in the next section), and it is composed of two vectors of values: one for declared variables and one for temporal values. This structure is used for global and local variables declared in the root scope, and a new \texttt{Scope} is created when executing user defined functions with local variables
 \end{itemize}
 
 The main function of the structure \texttt{VMState} is \texttt{execute}, which calls a private method named \texttt{inner\_execute}, implemented as a big match expression (like a switch statement) over the instructions that the virtual machine accepts.
 
 Another important method is \texttt{execute\_lambda} which, as the name implies, executes a lambda function defined by the user. It starts by checking the arity of the function, then creates a new \texttt{Scope}, inserts the local parameters at the start of the scope and also calls \texttt{inner\_execute}.
 
-\section{Memory representation}
-As described earlier, values are stored inside two vectors in structure \texttt{Scope}. This structure has 4 methods: two \texttt{get} methods for temporal values and variables, which accept an index and return either the value of the vector at that index, or a \texttt{RuntimeError::CompilerError} when the value wasn't found; and two \texttt{store} methods, also for temporal values and variables, which receive an index and a \texttt{Value}, which is then stored in the corresponding vector.
+\section{\texttt{Scope} struct}
+As described earlier, memory is represented by the structure \texttt{Scope}, where values are stored inside two vectors.
+
+\inputminted[firstline=7,lastline=13]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/scope.rs}
+
+This structure has 4 methods: two \texttt{get} methods for temporal values and variables, which accept an index and return either the value of the vector at that index, or a \texttt{RuntimeError::CompilerError} when the value wasn't found; and two \texttt{store} methods, also for temporal values and variables, which receive an index and a \texttt{Value}, which is then stored in the corresponding vector.
 
 The \texttt{get} methods from \texttt{Scope} are called by a \texttt{get} method in \texttt{VMState}, which receives a reference to the current scope and a memory address, and then routes the request depending on the lifetime of the memory address:
 \begin{itemize}
@@ -377,6 +381,151 @@ The \texttt{get} methods from \texttt{Scope} are called by a \texttt{get} method
 
 The same process happens with the \texttt{store} function in \texttt{Scope}: \texttt{VMState} has a method called \texttt{store} which routes its requests depending on the lifetime of the address, with an exception for \texttt{Constant} addresses, which aren't supposed to be modified during runtime.
 
+This structure is created once to represent the global scope, and then every time a user-defined function is executed, as shown in the diagram.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=220pt]{MemoryDiagram.png}
+\end{figure}
+
+During execution, the current instruction has access to two \texttt{Scope}s: the current scope, that is replaced every time a new scope is created and is accessed every time a local variable or a temporal value is read or written, and the global scope, accessed when a global variable is read or written. During execution of code in the global scope the reference to the current scope also points to the global scope, and local variables are mixed with global variables.
+
+\section{\texttt{Value} enum}
+This enum represents any type of value that can be used during runtime in \texttt{miniclj}. It is declared in file \path{miniclj-lib/src/vm/value.rs}.
+
+\inputminted[firstline=16,lastline=30]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/value.rs}
+
+It has the following variants:
+\begin{itemize}
+  \item \texttt{Callable}, which stores a unique pointer to a structure that implements the trait \texttt{Callable}
+  \item \texttt{Lambda}, which stores an instruction pointer and the arity of the function
+  \item \texttt{List}, which stores a \texttt{List} value (explained in the next section)
+  \item \texttt{Vector}, with a \texttt{Vec} of values inside
+  \item \texttt{Set}, with a \texttt{HashSet} of values
+  \item \texttt{Map}, with a \texttt{HashMap} of keys and values \texttt{Value}
+  \item \texttt{String}
+  \item \texttt{Number}, with a \texttt{Rational64} structure inside (a fraction of two 64-bit signed integers)
+  \item \texttt{Nil}
+\end{itemize}
+
+\section{\texttt{List} enum}
+This data structure is implemented as an enum with two variants, to closely match Clojure's implementation.
+
+\inputminted[firstline=8,lastline=13]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/list.rs}
+
+Besides implementing a couple of useful functions like "nth" and "len", this enum implements two special functions: \texttt{from\_iter} which lets the virtual machine create a \texttt{List} from any iterator of \texttt{Value}s, and \texttt{try\_from}, which facilitates converting any type of value into a \texttt{List}. This last function only works for collections and strings, and for the other types it returns an error with the type of value passed (that couldn't be converted).
+
+\inputminted[firstline=92,lastline=121]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/list.rs}
+
+
+\chapter{About callables}
+The name "callable" was originally inherited by Clojure, where a callable refers to any value that can be called, or in other words, used as the first value in a s-expression. In this project, the name "callable" refers to any function exposed by the language or lambda functions defined by the user.
+
+\section{Language callables and the \texttt{Callable} trait}
+This type of callables implement the trait \texttt{Callable}, declared on file \path{miniclj-lib/src/callables/callable.rs}.
+
+\inputminted[firstline=12,lastline=45,breaklines=true]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/callable.rs}
+
+A Rust trait shares the same idea as an abstract class in Java, but Rust structures don't actually "inherit" traits, they implement them, meaning polymorphism can't be used to downcast structures that implement the trait \texttt{Callable}, and that's why the language uses references to those callables through type \texttt{Box<dyn Callable>} (a \texttt{Box} is a unique pointer, and the keyword \texttt{dyn} means that they implement that trait).
+
+On line 12, the \texttt{Callable} trait is declared, and for it to be implemented for a structure, the structure must also implement the traits \texttt{Display} (used to display values as strings, in the same spirit as \texttt{Object.toString()} in Java), \texttt{Debug} (also used to display structures as strings, but with more information) and \texttt{DynClone} (makes it easier to clone references to callables and to store them in \texttt{Box}es).
+
+The \texttt{Callable} trait exposes 6 different functions, as seen in the code snippet above:
+\begin{itemize}
+  \item \texttt{name}, which returns a static reference to a string. This value is used when compiling code, to link a keyword (for example \texttt{defn}) to a callable (struct \texttt{Defn}, defined in file \texttt{scopefns.rs}).
+  \item \texttt{compile}, receives a \texttt{CompilerState} structure and a vector of \texttt{SExpr}s as arguments, is the main function used during compilation to modify the state of the compiler. The default implementation calls the method \texttt{check\_arity} with the length of the vector of arguments and then calls \texttt{inner\_compile} with the state and the arguments.
+  \item \texttt{check\_arity}, receives an unsigned integer and returns nothing, or a \texttt{CompilationError}. It doesn't have a default implementation.
+  \item \texttt{inner\_compile}, accepts the same arguments as \texttt{compile}, and has a default implementation (used for language functions, language macros override this implementation), where it executes the following code:
+  \begin{enumerate}
+    \item First it calls the method \texttt{get\_as\_address} with the compiler state as the only argument. This function is used to include this function in the constants table of the \texttt{CompilerState}, and it returns a variant of the enum \texttt{Option<MemAddress>}: either \texttt{Some(address)} or \texttt{None}. The default implementation of this method returns \texttt{None}, and the \texttt{expect} call on the result of this method terminates the compiler with the included error message if the result is \texttt{None}. This forces any structures that implement \texttt{Callabe} to either implement \texttt{get\_as\_address} (for the callable to be used as a function) or override the default implementation of \texttt{inner\_compile} (for the callable to be used as a macro).
+    \item Then, it converts the vector of \texttt{SExpr}s into an iterator, which is used to compile every s-expression into either a \texttt{MemAddress} or a \texttt{CompilationError}. These results are thenn collected into either a vector of \texttt{MemAdress}es or the first \texttt{CompilationError} that the compiler found. Finally, the question mark at the end of line 30 is an operator in Rust that makes it easier to handle errors: if the result of the iterator was a \texttt{CompilationError}, the whole function returns that \texttt{CompilationError}, and if the result of the iterator was the vector of \texttt{MemAddress}es, the function continues executing as normal.
+    \item A new temporal address is created for the result of the function, and a new instruction is created to call the memory address of this function, with the memory addresses of its arguments, and lastly with the memory address where the function should save this result.
+    \item Finally that instruction is inserted into the compiler and the temporal address used for the result is returned.
+  \end{enumerate}
+  \item \texttt{get\_as\_address}, as explained above, is used to insert this function in the constants table of the \texttt{CompilerState}, and it returns a variant of the enum \texttt{Option<MemAddress>}: either \texttt{Some(address)} or \texttt{None}.
+  \item \texttt{execute}, this method is used during execution, and it receives the state of the virtual machine \texttt{VMState} and a vector of values. It returns a \texttt{RuntimeResult<Value>}: either a \texttt{Value} or a \texttt{RuntimeError}.
+\end{itemize}
+
+\subsection{Language functions}
+Language functions are compiled with the process described above. An example of this type of callables is \texttt{IsEmpty}.
+
+\inputminted[firstline=268,lastline=316]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/collection/access.rs}
+
+This function is used to test if a collection is empty or not, and is referenced in miniclj code by the symbol "empty?" (the string returned by the method \texttt{name}).
+
+It overrides the method \texttt{check\_arity}, where it returns an error if the number of arguments passed to the function isn't equal to 1.
+
+It also overrides \texttt{get\_as\_address} so that it returns a memory address asigned by the \texttt{CompilerState}, through calling its method \texttt{get\_callable\_address}.
+
+Finally, it also provides an implementation for \texttt{execute}, where, first, the function, has to check for the number of arguments it received, because functions can be used as a value (for example, in transducers such as "filter").
+  
+Then, gets the first argument passed to it, and uses a match expression to check which type of argument it received. If it is a collection or a string, it checks if the underlying collection is empty; if it is "nil" it returns a true (because of a Clojure requirement), and if it is something else, the function returns a \texttt{RuntimeError}.
+
+Line 316 calls a Rust macro, \texttt{display\_for\_callable}, defined in \path{minicl-lib/src/callables/mod.rs}, used to provide a default implementation of the \texttt{Display} trait (a trait used in Rust to represent a value as a string). This implementation uses the string provided in \texttt{Callable}'s method \texttt{name}.
+
+\inputminted[lastline=9]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/mod.rs}
+
+\subsection{Language macros}
+This callabes are separated into a different section because they have a different compilation process: they override \texttt{Callable}'s method \texttt{inner\_compile}, with the exception of callable \texttt{Recur}, which overrides the method \texttt{compile}.
+
+The simplest example of this type of callables is \texttt{Do}, defined in \path{miniclj-lib/src/callables/groupingfns.rs}.
+
+\inputminted[firstline=6,lastline=40,breaklines=true]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/groupingfns.rs}
+
+This macro is usually used to group calls to functions with side-effects. It receives any number of functions and returns only the result of the last one.
+
+The overriden method \texttt{inner\_compile} does just that: it compiles the first s-expression, saves it's result address in variable \texttt{res\_addr}, and then iterates through the remaining s-expressions, compiling each one and replacing the variable \texttt{res\_addr} with the result of the compilation. After the iterator is exhausted, the variable \texttt{res\_addr} is returned.
+
+Another important point is that every language macro overrides \texttt{execute} so that it automatically returns a \texttt{RuntimeError::CompilerError} (the variant of \texttt{RuntimeError} that indicates a bug in the compiler) with an error message detailing what happened and which function was called.
+
+\subsection{\texttt{CallablesTable} struct}
+This structure, defined in \path{miniclj-lib/src/callables/mod.rs}, stores a read-only map of callable names to pointers of callable structures. It is used both during compilation to compile macros and functions) and execution (to link callable names from the constants table to references to the corresponding structures).
+
+\inputminted[firstline=47,lastline=48]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/mod.rs}
+
+It only has one method: a \texttt{get} method which receives a reference to a string and returns either a pointer to the callable with that name or nothing.
+
+\inputminted[firstline=116,lastline=120]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/callables/mod.rs}
+
+\section{User-defined functions}
+Although there are three ways to write functions: using a "defn" call, using the "fn" macro, and using the shorthand syntax ("\#(...)"), all of them have a similar compilation and execution process.
+
+\subsection{Compilation}
+To exemplify the compilation process of these user-defined functions, here's the process for compiling a lambda defined using the shorthand syntax. It starts \texttt{CompilerState}'s main function: \texttt{compile}, which matches over the type of expression passed to it. Here's the actions executed when it encounters a lambda function defined with the shorthand syntax:
+
+\inputminted[firstline=54,lastline=64,breaklines=true]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/state.rs}
+
+First, a new inconditional jump instruction is created, with an unknown instruction pointer as a destination. This instruction is added to the compiler, and the index of this instruction is saved in variable \texttt{jump\_lambda\_instr\_ptr}. Then, the instruction pointer to the next instruction is saved, and a new constant is created using that pointer and the arity of the function, which for shorthand lambda functions is always 1. This constant is inserted into the compiler, and the address that corresponds to the lambda is saved in variable \texttt{lambda\_addr}.
+
+The compiler then calls its own method \texttt{compile\_lambda} with the argument names (in shorthand lambdas it is only the symbol "\%") and the body of the function.
+
+Finally, the jump in position \texttt{jump\_lambda\_instr\_ptr} is filled with the current instruction pointer, and the address of the lambda (\texttt{lambda\_addr}) is returned.
+
+\texttt{compile\_lambda}, defined in the same file, executes a couple of actions:
+
+\inputminted[firstline=86,lastline=105,breaklines=true]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/compiler/state.rs}
+
+First, it creates a new \texttt{SymbolTable} structure using the shared pointer to the current, top-most \texttt{SymbolTable} and the number of arguments that the function receives. This last parameter is important because arguments in miniclj are treated as the first local variables in the \texttt{Scope} of the function, and if the user would like to create new local variables inside the function, these must have indexes greater than the index of the last parameter.
+
+Then, the compiler iterates through the argument names, and inserts them in order to the \texttt{SymbolTable}. The compiler compiles the body of the function, and finally, destroys the created \texttt{SymbolTable}.
+
+Lastly, \texttt{compile\_lambda} generates a return instruction using the returning address of compiling the body of the function, and appends it to the vector of instructions.
+
+\subsection{Execution}
+The execution of a user defined function starts when \texttt{VMState} tries to process a call instruction, where the address of the callable points to a \texttt{Lambda} value.
+
+\inputminted[firstline=94,lastline=99,breaklines=true,autogobble]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/state.rs}
+
+In this case, the virtual machine calls its own function \texttt{execute\_lambda}, which receives the instruction pointer to jump to, the arity of the lambda function and the arguments passed to the function (as values). This function returns the value returned from the lambda, stores it in the parent scope of the function and advances the instruction pointer by 1.
+
+\inputminted[firstline=40,lastline=66,breaklines=true,autogobble]{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/vm/state.rs}
+
+\texttt{execute\_lambda} is a simple function: it starts by comparing the number of arguments passed to the function and its arity, and if they aren't equal, the virtual machine returns a \texttt{RuntimeError::WrongArity} error.
+
+Then, a new \texttt{Scope} structure is created, and the arguments passed to the function are inserted into it.
+
+Finally, \texttt{VMState}'s method \texttt{inner\_execute} is called, which returns a \texttt{RuntimeResult<Option<MemAddress>>}. The error is handled by the question mark at the end of line 59, and we're left with either a memory address or nothing. In the first case, the value is extracted from the scope using the address, and it is returned by \texttt{execute\_lambda}. In the second case, \texttt{execute\_lambda} returns a \texttt{RuntimeError::CompilerError}, meaning the compiler has a bug and defined a lambda that never returned a value.
+
 
 \chapter{Project structure}
 The project is structured in 4 different folders; 3 Rust crates part of the root workspace, and one Next.js project:
@@ -384,15 +533,15 @@ The project is structured in 4 different folders; 3 Rust crates part of the root
 \section{\texttt{miniclj-lib}}
 This crate stores the main logic for the compiler, virtual machine and the shared code between them. This crate's unit tests are run for every new commit pushed to the main branch of the repo in a GitHub Actions worker, following the continuous integration pipeline described in the file \texttt{.github/workflows/ci.yml}.
 
-This crate is divided in 7 modules:
+This crate is divided in the following modules:
 \begin{itemize}
-  \item \texttt{callables}: Stores the callables available in the language and exposes them using the \texttt{CallablesTable} struct
-  \item \texttt{compiler}: Stores the mechanisms and structures used specifically during the compilation process
+  \item \texttt{callables}: Stores the callables available in the language, the base \texttt{Callable} trait, and the structure \texttt{CallablesTable} which exposes the callables implemented inside
+  \item \texttt{compiler}: Stores the mechanisms and structures used specifically during the compilation process (the \texttt{CompilerState} struct, the \texttt{SymbolTable} enum, the \texttt{CompilationError} enum, the \texttt{SExpr} enum and the \texttt{Literal} enum)
   \item \texttt{constant}: Stores the implementation of the \texttt{Constant} enum
   \item \texttt{instruction}: Stores the implementation of the \texttt{Instruction} enum
   \item \texttt{memaddress}: Stores the implementation of the \texttt{MemAddress} struct
-  \item \texttt{parsers}: Stores the parsers generated using \texttt{lalrpop}
-  \item \texttt{vm}: Stores the mechanisms and structures used specifically during the execution
+  \item \texttt{parsers}: Stores the parsers generated using \texttt{lalrpop} (the \texttt{SExprsParser}, \texttt{BytecodeParser} and the \texttt{NumberLiteralParser})
+  \item \texttt{vm}: Stores the mechanisms and structures used specifically during the execution (the \texttt{VMState} struct, the \texttt{Scope} struct, the \texttt{RuntimeError} enum, the \texttt{Value} enum and the \texttt{List} enum)
 \end{itemize}
 
 \section{\texttt{miniclj}}
@@ -425,11 +574,8 @@ This folder stores a simple, one page Next.js project where the \texttt{miniclj-
 \label{examples}
 
 \section{Cyclic factorial function}
-\subsection{minclj code}
+\subsection{\texttt{miniclj} code}
 \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/cyclic_factorial.clj}
-
-\subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_factorial.mclj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -437,13 +583,13 @@ The factorial of 15 is 1307674368000
 Finished in 26ms
 \end{minted}
 
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_factorial.mclj}
+
 
 \section{Recursive factorial function}
-\subsection{minclj code}
+\subsection{\texttt{miniclj} code}
 \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/recursive_factorial.clj}
-
-\subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_factorial.mclj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -451,13 +597,27 @@ The factorial of 15 is 1307674368000
 Finished in 32ms
 \end{minted}
 
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_factorial.mclj}
 
-\section{Cyclic Fibonacci function}
-\subsection{minclj code}
-\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.clj}
+
+\section{Factorial function using list generation and transducers}
+\subsection{\texttt{miniclj} code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/reduce_factorial.clj}
+
+\subsection{Output}
+\begin{minted}{text}
+The factorial of 15 is 1307674368000
+Finished in 12ms
+\end{minted}
 
 \subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.mclj}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/reduce_factorial.mclj}
+
+
+\section{Cyclic Fibonacci function}
+\subsection{\texttt{miniclj} code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.clj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -465,13 +625,13 @@ The Fibonacci number 15 is 610
 Finished in 27ms
 \end{minted}
 
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/cyclic_fibonacci.mclj}
+
 
 \section{Recursive Fibonacci function}
-\subsection{minclj code}
+\subsection{\texttt{miniclj} code}
 \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/recursive_fibonacci.clj}
-
-\subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_fibonacci.mclj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -479,13 +639,13 @@ The Fibonacci number 15 is 610
 Finished in 143ms
 \end{minted}
 
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/recursive_fibonacci.mclj}
+
 
 \section{Find an element in a list}
-\subsection{minclj code}
+\subsection{\texttt{miniclj} code}
 \inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.clj}
-
-\subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.mclj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -494,12 +654,13 @@ Found element 3 in position 4
 Finished in 26ms
 \end{minted}
 
-\section{Sorting a list}
-\subsection{minclj code}
-\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/sort_list.clj}
-
 \subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/sort_list.mclj}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/find_in_list.mclj}
+
+
+\section{Sorting a list}
+\subsection{\texttt{miniclj} code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/sort_list.clj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -508,12 +669,13 @@ Sorted list: (1 2 3 6 7 7 8)
 Finished in 35ms
 \end{minted}
 
-\section{Matrix multiplication}
-\subsection{minclj code}
-\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.clj}
-
 \subsection{Bytecode}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.mclj}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/sort_list.mclj}
+
+
+\section{Matrix multiplication}
+\subsection{\texttt{miniclj} code}
+\inputminted{clojure}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.clj}
 
 \subsection{Output}
 \begin{minted}{text}
@@ -524,18 +686,23 @@ B x A: [[8 3 7] [11 9 14] [-6 27 21]]
 Finished in 18ms
 \end{minted}
 
+\subsection{Bytecode}
+\inputminted{text}{/home/mario/git/MarioJim/miniclj/examples/matrix_multiplication.mclj}
+
 
 \appendix
 
+\definecolor{white}{rgb}{1,1,1}
+
 \chapter{Commit log}
 \label{apdx:commits}
-\inputminted{text}{/home/mario/git/MarioJim/miniclj/docs/commits.txt}
+\inputminted[bgcolor=white]{text}{/home/mario/git/MarioJim/miniclj/docs/commits.txt}
 
 \chapter{Weekly logs in Spanish}
 \label{apdx:weeklylogs}
-\inputminted[breaklines=true]{md}{/home/mario/git/MarioJim/miniclj/docs/logs.md}
+\inputminted[bgcolor=white,breaklines=true]{md}{/home/mario/git/MarioJim/miniclj/docs/logs.md}
 
-\chapter{Language grammar}
+\chapter{lalrpop grammar}
 \label{apdx:grammar}
 \inputminted{rust}{/home/mario/git/MarioJim/miniclj/miniclj-lib/src/parsers/lispparser.lalrpop}
 
