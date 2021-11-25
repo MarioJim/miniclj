@@ -13,6 +13,7 @@ use crate::{
     vm::{List, RuntimeError, RuntimeResult},
 };
 
+/// Represents a value used during execution of `miniclj` code
 #[derive(Clone)]
 pub enum Value {
     Callable(Box<dyn Callable>),

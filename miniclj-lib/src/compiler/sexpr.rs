@@ -2,6 +2,8 @@ use crate::compiler::Literal;
 
 pub type SExprs = Vec<SExpr>;
 
+/// Represents an expression in miniclj code
+/// Returned by the `SExprParser`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SExpr {
     Expr(SExprs),

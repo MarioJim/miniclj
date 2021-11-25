@@ -85,8 +85,8 @@ impl VMState {
                         .map(|addr| self.get(current_scope, addr))
                         .collect::<RuntimeResult<Vec<Value>>>()?;
                     match callable {
-                        Value::Callable(builtin_callable) => {
-                            let result = builtin_callable.execute(self, args)?;
+                        Value::Callable(language_callable) => {
+                            let result = language_callable.execute(self, args)?;
                             self.store(current_scope, *result_addr, result)?;
                             instruction_ptr += 1;
                             Ok(())

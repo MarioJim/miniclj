@@ -4,6 +4,8 @@ use crate::memaddress::MemAddress;
 
 pub type InstructionPtr = usize;
 
+/// Represents the different type of instructions
+/// produced by the compiler and ran by the virtual machine
 #[derive(Debug)]
 pub enum Instruction {
     Call {

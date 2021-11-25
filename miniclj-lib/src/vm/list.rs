@@ -5,6 +5,7 @@ use std::{
 
 use crate::vm::Value;
 
+/// List type from Clojure
 #[derive(Debug, Clone)]
 pub enum List {
     Cons(Box<Value>, Box<List>),

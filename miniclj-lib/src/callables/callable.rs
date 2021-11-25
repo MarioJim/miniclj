@@ -9,6 +9,7 @@ use crate::{
     vm::{RuntimeResult, VMState, Value},
 };
 
+/// Base trait that all language callables must implement
 pub trait Callable: Display + Debug + DynClone {
     fn name(&self) -> &'static str;
 

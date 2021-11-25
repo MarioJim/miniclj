@@ -7,6 +7,8 @@ use crate::memaddress::{Lifetime, MemAddress};
 type Table = RefCell<HashMap<SmolStr, MemAddress>>;
 type Counter = RefCell<usize>;
 
+/// Stores the symbols and memory addresses for
+/// the current scope
 #[derive(Debug)]
 pub enum SymbolTable {
     Global {

@@ -7,6 +7,9 @@ use num::Rational64;
 
 use crate::{callables::Callable, compiler::Literal, instruction::InstructionPtr};
 
+/// Represents a constant value created from a `Literal`
+/// by the compiler and read through bytecode by
+/// the virtual machine
 #[derive(Debug, Clone)]
 pub enum Constant {
     Callable(Box<dyn Callable>),

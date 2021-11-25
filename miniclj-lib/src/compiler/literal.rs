@@ -3,6 +3,8 @@ use std::fmt::{self, Display, Formatter};
 use num::Rational64;
 use smol_str::SmolStr;
 
+/// Represents a value extracted directly from a
+/// s-expression and parsed by the `SExprParser`
 #[derive(Debug, Clone)]
 pub enum Literal {
     Symbol(SmolStr),

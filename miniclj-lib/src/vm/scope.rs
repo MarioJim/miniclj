@@ -4,6 +4,8 @@ use crate::vm::{RuntimeError, RuntimeResult, Value};
 
 type ValuesTable = RefCell<Vec<Option<Value>>>;
 
+/// Stores the local variables and the temporal values
+/// of the current scope
 #[derive(Debug, Default)]
 pub struct Scope {
     vars: ValuesTable,

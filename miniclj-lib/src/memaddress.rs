@@ -3,6 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+/// Represents a virtual memory address
 #[derive(Debug, Clone, Copy)]
 pub struct MemAddress {
     lifetime: Lifetime,
