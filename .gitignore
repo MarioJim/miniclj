@@ -15,4 +15,4 @@ test_cljs
 # Intermediate files in /docs
 docs/*.txt
 docs/*.md
-docs/*.png
+docs/firma.png

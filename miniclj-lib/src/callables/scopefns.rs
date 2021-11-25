@@ -45,7 +45,10 @@ impl Callable for Def {
         }?;
 
         let value_addr = state.compile(value_arg)?;
-        let global_val_addr = state.new_address(Lifetime::GlobalVar);
+        let global_val_addr = match state.get_symbol(&symbol) {
+            Some(address) => address,
+            None => state.new_address(Lifetime::GlobalVar),
+        };
         let mov_instruction = Instruction::new_assignment(value_addr, global_val_addr);
         state.add_instruction(mov_instruction);
 
@@ -126,7 +129,10 @@ impl Callable for Defn {
         let lambda_const = Constant::new_lambda(lambda_start_ptr, arg_names.len());
         let lambda_const_addr = state.insert_constant(lambda_const);
 
-        let lambda_global_addr = state.new_address(Lifetime::GlobalVar);
+        let lambda_global_addr = match state.get_symbol(&symbol) {
+            Some(address) => address,
+            None => state.new_address(Lifetime::GlobalVar),
+        };
         let mov_instruction = Instruction::new_assignment(lambda_const_addr, lambda_global_addr);
         state.add_instruction(mov_instruction);
         state.insert_symbol(symbol, lambda_global_addr);
